@@ -26,6 +26,10 @@ struct Value {
             "Cannot convert value of type " + std::to_string(static_cast<int>(type)) + " to string");
     }
 
+    [[nodiscard]] bool is_number() const { return type == Number; }
+    [[nodiscard]] bool is_string() const { return type == String; }
+    [[nodiscard]] bool is_nil() const { return type == Nil; }
+
     static Value number_value(const int n) { return Value{Number, n}; }
     static Value string_value(std::string s) { return Value{String, 0, std::move(s)}; }
     static Value nil_value() { return Value{Nil, 0, ""}; }

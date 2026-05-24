@@ -25,6 +25,14 @@ void BinaryExpr::accept(ExprVisitor& visitor) {
     visitor.visit(*this);
 }
 
+ConcatExpr::ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
+    : left(std::move(l)), right(std::move(r)) {
+}
+
+void ConcatExpr::accept(ExprVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 AssignExpr::AssignExpr(std::string n, std::unique_ptr<Expr> (v))
     : name(std::move(n)), value(std::move(v)) {
 }

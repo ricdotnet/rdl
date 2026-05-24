@@ -44,6 +44,16 @@ public:
     void accept(ExprVisitor& visitor) override;
 };
 
+class ConcatExpr : public Expr {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+
+    ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
+
+    void accept(ExprVisitor& visitor) override;
+};
+
 class AssignExpr : public Expr {
 public:
     std::string name;

@@ -7,6 +7,7 @@
 
 bool Lexer::is_digit(char c) { return std::isdigit(c); }
 bool Lexer::is_alpha(char c) { return std::isalpha(c); }
+char Lexer::peek(const std::string &source, const size_t index) { return source[index]; }
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {
 };
@@ -15,7 +16,7 @@ std::vector<Token> Lexer::tokenize() {
     std::vector<Token> tokens;
 
     while (current < source.size()) {
-        char c = source[current];
+        const char c = peek(source, current);
 
         if (std::isspace(c)) {
             current++;
@@ -27,9 +28,9 @@ std::vector<Token> Lexer::tokenize() {
         if (is_alpha(c) || c == '_') {
             std::string value;
 
-            while (current < source.size() && (is_alpha(source[current]) || is_digit(source[current]) || source[
-                                                   current] == '_')) {
-                value += source[current];
+            while (current < source.size() && (is_alpha(peek(source, current)) || is_digit(peek(source, current)) ||
+                                               peek(source, current) == '_')) {
+                value += peek(source, current);
                 current++;
             }
 
@@ -41,8 +42,8 @@ std::vector<Token> Lexer::tokenize() {
         if (is_digit(c)) {
             std::string number;
 
-            while (current < source.size() && is_digit(source[current])) {
-                number += source[current];
+            while (current < source.size() && is_digit(peek(source, current))) {
+                number += peek(source, current);
                 current++;
             }
 
@@ -70,10 +71,13 @@ std::vector<Token> Lexer::tokenize() {
             continue;
         }
 
+        if (c == '.' && peek(source, current + 1) == '.') {
+            current += 2;
+            tokens.push_back({TokenType::Concat, ".."});
+            continue;
+        }
+
         switch (c) {
-            // case '"':
-            //     tokens.push_back({TokenType::DoubleQuote, "\""});
-            //     break;
             case '+':
                 tokens.push_back({TokenType::Plus, "+"});
                 break;

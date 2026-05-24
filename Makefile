@@ -7,8 +7,10 @@ SRC = $(wildcard *.cpp)
 all:
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
 
+build: all
+
 run: all
-		./$(TARGET)
+	./$(TARGET)
 
 clean:
 	rm -f $(TARGET)

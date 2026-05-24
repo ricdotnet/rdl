@@ -16,6 +16,7 @@ enum class TokenType {
     Comma,
     Semicolon,
     DoubleQuote,
+    Concat,
     EndOfFile,
 };
 

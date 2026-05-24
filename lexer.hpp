@@ -12,8 +12,10 @@ class Lexer {
 
     static bool is_alpha(char c);
 
+    static char peek(const std::string &source, size_t index);
+
 public:
-    Lexer(std::string src);
+    explicit Lexer(std::string src);
 
     std::vector<Token> tokenize();
 };

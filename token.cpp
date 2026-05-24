@@ -15,6 +15,7 @@ std::string token_type_to_string(TokenType type) {
         case TokenType::Comma: return "Comma";
         case TokenType::Semicolon: return "Semicolon";
         case TokenType::DoubleQuote: return "DoubleQuote";
+        case TokenType::Concat: return "Concat";
         case TokenType::EndOfFile: return "EndOfFile";
         default: return "Invalid TokenType";
     }

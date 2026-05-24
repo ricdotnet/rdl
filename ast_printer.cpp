@@ -25,7 +25,7 @@ public:
     void visit(VariableExpr &expr) override {
         print_indent();
         std::cout << "Variable(" << expr.name << ")\n";
-    };
+    }
 
     void visit(AssignExpr &expr) override {
         print_indent();
@@ -34,7 +34,7 @@ public:
         indent++;
         expr.value->accept(*this);
         indent--;
-    };
+    }
 
     void visit(BinaryExpr &expr) override {
         print_indent();
@@ -44,7 +44,17 @@ public:
         expr.left->accept(*this);
         expr.right->accept(*this);
         indent--;
-    };
+    }
+
+    void visit(ConcatExpr &expr) override {
+        print_indent();
+        std::cout << "Concat(";
+
+        indent++;
+        expr.left->accept(*this);
+        expr.right->accept(*this);
+        indent--;
+    }
 
     void visit(CallExpr &expr) override {
         print_indent();
@@ -52,9 +62,9 @@ public:
         std::cout << std::endl;
 
         indent++;
-        for (auto &arg : expr.arguments) {
+        for (const auto &arg: expr.arguments) {
             arg->accept(*this);
         }
         indent--;
-    };
+    }
 };

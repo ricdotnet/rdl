@@ -6,6 +6,10 @@
 class Interpreter : public ExprVisitor {
     Environment &env;
 
+    static std::string concat_expr(const std::string &left, const std::string &right) {
+        return left + right;
+    }
+
 public:
     Value result;
 
@@ -41,8 +45,8 @@ public:
     }
 
     void visit(BinaryExpr &expr) override {
-        Value left = evaluate(expr.left.get());
-        Value right = evaluate(expr.right.get());
+        const auto left = evaluate(expr.left.get());
+        const auto right = evaluate(expr.right.get());
 
         if (left.type != Value::Number || right.type != Value::Number) {
             throw std::runtime_error("Binary operation requires number operands");
@@ -67,6 +71,17 @@ public:
             default:
                 throw std::runtime_error("Unknown operation");
         }
+    }
+
+    void visit(ConcatExpr &expr) override {
+        const auto left = evaluate(expr.left.get());
+        const auto right = evaluate(expr.right.get());
+
+        if ((!left.is_string() && !left.is_number()) || (!right.is_string() && !right.is_number())) {
+            throw std::runtime_error("Concatenation requires string or number operands");
+        }
+
+        result = Value::string_value(left.to_string() + right.to_string());
     }
 
     void visit(CallExpr &expr) override {

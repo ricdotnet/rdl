@@ -45,6 +45,13 @@ std::unique_ptr<Expr> Parser::expression() {
         expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
     }
 
+    if (match(TokenType::Concat)) {
+        Token op = previous();
+        auto right = expression();
+
+        expr = std::make_unique<ConcatExpr>(std::move(expr), std::move(right));
+    }
+
     return expr;
 }
 
