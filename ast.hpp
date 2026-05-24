@@ -73,6 +73,16 @@ public:
     void accept(ExprVisitor& visitor) override;
 };
 
+class LetExpr : public Expr {
+public:
+    std::string name;
+    std::unique_ptr<Expr> initialiser;
+
+    LetExpr(std::string n, std::unique_ptr<Expr> init);
+
+    void accept(ExprVisitor& visitor) override;
+};
+
 class CallExpr : public Expr {
 public:
     std::string function_name;

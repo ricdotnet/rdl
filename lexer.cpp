@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "error_service.hpp"
+
 bool Lexer::is_digit(char c) { return std::isdigit(c); }
 bool Lexer::is_alpha(char c) { return std::isalpha(c); }
 char Lexer::peek(const std::string &source, const size_t index) { return source[index]; }
@@ -34,7 +36,12 @@ std::vector<Token> Lexer::tokenize() {
                 current++;
             }
 
-            tokens.push_back({TokenType::Identifier, value});
+            if (value == "let") {
+                tokens.push_back({TokenType::Let, value, 1, current});
+                continue;
+            }
+
+            tokens.push_back({TokenType::Identifier, value, 1, current});
 
             continue;
         }
@@ -47,7 +54,7 @@ std::vector<Token> Lexer::tokenize() {
                 current++;
             }
 
-            tokens.push_back({TokenType::Number, number});
+            tokens.push_back({TokenType::Number, number, 1, current});
 
             continue;
         }
@@ -62,57 +69,58 @@ std::vector<Token> Lexer::tokenize() {
             }
 
             if (current >= source.size()) {
-                throw std::runtime_error("Unterminated string");
+                ErrorService::syntax_error("Unterminated string", {TokenType::String, value, 1, current});
             }
 
             current++;
-            tokens.push_back({TokenType::String, value});
+            tokens.push_back({TokenType::String, value, 1, current});
 
             continue;
         }
 
         if (c == '.' && peek(source, current + 1) == '.') {
             current += 2;
-            tokens.push_back({TokenType::Concat, ".."});
+            tokens.push_back({TokenType::Concat, "..", 1, current});
             continue;
         }
 
         switch (c) {
             case '+':
-                tokens.push_back({TokenType::Plus, "+"});
+                tokens.push_back({TokenType::Plus, "+", 1, current});
                 break;
             case '-':
-                tokens.push_back({TokenType::Minus, "-"});
+                tokens.push_back({TokenType::Minus, "-", 1, current});
                 break;
             case '*':
-                tokens.push_back({TokenType::Star, "*"});
+                tokens.push_back({TokenType::Star, "*", 1, current});
                 break;
             case '/':
-                tokens.push_back({TokenType::Slash, "/"});
+                tokens.push_back({TokenType::Slash, "/", 1, current});
                 break;
             case '(':
-                tokens.push_back({TokenType::LeftParen, "("});
+                tokens.push_back({TokenType::LeftParen, "(", 1, current});
                 break;
             case ')':
-                tokens.push_back({TokenType::RightParen, ")"});
+                tokens.push_back({TokenType::RightParen, ")", 1, current});
                 break;
             case '=':
-                tokens.push_back({TokenType::Equals, "="});
+                tokens.push_back({TokenType::Equals, "=", 1, current});
                 break;
             case ',':
-                tokens.push_back({TokenType::Comma, ","});
+                tokens.push_back({TokenType::Comma, ",", 1, current});
                 break;
             case ';':
-                tokens.push_back({TokenType::Semicolon, ";"});
+                tokens.push_back({TokenType::Semicolon, ";", 1, current});
                 break;
             default:
-                throw std::runtime_error("Unknown character: " + std::string(1, c));
+                ErrorService::syntax_error("Unexpected character: " + std::string(1, c),
+                                           {TokenType::Unknown, std::string(1, c), 1, current});
         }
 
         current++;
     }
 
-    tokens.push_back({TokenType::EndOfFile, ""});
+    tokens.push_back({TokenType::EndOfFile, "", 1, current});
 
     return tokens;
 }

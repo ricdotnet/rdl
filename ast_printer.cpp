@@ -36,6 +36,15 @@ public:
         indent--;
     }
 
+    void visit(LetExpr &expr) override {
+        print_indent();
+        std::cout << "Let(" << expr.name << ")\n";
+
+        indent++;
+        expr.initialiser->accept(*this);
+        indent--;
+    }
+
     void visit(BinaryExpr &expr) override {
         print_indent();
         std::cout << "Binary(" << expr.operation.value << ")\n";

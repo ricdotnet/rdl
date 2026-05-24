@@ -2,6 +2,7 @@
 
 std::string token_type_to_string(TokenType type) {
     switch (type) {
+        case TokenType::Let: return "Let";
         case TokenType::Identifier: return "Identifier";
         case TokenType::Number: return "Number";
         case TokenType::String: return "String";
@@ -17,6 +18,7 @@ std::string token_type_to_string(TokenType type) {
         case TokenType::DoubleQuote: return "DoubleQuote";
         case TokenType::Concat: return "Concat";
         case TokenType::EndOfFile: return "EndOfFile";
+        case TokenType::Unknown: return "Unknown";
         default: return "Invalid TokenType";
     }
 }

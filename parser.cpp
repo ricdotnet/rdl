@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "error_service.hpp"
+
 Parser::Parser(std::vector<Token> t) : tokens(std::move(t)) {
 }
 
@@ -24,6 +26,14 @@ std::vector<std::unique_ptr<Expr> > Parser::parse() {
 }
 
 std::unique_ptr<Expr> Parser::statement() {
+    if (match(TokenType::Let)) {
+        Token token = advance();
+        consume(TokenType::Equals);
+
+        auto initialiser = expression();
+        return std::make_unique<LetExpr>(token.value, std::move(initialiser));
+    }
+
     if (check(TokenType::Identifier) && peekNext().type == TokenType::Equals) {
         Token token = advance();
         advance();
@@ -97,9 +107,8 @@ std::unique_ptr<Expr> Parser::primary() {
         return expr;
     }
 
-    throw std::runtime_error("Expected expression in line " +
-                             std::to_string(current) + " found " +
-                             tokens[current].value);
+    ErrorService::syntax_error("Expected expression", tokens[current]);
+    return nullptr;
 }
 
 std::unique_ptr<Expr> Parser::postfix() {

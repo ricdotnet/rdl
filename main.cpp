@@ -22,9 +22,10 @@ void run(std::string source) {
 }
 
 int main() {
-    // std::string source = R"(name = "Ricardo"; surname = "Rocha"; print("Name: " .. name .. " " .. surname .. " :: " .. "Age: " .. 25))";
+    std::string source = R"(let name = "Ricardo"; @ let surname = "Rocha"; print("Name: " .. name .. " " .. surname .. " :: " .. "Age: " .. 25))";
     // std::string source = R"(print(1 + 2 * 3))";
-    std::string source = "print(10 .. 20 + 30)";
+    // std::string source = "print(10 .. 20 + 30)";
+    // std::string source = R"(let name = "Ricardo)";
 
     // auto env = Environment();
     //

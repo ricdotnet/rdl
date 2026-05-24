@@ -5,14 +5,14 @@
 NumberExpr::NumberExpr(int val) : value(val) {
 }
 
-void NumberExpr::accept(ExprVisitor& visitor) {
+void NumberExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
 StringExpr::StringExpr(std::string val) : value(std::move(val)) {
 }
 
-void StringExpr::accept(ExprVisitor& visitor) {
+void StringExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
@@ -21,7 +21,7 @@ BinaryExpr::BinaryExpr(std::unique_ptr<Expr> l, Token oper,
     : left(std::move(l)), operation(oper), right(std::move(r)) {
 }
 
-void BinaryExpr::accept(ExprVisitor& visitor) {
+void BinaryExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
@@ -29,7 +29,7 @@ ConcatExpr::ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
     : left(std::move(l)), right(std::move(r)) {
 }
 
-void ConcatExpr::accept(ExprVisitor& visitor) {
+void ConcatExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
@@ -37,14 +37,21 @@ AssignExpr::AssignExpr(std::string n, std::unique_ptr<Expr> (v))
     : name(std::move(n)), value(std::move(v)) {
 }
 
-void AssignExpr::accept(ExprVisitor& visitor) {
+void AssignExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
 VariableExpr::VariableExpr(std::string n) : name(std::move(n)) {
 }
 
-void VariableExpr::accept(ExprVisitor& visitor) {
+void VariableExpr::accept(ExprVisitor &visitor) {
+    visitor.visit(*this);
+}
+
+LetExpr::LetExpr(std::string n, std::unique_ptr<Expr> init) : name(std::move(n)), initialiser(std::move(init)) {
+}
+
+void LetExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }
 
@@ -52,6 +59,6 @@ CallExpr::CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args) :
     arguments(std::move(args)) {
 }
 
-void CallExpr::accept(ExprVisitor& visitor) {
+void CallExpr::accept(ExprVisitor &visitor) {
     visitor.visit(*this);
 }

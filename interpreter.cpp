@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "error_service.hpp"
+
 class Interpreter : public ExprVisitor {
     Environment &env;
 
@@ -39,9 +41,17 @@ public:
 
     void visit(AssignExpr &expr) override {
         const auto value = evaluate(expr.value.get());
-        env.set(expr.name, value);
+        env.assign(expr.name, value);
 
         result = value;
+    }
+
+    void visit(LetExpr &expr) override {
+        const auto value = evaluate(expr.initialiser.get());
+
+        env.define(expr.name, value);
+
+        result = Value::nil_value();
     }
 
     void visit(BinaryExpr &expr) override {
@@ -69,7 +79,7 @@ public:
                 result = Value::number_value(left_value / right_value);
                 break;
             default:
-                throw std::runtime_error("Unknown operation");
+                ErrorService::syntax_error("Unknown binary operation", expr.operation);
         }
     }
 

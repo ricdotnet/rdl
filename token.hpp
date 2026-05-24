@@ -3,6 +3,7 @@
 #include <string>
 
 enum class TokenType {
+    Let,
     Identifier,
     Number,
     String,
@@ -18,11 +19,15 @@ enum class TokenType {
     DoubleQuote,
     Concat,
     EndOfFile,
+    Unknown,
 };
 
 struct Token {
     TokenType type;
     std::string value;
+
+    size_t line;
+    size_t column;
 };
 
 TokenType get_token_type(char c);
