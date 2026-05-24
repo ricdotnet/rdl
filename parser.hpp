@@ -12,22 +12,28 @@ private:
     size_t current = 0;
 
 public:
-    Parser(std::vector<Token> t);
+    explicit Parser(std::vector<Token> t);
 
     std::vector<std::unique_ptr<Expr> > parse();
 
+private:
     std::unique_ptr<Expr> statement();
 
     std::unique_ptr<Expr> expression();
 
+    std::unique_ptr<Expr> equality();
+
+    std::unique_ptr<Expr> comparison();
+
+    std::unique_ptr<Expr> concat();
+
     std::unique_ptr<Expr> term();
 
-private:
     std::unique_ptr<Expr> factor();
 
-    std::unique_ptr<Expr> primary();
-
     std::unique_ptr<Expr> postfix();
+
+    std::unique_ptr<Expr> primary();
 
     Token peek();
 

@@ -12,6 +12,10 @@ class Interpreter : public ExprVisitor {
         return left + right;
     }
 
+    static bool number_type(const Value &value1, const Value &value2) {
+        return value1.is_number() && value2.is_number();
+    }
+
 public:
     Value result;
 
@@ -58,31 +62,63 @@ public:
         const auto left = evaluate(expr.left.get());
         const auto right = evaluate(expr.right.get());
 
-        if (!left.is_number() || !right.is_number()) {
-            ErrorService::runtime_error("Binary operation requires number operands",
-                                        "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
-                                        token_type_to_string(
-                                            static_cast<TokenType>(right.type)));
-        }
-
-        const int left_value = left.number;
-        const int right_value = right.number;
-
         switch (expr.operation.type) {
             case TokenType::Plus:
-                result = Value::number_value(left_value + right_value);
-                break;
             case TokenType::Minus:
-                result = Value::number_value(left_value - right_value);
-                break;
             case TokenType::Star:
-                result = Value::number_value(left_value * right_value);
-                break;
             case TokenType::Slash:
-                result = Value::number_value(left_value / right_value);
+            case TokenType::Greater:
+            case TokenType::GreaterEqual:
+            case TokenType::Less:
+            case TokenType::LessEqual: {
+                if (!number_type(left, right)) {
+                    ErrorService::runtime_error("Expected numbers ",
+                                                "Got " + left.to_string() + " and " + right.to_string() + "");
+                }
+
+                const int left_value = left.number;
+                const int right_value = right.number;
+
+                switch (expr.operation.type) {
+                    case TokenType::Plus:
+                        result = Value::number_value(left_value + right_value);
+                        break;
+                    case TokenType::Minus:
+                        result = Value::number_value(left_value - right_value);
+                        break;
+                    case TokenType::Star:
+                        result = Value::number_value(left_value * right_value);
+                        break;
+                    case TokenType::Slash:
+                        result = Value::number_value(left_value / right_value);
+                        break;
+
+                    case TokenType::Greater:
+                        result = Value::boolean_value(left_value > right_value);
+                        break;
+                    case TokenType::GreaterEqual:
+                        result = Value::boolean_value(left_value >= right_value);
+                        break;
+                    case TokenType::Less:
+                        result = Value::boolean_value(left_value < right_value);
+                        break;
+                    case TokenType::LessEqual:
+                        result = Value::boolean_value(left_value <= right_value);
+                        break;
+
+                    default: break;
+                }
+
+                return;
+            }
+            case TokenType::EqualEqual:
+                result = Value::boolean_value(left.equals(right));
+                break;
+            case TokenType::BangEqual:
+                result = Value::boolean_value(!left.equals(right));
                 break;
             default:
-                ErrorService::syntax_error("Unknown binary operation", expr.operation);
+                ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
         }
     }
 
@@ -90,8 +126,9 @@ public:
         const auto left = evaluate(expr.left.get());
         const auto right = evaluate(expr.right.get());
 
-        if ((!left.is_string() && !left.is_number()) || (!right.is_string() && !right.is_number())) {
-            ErrorService::runtime_error("Concatenation requires string or number operands",
+        if ((!left.is_string() && !left.is_number() && !left.is_boolean()) || (
+                !right.is_string() && !right.is_number() && !right.is_boolean())) {
+            ErrorService::runtime_error("Concatenation requires string, number or boolean operands",
                                         "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
                                         token_type_to_string(
                                             static_cast<TokenType>(right.type)));

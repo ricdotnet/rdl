@@ -1,12 +1,11 @@
 #include "ast.hpp"
+#include "error_service.hpp"
 #include "parser.hpp"
 #include "token.hpp"
 
 #include <memory>
-#include <stdexcept>
 #include <utility>
 
-#include "error_service.hpp"
 
 Parser::Parser(std::vector<Token> t) : tokens(std::move(t)) {
 }
@@ -28,13 +27,13 @@ std::vector<std::unique_ptr<Expr> > Parser::parse() {
 std::unique_ptr<Expr> Parser::statement() {
     if (match(TokenType::Let)) {
         Token token = advance();
-        consume(TokenType::Equals);
+        consume(TokenType::Equal);
 
         auto initialiser = expression();
         return std::make_unique<LetExpr>(token.value, std::move(initialiser));
     }
 
-    if (check(TokenType::Identifier) && peekNext().type == TokenType::Equals) {
+    if (check(TokenType::Identifier) && peekNext().type == TokenType::Equal) {
         Token token = advance();
         advance();
 
@@ -46,18 +45,28 @@ std::unique_ptr<Expr> Parser::statement() {
 }
 
 std::unique_ptr<Expr> Parser::expression() {
-    auto expr = term();
+    return equality();
+}
 
-    while (match(TokenType::Plus) || match(TokenType::Minus)) {
+std::unique_ptr<Expr> Parser::equality() {
+    auto expr = concat();
+
+    while (match(TokenType::EqualEqual) || match(TokenType::BangEqual)) {
         Token op = previous();
-        auto right = term();
+        auto right = concat();
 
         expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
     }
 
-    if (match(TokenType::Concat)) {
+    return expr;
+}
+
+std::unique_ptr<Expr> Parser::concat() {
+    auto expr = comparison();
+
+    while (match(TokenType::Concat)) {
         Token op = previous();
-        auto right = expression();
+        auto right = comparison();
 
         expr = std::make_unique<ConcatExpr>(std::move(expr), std::move(right));
     }
@@ -65,10 +74,24 @@ std::unique_ptr<Expr> Parser::expression() {
     return expr;
 }
 
+std::unique_ptr<Expr> Parser::comparison() {
+    auto expr = term();
+
+    while (match(TokenType::Less) || match(TokenType::LessEqual) || match(TokenType::Greater) || match(
+               TokenType::GreaterEqual)) {
+        Token op = previous();
+        auto right = term();
+
+        expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+               }
+
+    return expr;
+}
+
 std::unique_ptr<Expr> Parser::term() {
     auto expr = factor();
 
-    while (match(TokenType::Star) || match(TokenType::Slash)) {
+    while (match(TokenType::Plus) || match(TokenType::Minus)) {
         Token op = previous();
         auto right = factor();
 
@@ -79,36 +102,16 @@ std::unique_ptr<Expr> Parser::term() {
 }
 
 std::unique_ptr<Expr> Parser::factor() {
-    return postfix();
-}
+    auto expr = postfix();
 
-std::unique_ptr<Expr> Parser::primary() {
-    if (match(TokenType::Number)) {
-        Token token = previous();
+    while (match(TokenType::Star) || match(TokenType::Slash)) {
+        Token op = previous();
+        auto right = postfix();
 
-        return std::make_unique<NumberExpr>(std::stoi(token.value));
+        expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
     }
 
-    if (match(TokenType::Identifier)) {
-        Token token = previous();
-
-        return std::make_unique<VariableExpr>(token.value);
-    }
-
-    if (match(TokenType::String)) {
-        Token token = previous();
-
-        return std::make_unique<StringExpr>(token.value);
-    }
-
-    if (match(TokenType::LeftParen)) {
-        auto expr = expression();
-        consume(TokenType::RightParen);
-        return expr;
-    }
-
-    ErrorService::syntax_error("Expected expression", tokens[current]);
-    return nullptr;
+    return expr;
 }
 
 std::unique_ptr<Expr> Parser::postfix() {
@@ -149,6 +152,35 @@ std::unique_ptr<Expr> Parser::postfix() {
     }
 
     return expr;
+}
+
+std::unique_ptr<Expr> Parser::primary() {
+    if (match(TokenType::Number)) {
+        Token token = previous();
+
+        return std::make_unique<NumberExpr>(std::stoi(token.value));
+    }
+
+    if (match(TokenType::Identifier)) {
+        Token token = previous();
+
+        return std::make_unique<VariableExpr>(token.value);
+    }
+
+    if (match(TokenType::String)) {
+        Token token = previous();
+
+        return std::make_unique<StringExpr>(token.value);
+    }
+
+    if (match(TokenType::LeftParen)) {
+        auto expr = expression();
+        consume(TokenType::RightParen);
+        return expr;
+    }
+
+    ErrorService::syntax_error("Expected expression", tokens[current]);
+    return nullptr;
 }
 
 bool Parser::match(TokenType type) {

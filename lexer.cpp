@@ -82,17 +82,17 @@ std::vector<Token> Lexer::tokenize() {
                 ErrorService::syntax_error("Unterminated string", {TokenType::String, value, line, column});
             }
 
+            tokens.push_back({TokenType::String, value, line, column});
             current++;
             column++;
-            tokens.push_back({TokenType::String, value, line, column});
 
             continue;
         }
 
         if (c == '.' && peek(source, current + 1) == '.') {
+            tokens.push_back({TokenType::Concat, "..", line, column});
             current += 2;
             column += 2;
-            tokens.push_back({TokenType::Concat, "..", line, column});
             continue;
         }
 
@@ -116,13 +116,46 @@ std::vector<Token> Lexer::tokenize() {
                 tokens.push_back({TokenType::RightParen, ")", line, column});
                 break;
             case '=':
-                tokens.push_back({TokenType::Equals, "=", line, column});
+                if (peek(source, current + 1) == '=') {
+                    tokens.push_back({TokenType::EqualEqual, "==", line, column});
+                    current++;
+                    column++;
+                    break;
+                }
+                tokens.push_back({TokenType::Equal, "=", line, column});
                 break;
             case ',':
                 tokens.push_back({TokenType::Comma, ",", line, column});
                 break;
             case ';':
                 tokens.push_back({TokenType::Semicolon, ";", line, column});
+                break;
+            case '>':
+                if (peek(source, current + 1) == '=') {
+                    tokens.push_back({TokenType::GreaterEqual, ">=", line, column});
+                    current++;
+                    column++;
+                    break;
+                }
+                tokens.push_back({TokenType::Greater, ">", line, column});
+                break;
+            case '<':
+                if (peek(source, current + 1) == '=') {
+                    tokens.push_back({TokenType::LessEqual, "<=", line, column});
+                    current++;
+                    column++;
+                    break;
+                }
+                tokens.push_back({TokenType::Less, "<", line, column});
+                break;
+            case '!':
+                if (peek(source, current + 1) == '=') {
+                    tokens.push_back({TokenType::BangEqual, "!=", line, column});
+                    current++;
+                    column++;
+                    break;
+                }
+                tokens.push_back({TokenType::Bang, "!", line, column});
                 break;
             default:
                 ErrorService::syntax_error("Unexpected character: " + std::string(1, c),
