@@ -1,69 +1,60 @@
-#include "ast_printer.hpp"
-
 #include <iostream>
 
-void print_indent(int level) {
-    for (int i = 0; i < level; i++) {
-        std::cout << "  ";
-    }
-}
+#include "ast.hpp"
 
-void print_ast(Expr *expr, int indent) {
-    if (auto num = dynamic_cast<NumberExpr *>(expr)) {
-        print_indent(indent);
-        std::cout << "Number(" << num->value << ")\n";
-        return;
-    }
+class ASTPrinter : public ExprVisitor {
+    int indent = 0;
 
-    if (auto str = dynamic_cast<StringExpr *>(expr)) {
-        print_indent(indent);
-        std::cout << "String(\"" << str->value << "\")\n";
-        return;
-    }
-
-    if (auto var = dynamic_cast<VariableExpr *>(expr)) {
-        print_indent(indent);
-        std::cout << "Variable(" << var->name << ")\n";
-        return;
-    }
-
-    if (auto assign = dynamic_cast<AssignExpr *>(expr)) {
-        print_indent(indent);
-        std::cout << "Assign(" << assign->name << ")\n";
-
-        print_ast(assign->value.get(), indent + 1);
-        return;
-    }
-
-    if (auto binary = dynamic_cast<BinaryExpr *>(expr)) {
-        print_indent(indent);
-
-        std::cout
-                << "Binary("
-                << binary->operation.value
-                << ")\n";
-
-        print_ast(binary->left.get(), indent + 1);
-        print_ast(binary->right.get(), indent + 1);
-
-        return;
-    }
-
-    if (auto call = dynamic_cast<CallExpr *>(expr)) {
-        print_indent(indent);
-
-        std::cout
-                << "Call("
-                << call->function_name
-                << ")\n";
-
-        for (auto &arg: call->arguments) {
-            print_ast(arg.get(), indent + 1);
+    void print_indent() const {
+        for (int i = 0; i < indent; i++) {
+            std::cout << "  ";
         }
-
-        return;
     }
 
-    print_indent(indent);
-    std::cout << "Unknown\n";
-}
+public:
+    void visit(NumberExpr &expr) override {
+        print_indent();
+        std::cout << "Number(" << expr.value << ")\n";
+    }
+
+    void visit(StringExpr &expr) override {
+        print_indent();
+        std::cout << "String(" << expr.value << ")\n";
+    }
+
+    void visit(VariableExpr &expr) override {
+        print_indent();
+        std::cout << "Variable(" << expr.name << ")\n";
+    };
+
+    void visit(AssignExpr &expr) override {
+        print_indent();
+        std::cout << "Assign(" << expr.name << ")\n";
+
+        indent++;
+        expr.value->accept(*this);
+        indent--;
+    };
+
+    void visit(BinaryExpr &expr) override {
+        print_indent();
+        std::cout << "Binary(" << expr.operation.value << ")\n";
+
+        indent++;
+        expr.left->accept(*this);
+        expr.right->accept(*this);
+        indent--;
+    };
+
+    void visit(CallExpr &expr) override {
+        print_indent();
+        std::cout << "Call(" << expr.function_name << ")\n";
+        std::cout << std::endl;
+
+        indent++;
+        for (auto &arg : expr.arguments) {
+            arg->accept(*this);
+        }
+        indent--;
+    };
+};

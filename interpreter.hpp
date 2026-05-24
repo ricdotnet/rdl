@@ -31,5 +31,3 @@ struct Value {
     static Value nil_value() { return Value{Nil, 0, ""}; }
     static Value undefined_value() { return Value{Undefined, 0, "", true}; }
 };
-
-Value evaluate(Expr *expr, Environment &env);
