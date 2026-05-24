@@ -20,8 +20,14 @@ std::vector<Token> Lexer::tokenize() {
     while (current < source.size()) {
         const char c = peek(source, current);
 
+        if (c == '\n') {
+            line++;
+            column = 0;
+        }
+
         if (std::isspace(c)) {
             current++;
+            column++;
             continue;
         }
 
@@ -34,14 +40,15 @@ std::vector<Token> Lexer::tokenize() {
                                                peek(source, current) == '_')) {
                 value += peek(source, current);
                 current++;
+                column++;
             }
 
             if (value == "let") {
-                tokens.push_back({TokenType::Let, value, 1, current});
+                tokens.push_back({TokenType::Let, value, line, column});
                 continue;
             }
 
-            tokens.push_back({TokenType::Identifier, value, 1, current});
+            tokens.push_back({TokenType::Identifier, value, line, column});
 
             continue;
         }
@@ -52,9 +59,10 @@ std::vector<Token> Lexer::tokenize() {
             while (current < source.size() && is_digit(peek(source, current))) {
                 number += peek(source, current);
                 current++;
+                column++;
             }
 
-            tokens.push_back({TokenType::Number, number, 1, current});
+            tokens.push_back({TokenType::Number, number, line, column});
 
             continue;
         }
@@ -62,65 +70,70 @@ std::vector<Token> Lexer::tokenize() {
         if (c == '"') {
             std::string value;
             current++;
+            column++;
 
             while (current < source.size() && source[current] != '"') {
                 value += source[current];
                 current++;
+                column++;
             }
 
             if (current >= source.size()) {
-                ErrorService::syntax_error("Unterminated string", {TokenType::String, value, 1, current});
+                ErrorService::syntax_error("Unterminated string", {TokenType::String, value, line, column});
             }
 
             current++;
-            tokens.push_back({TokenType::String, value, 1, current});
+            column++;
+            tokens.push_back({TokenType::String, value, line, column});
 
             continue;
         }
 
         if (c == '.' && peek(source, current + 1) == '.') {
             current += 2;
-            tokens.push_back({TokenType::Concat, "..", 1, current});
+            column += 2;
+            tokens.push_back({TokenType::Concat, "..", line, column});
             continue;
         }
 
         switch (c) {
             case '+':
-                tokens.push_back({TokenType::Plus, "+", 1, current});
+                tokens.push_back({TokenType::Plus, "+", line, column});
                 break;
             case '-':
-                tokens.push_back({TokenType::Minus, "-", 1, current});
+                tokens.push_back({TokenType::Minus, "-", line, column});
                 break;
             case '*':
-                tokens.push_back({TokenType::Star, "*", 1, current});
+                tokens.push_back({TokenType::Star, "*", line, column});
                 break;
             case '/':
-                tokens.push_back({TokenType::Slash, "/", 1, current});
+                tokens.push_back({TokenType::Slash, "/", line, column});
                 break;
             case '(':
-                tokens.push_back({TokenType::LeftParen, "(", 1, current});
+                tokens.push_back({TokenType::LeftParen, "(", line, column});
                 break;
             case ')':
-                tokens.push_back({TokenType::RightParen, ")", 1, current});
+                tokens.push_back({TokenType::RightParen, ")", line, column});
                 break;
             case '=':
-                tokens.push_back({TokenType::Equals, "=", 1, current});
+                tokens.push_back({TokenType::Equals, "=", line, column});
                 break;
             case ',':
-                tokens.push_back({TokenType::Comma, ",", 1, current});
+                tokens.push_back({TokenType::Comma, ",", line, column});
                 break;
             case ';':
-                tokens.push_back({TokenType::Semicolon, ";", 1, current});
+                tokens.push_back({TokenType::Semicolon, ";", line, column});
                 break;
             default:
                 ErrorService::syntax_error("Unexpected character: " + std::string(1, c),
-                                           {TokenType::Unknown, std::string(1, c), 1, current});
+                                           {TokenType::Unknown, std::string(1, c), line, column});
         }
 
         current++;
+        column++;
     }
 
-    tokens.push_back({TokenType::EndOfFile, "", 1, current});
+    tokens.push_back({TokenType::EndOfFile, "", line, column});
 
     return tokens;
 }

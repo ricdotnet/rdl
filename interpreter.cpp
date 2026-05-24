@@ -34,7 +34,7 @@ public:
     void visit(VariableExpr &expr) override {
         const auto value = env.get(expr.name);
         if (value.is_undefined) {
-            throw std::runtime_error("Undefined variable: " + expr.name);
+            ErrorService::runtime_error("Undefined variable", expr.name);
         }
         result = value;
     }
@@ -59,7 +59,10 @@ public:
         const auto right = evaluate(expr.right.get());
 
         if (!left.is_number() || !right.is_number()) {
-            throw std::runtime_error("Binary operation requires number operands");
+            ErrorService::runtime_error("Binary operation requires number operands",
+                                        "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
+                                        token_type_to_string(
+                                            static_cast<TokenType>(right.type)));
         }
 
         const int left_value = left.number;
@@ -88,7 +91,10 @@ public:
         const auto right = evaluate(expr.right.get());
 
         if ((!left.is_string() && !left.is_number()) || (!right.is_string() && !right.is_number())) {
-            throw std::runtime_error("Concatenation requires string or number operands");
+            ErrorService::runtime_error("Concatenation requires string or number operands",
+                                        "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
+                                        token_type_to_string(
+                                            static_cast<TokenType>(right.type)));
         }
 
         result = Value::string_value(left.to_string() + right.to_string());
@@ -104,7 +110,7 @@ public:
 
             result = Value::nil_value();
         } else {
-            throw std::runtime_error("Unknown function: " + expr.function_name);
+            ErrorService::runtime_error("Unknown function", expr.function_name);
         }
     }
 };

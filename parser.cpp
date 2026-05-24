@@ -114,7 +114,7 @@ std::unique_ptr<Expr> Parser::primary() {
 std::unique_ptr<Expr> Parser::postfix() {
     auto expr = primary();
 
-
+    // TODO: understand this
     while (true) {
         if (match(TokenType::LeftParen)) {
             std::vector<std::unique_ptr<Expr> > args;
@@ -132,8 +132,8 @@ std::unique_ptr<Expr> Parser::postfix() {
                     dynamic_cast<VariableExpr *>(expr.get());
 
             if (!var) {
-                throw std::runtime_error(
-                    "Only identifiers can be called"
+                ErrorService::runtime_error(
+                    "Only identifiers can be called", ""
                 );
             }
 
@@ -195,5 +195,5 @@ void Parser::consume(TokenType type) {
         return;
     }
 
-    throw std::runtime_error("Unexpected token type " + token_type_to_string(type));
+    ErrorService::syntax_error("Unexpected token", peek());
 }

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "ast.hpp"
+#include "error_service.hpp"
 
 #include <string>
-#include <stdexcept>
 
 class Environment;
 
@@ -22,8 +22,8 @@ struct Value {
             return string;
         }
 
-        throw std::runtime_error(
-            "Cannot convert value of type " + std::to_string(static_cast<int>(type)) + " to string");
+        ErrorService::runtime_error("Cannot convert value of type to string", std::to_string(static_cast<int>(type)));
+        return "";
     }
 
     [[nodiscard]] bool is_number() const { return type == Number; }

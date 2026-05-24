@@ -1,8 +1,8 @@
 #include <utility>
 
-#include "ast_printer.cpp"
 #include "environment.hpp"
 #include "interpreter.cpp"
+#include "io.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
@@ -21,36 +21,14 @@ void run(std::string source) {
     }
 }
 
-int main() {
-    std::string source = R"(let name = "Ricardo"; @ let surname = "Rocha"; print("Name: " .. name .. " " .. surname .. " :: " .. "Age: " .. 25))";
-    // std::string source = R"(print(1 + 2 * 3))";
-    // std::string source = "print(10 .. 20 + 30)";
-    // std::string source = R"(let name = "Ricardo)";
+int main(const int argc, char **argv) {
+    if (argc < 2) {
+        std::cout << "Usage: ./language <file>\n";
+        return 1;
+    }
 
-    // auto env = Environment();
-    //
-    // Lexer lexer(source);
-    // const auto tokens = lexer.tokenize();
-    //
-    // // TODO: add debug flag
-    // // std::cout << "Tokens: \n" << std::endl;
-    // // for (const auto &token: tokens) {
-    // //     std::cout << token_type_to_string(token.type) << " : " << token.value << '\n';
-    // // }
-    // // std::cout << std::endl;
-    //
-    // Parser parser(tokens);
-    // const auto program = parser.parse();
-    //
-    // ASTPrinter printer;
-    // Interpreter interpreter(env);
-    //
-    // for (auto &statement: program) {
-    //     const auto stmt = statement.get();
-    //     // stmt->accept(printer);
-    //     interpreter.evaluate(stmt);
-    // }
-    
+    const std::string source = read_file(argv[1]);
+
     run(source);
 
     return 0;
