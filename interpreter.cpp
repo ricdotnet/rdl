@@ -48,7 +48,7 @@ public:
         const auto left = evaluate(expr.left.get());
         const auto right = evaluate(expr.right.get());
 
-        if (left.type != Value::Number || right.type != Value::Number) {
+        if (!left.is_number() || !right.is_number()) {
             throw std::runtime_error("Binary operation requires number operands");
         }
 
