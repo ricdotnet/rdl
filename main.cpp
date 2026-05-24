@@ -10,7 +10,7 @@ int main() {
     auto env = Environment();
 
     Lexer lexer(source);
-    auto tokens = lexer.tokenize();
+    const auto tokens = lexer.tokenize();
 
     // TODO: add debug flag
     // std::cout << "Tokens: \n" << std::endl;
@@ -20,13 +20,13 @@ int main() {
     // std::cout << std::endl;
 
     Parser parser(tokens);
-    auto program = parser.parse();
+    const auto program = parser.parse();
 
     ASTPrinter printer;
     Interpreter interpreter(env);
 
     for (auto &statement: program) {
-        auto stmt = statement.get();
+        const auto stmt = statement.get();
         // stmt->accept(printer);
         interpreter.evaluate(stmt);
     }
