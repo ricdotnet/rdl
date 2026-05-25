@@ -7,7 +7,15 @@ void Environment::define(const std::string &name, const Value &value) {
     ErrorService::runtime_error("Variable already defined", name);
   }
 
-  values[name] = {value, false};
+  std::string name_copy = name;
+  bool is_mutable = false;
+
+  if (name[0] == '$') {
+    is_mutable = true;
+    name_copy = name.substr(1);
+  }
+
+  values[name_copy] = {value, is_mutable};
 }
 
 Value Environment::get(const std::string &name) {

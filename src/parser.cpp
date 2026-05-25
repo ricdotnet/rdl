@@ -68,6 +68,15 @@ std::unique_ptr<Expr> Parser::statement() {
     return ifStatement();
   }
 
+  if (match(TokenType::While)) {
+    consume(TokenType::LeftParen);
+    auto condition = expression();
+    consume(TokenType::RightParen);
+    consume(TokenType::LeftBrace);
+    auto body = block();
+    return std::make_unique<WhileExpr>(std::move(condition), std::move(body));
+  }
+
   return expression();
 }
 

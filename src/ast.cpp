@@ -16,6 +16,11 @@ BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std
 
 void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
+WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
+  : condition(std::move(cond)), body(std::move(body)) {}
+
+void WhileExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 NumberExpr::NumberExpr(const int val) : value(val) {}
 
 void NumberExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

@@ -51,6 +51,14 @@ public:
     result = Value::nil_value();
   }
 
+  void visit(WhileExpr &expr) override {
+    while (evaluate(expr.condition.get()).is_truthy()) {
+      evaluate(expr.body.get());
+    }
+
+    result = Value::nil_value();
+  }
+
   void visit(NumberExpr &expr) override {
     result = Value::number_value(expr.value);
   }

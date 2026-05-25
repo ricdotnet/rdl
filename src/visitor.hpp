@@ -6,6 +6,8 @@ class IfStmt;
 
 class BlockStmt;
 
+class WhileExpr;
+
 class NumberExpr;
 
 class StringExpr;
@@ -32,6 +34,8 @@ public:
   virtual void visit(IfStmt &expr) = 0;
 
   virtual void visit(BlockStmt &expr) = 0;
+
+  virtual void visit(WhileExpr &expr) = 0;
 
   virtual void visit(NumberExpr &expr) = 0;
 

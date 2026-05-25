@@ -28,6 +28,7 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+// TODO: bodies should be BlockStmt
 class IfStmt : public Expr
 {
 public:
@@ -48,6 +49,18 @@ public:
   std::vector<std::unique_ptr<Expr> > statements;
 
   explicit BlockStmt(std::vector<std::unique_ptr<Expr> > stmts);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class WhileExpr : public Expr
+{
+public:
+  std::unique_ptr<Expr> condition;
+
+  std::unique_ptr<BlockStmt> body;
+
+  explicit WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body);
 
   void accept(ExprVisitor &visitor) override;
 };

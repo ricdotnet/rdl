@@ -41,13 +41,12 @@ std::vector<Token> Lexer::tokenize() {
       }
     }
 
-    // this allows an identifier to start with an alpha char only while allowing
-    // numbers anywhere else will not allow any invalid character though
-    if (is_alpha(c) || c == '_') {
+    // identifiers started by $ will be mutable
+    if (is_alpha(c) || c == '_' || c == '$') {
       std::string value;
 
       while (current < source.size() && (is_alpha(peek(source, current)) || is_digit(peek(source, current)) ||
-                                         peek(source, current) == '_')) {
+                                         peek(source, current) == '_' || peek(source, current) == '$')) {
         value += peek(source, current);
         current++;
         column++;
@@ -65,6 +64,11 @@ std::vector<Token> Lexer::tokenize() {
 
       if (value == "elseif") {
         tokens.push_back({TokenType::ElseIf, value, line, column});
+        continue;
+      }
+
+      if (value == "while") {
+        tokens.push_back({TokenType::While, value, line, column});
         continue;
       }
 
