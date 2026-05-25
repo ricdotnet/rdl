@@ -14,6 +14,20 @@ public:
   virtual void accept(ExprVisitor &visitor) = 0;
 };
 
+class FunctionExpr : public Expr
+{
+public:
+  std::string name;
+
+  std::vector<std::string> parameters;
+
+  std::unique_ptr<BlockStmt> body;
+
+  explicit FunctionExpr(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockStmt> body);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class IfStmt : public Expr
 {
 public:

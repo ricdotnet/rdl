@@ -62,6 +62,16 @@ std::vector<Token> Lexer::tokenize() {
         continue;
       }
 
+      if (value == "func") {
+        tokens.push_back({TokenType::Func, value, line, column});
+        continue;
+      }
+
+      if (value == "return") {
+        tokens.push_back({TokenType::Return, value, line, column});
+        continue;
+      }
+
       tokens.push_back({TokenType::Identifier, value, line, column});
 
       continue;

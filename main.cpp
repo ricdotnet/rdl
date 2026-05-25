@@ -1,14 +1,21 @@
 #include <utility>
-#include "./environment.hpp"
-#include "./interpreter.cpp"
-#include "./io.hpp"
-#include "./lexer.hpp"
-#include "./parser.hpp"
+#include "src/environment.hpp"
+#include "src/interpreter.cpp"
+#include "src/io.hpp"
+#include "src/lexer.hpp"
+#include "src/parser.hpp"
 
 void run(std::string source) {
   Lexer lexer(std::move(source));
   auto tokens = lexer.tokenize();
   Parser parser(tokens);
+
+  std::cout << "Tokens: " << std::endl;
+  std::cout << std::endl;
+  for (const auto &token: tokens) {
+    std::cout << token_type_to_string(token.type) + ": " << token.value << std::endl;
+  }
+  std::cout << std::endl;
 
   const auto program = parser.parse();
 

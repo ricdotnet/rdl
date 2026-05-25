@@ -25,6 +25,12 @@ public:
     return result;
   }
 
+  void visit(FunctionExpr &expr) override {
+    result = Value::function_value(&expr);
+
+    env.define(expr.name, result);
+  }
+
   void visit(IfStmt &stmt) override {
     const auto condition = evaluate(stmt.condition.get());
 
@@ -162,7 +168,26 @@ public:
       arguments.push_back(evaluate(arg.get()));
     }
 
-    const auto callable = env.builtins.at(expr.function_name);
-    result = callable.operator()(arguments);
+    if (env.builtins.contains(expr.function_name)) {
+      result = env.builtins.at(expr.function_name)(arguments);
+
+      return;
+    }
+
+    const auto function = env.get(expr.function_name);
+
+    if (!function.is_function()) {
+      ErrorService::runtime_error("Not a function", expr.function_name);
+    }
+
+    const auto declaration = function.function.declaration;
+
+    for (size_t i = 0; i < declaration->parameters.size(); i++) {
+      env.define(declaration->parameters[i], arguments[i]);
+    }
+
+    evaluate(declaration->body.get());
+
+    result = Value::nil_value();
   }
 };
