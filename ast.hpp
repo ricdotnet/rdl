@@ -8,87 +8,107 @@
 
 #include "visitor.hpp"
 
-class Expr {
+class Expr
+{
 public:
-    virtual ~Expr() = default;
+  virtual ~Expr() = default;
 
-    virtual void accept(ExprVisitor& visitor) = 0;
+  virtual void accept(ExprVisitor &visitor) = 0;
 };
 
-class NumberExpr : public Expr {
+class IfStatement : public Expr
+{
 public:
-    int value;
+  std::unique_ptr<Expr> condition;
+  std::vector<std::unique_ptr<Expr>> then_branch;
 
-    explicit NumberExpr(int val);
+  explicit IfStatement(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Expr>> then);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class StringExpr : public Expr {
+class NumberExpr : public Expr
+{
 public:
-    std::string value;
+  int value;
 
-    explicit StringExpr(std::string val);
+  explicit NumberExpr(int val);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class BinaryExpr : public Expr {
+class StringExpr : public Expr
+{
 public:
-    std::unique_ptr<Expr> left;
-    Token operation;
-    std::unique_ptr<Expr> right;
+  std::string value;
 
-    BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
+  explicit StringExpr(std::string val);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class ConcatExpr : public Expr {
+class BinaryExpr : public Expr
+{
 public:
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
+  std::unique_ptr<Expr> left;
+  Token operation;
+  std::unique_ptr<Expr> right;
 
-    ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
+  BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class AssignExpr : public Expr {
+class ConcatExpr : public Expr
+{
 public:
-    std::string name;
-    std::unique_ptr<Expr> value;
+  std::unique_ptr<Expr> left;
+  std::unique_ptr<Expr> right;
 
-    AssignExpr(std::string m, std::unique_ptr<Expr> v);
+  ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class VariableExpr : public Expr {
+class AssignExpr : public Expr
+{
 public:
-    std::string name;
+  std::string name;
+  std::unique_ptr<Expr> value;
 
-    explicit VariableExpr(std::string);
+  AssignExpr(std::string m, std::unique_ptr<Expr> v);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class LetExpr : public Expr {
+class VariableExpr : public Expr
+{
 public:
-    std::string name;
-    std::unique_ptr<Expr> initialiser;
+  std::string name;
 
-    LetExpr(std::string n, std::unique_ptr<Expr> init);
+  explicit VariableExpr(std::string);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class CallExpr : public Expr {
+class LetExpr : public Expr
+{
 public:
-    std::string function_name;
-    std::vector<std::unique_ptr<Expr> > arguments;
+  std::string name;
+  std::unique_ptr<Expr> initialiser;
 
-    CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+  LetExpr(std::string n, std::unique_ptr<Expr> init);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
+};
+
+class CallExpr : public Expr
+{
+public:
+  std::string function_name;
+  std::vector<std::unique_ptr<Expr>> arguments;
+
+  CallExpr(std::string func, std::vector<std::unique_ptr<Expr>> args);
+
+  void accept(ExprVisitor &visitor) override;
 };

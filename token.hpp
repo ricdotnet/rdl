@@ -2,39 +2,46 @@
 
 #include <string>
 
-enum class TokenType {
-    Let,
-    Identifier,
-    Number,
-    String,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Equal,
-    LeftParen,
-    RightParen,
-    Comma,
-    Semicolon,
-    DoubleQuote,
-    Concat,
-    Greater,
-    GreaterEqual,
-    Less,
-    LessEqual,
-    EqualEqual,
-    Bang,
-    BangEqual,
-    EndOfFile,
-    Unknown,
+enum class TokenType
+{
+  Let,
+  If,
+  Else,
+  ElseIf,
+  Identifier,
+  Number,
+  String,
+  Plus,
+  Minus,
+  Star,
+  Slash,
+  Equal,
+  LeftParen,
+  RightParen,
+  LeftBrace,
+  RightBrace,
+  Comma,
+  Semicolon,
+  DoubleQuote,
+  Concat,
+  Greater,
+  GreaterEqual,
+  Less,
+  LessEqual,
+  EqualEqual,
+  Bang,
+  BangEqual,
+  EndOfFile,
+  Unknown,
 };
 
-struct Token {
-    TokenType type;
-    std::string value;
+struct Token
+{
+  TokenType type;
+  std::string value;
 
-    int line;
-    int column;
+  int line;
+  int column;
 };
 
 TokenType get_token_type(char c);
