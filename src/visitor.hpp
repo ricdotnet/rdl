@@ -2,6 +2,8 @@
 
 class FunctionExpr;
 
+class ReturnStmt;
+
 class IfStmt;
 
 class BlockStmt;
@@ -30,6 +32,8 @@ public:
   virtual ~ExprVisitor() = default;
 
   virtual void visit(FunctionExpr &expr) = 0;
+
+  virtual void visit(ReturnStmt &expr) = 0;
 
   virtual void visit(IfStmt &expr) = 0;
 

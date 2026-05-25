@@ -3,16 +3,16 @@
 #include "./interpreter.hpp"
 
 void Environment::define(const std::string &name, const Value &value) {
-  if (values.contains(name)) {
-    ErrorService::runtime_error("Variable already defined", name);
-  }
-
   std::string name_copy = name;
   bool is_mutable = false;
 
-  if (name[0] == '$') {
+  if (!name.empty() && name[0] == '$') {
     is_mutable = true;
     name_copy = name.substr(1);
+  }
+
+  if (values.contains(name)) {
+    ErrorService::runtime_error("Variable already defined", name);
   }
 
   values[name_copy] = {value, is_mutable};
@@ -38,12 +38,4 @@ void Environment::assign(const std::string &name, const Value &value) {
   }
 
   current->second.value = value;
-}
-
-void Environment::define_builtin(const std::string &name, const builtin_function &function) {
-  if (builtins.contains(name)) {
-    ErrorService::runtime_error("Builtin function already defined", name);
-  }
-
-  builtins[name] = function;
 }

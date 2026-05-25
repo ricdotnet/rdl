@@ -56,5 +56,5 @@ private:
 
   bool isAtEnd();
 
-  void consume(TokenType type);
+  Token consume(TokenType type);
 };

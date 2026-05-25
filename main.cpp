@@ -6,6 +6,7 @@
 #include "src/io.hpp"
 #include "src/lexer.hpp"
 #include "src/parser.hpp"
+#include "src/runtime.hpp"
 
 void run(std::string source) {
   Lexer lexer(std::move(source));
@@ -22,8 +23,9 @@ void run(std::string source) {
   const auto program = parser.parse();
 
   Environment env;
+  Runtime runtime;
 
-  env.define_builtin("print", [](const std::vector<Value> &args) -> Value {
+  runtime.define_builtin("print", [](const std::vector<Value> &args) -> Value {
     for (const auto &arg: args) {
       std::cout << arg.to_string() << " ";
     }
@@ -31,7 +33,7 @@ void run(std::string source) {
     return Value::nil_value();
   });
 
-  env.define_builtin("sleep", [](const std::vector<Value> &args) -> Value {
+  runtime.define_builtin("sleep", [](const std::vector<Value> &args) -> Value {
     if (args.size() != 1) {
       ErrorService::runtime_error("Expected 1 argument for sleep in milliseconds.",
                                   "Found " + std::to_string(args.size()));
@@ -49,7 +51,7 @@ void run(std::string source) {
     return Value::nil_value();
   });
 
-  Interpreter interpreter(env);
+  Interpreter interpreter(&env, &runtime);
 
   for (auto &statement: program) {
     const auto stmt = statement.get();

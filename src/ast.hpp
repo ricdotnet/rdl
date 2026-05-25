@@ -28,6 +28,16 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class ReturnStmt : public Expr
+{
+public:
+  std::unique_ptr<Expr> value;
+
+  explicit ReturnStmt(std::unique_ptr<Expr> v);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 // TODO: bodies should be BlockStmt
 class IfStmt : public Expr
 {

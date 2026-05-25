@@ -131,3 +131,8 @@ struct Value
     }
   }
 };
+
+struct ReturnSignal
+{
+  Value value;
+};
