@@ -2,10 +2,13 @@
 #include "./ast.hpp"
 #include "./environment.hpp"
 #include "./error_service.hpp"
+#include "./runtime.hpp"
 
 class Interpreter : public ExprVisitor
 {
-  Environment &env;
+  Environment *env;
+
+  Runtime *runtime;
 
   static std::string concat_expr(const std::string &left, const std::string &right) {
     return left + right;
@@ -15,10 +18,16 @@ class Interpreter : public ExprVisitor
     return value1.is_number() && value2.is_number();
   }
 
+  static void bind_local_params(Environment &local_env, const FunctionExpr &fn, const std::vector<Value> &args) {
+    for (size_t i = 0; i < args.size(); i++) {
+      local_env.define(fn.parameters[i], args[i]);
+    }
+  }
+
 public:
   Value result;
 
-  explicit Interpreter(Environment &env) : env(env), result() {}
+  explicit Interpreter(Environment *env, Runtime *runtime) : env(env), runtime(runtime), result() {}
 
   Value evaluate(Expr *expr) {
     expr->accept(*this);
@@ -28,7 +37,17 @@ public:
   void visit(FunctionExpr &expr) override {
     result = Value::function_value(&expr);
 
-    env.define(expr.name, result);
+    env->define(expr.name, result);
+  }
+
+  void visit(ReturnStmt &stmt) override {
+    auto value = Value::nil_value();
+
+    if (stmt.value) {
+      value = evaluate(stmt.value.get());
+    }
+
+    throw ReturnSignal{value};
   }
 
   void visit(IfStmt &stmt) override {
@@ -68,7 +87,7 @@ public:
   }
 
   void visit(VariableExpr &expr) override {
-    const auto value = env.get(expr.name);
+    const auto value = env->get(expr.name);
     if (value.is_undefined) {
       ErrorService::runtime_error("Undefined variable", expr.name);
     }
@@ -77,7 +96,7 @@ public:
 
   void visit(AssignExpr &expr) override {
     const auto value = evaluate(expr.value.get());
-    env.assign(expr.name, value);
+    env->assign(expr.name, value);
 
     result = value;
   }
@@ -85,7 +104,7 @@ public:
   void visit(LetExpr &expr) override {
     const auto value = evaluate(expr.initialiser.get());
 
-    env.define(expr.name, value);
+    env->define(expr.name, value);
 
     result = Value::nil_value();
   }
@@ -175,26 +194,34 @@ public:
       arguments.push_back(evaluate(arg.get()));
     }
 
-    if (env.builtins.contains(expr.function_name)) {
-      result = env.builtins.at(expr.function_name)(arguments);
+    if (runtime->builtins.contains(expr.function_name)) {
+      result = runtime->builtins.at(expr.function_name)(arguments);
 
       return;
     }
 
-    const auto function = env.get(expr.function_name);
+    const auto function = env->get(expr.function_name);
 
     if (!function.is_function()) {
       ErrorService::runtime_error("Not a function", expr.function_name);
     }
 
-    const auto declaration = function.function.declaration;
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
 
-    for (size_t i = 0; i < declaration->parameters.size(); i++) {
-      env.define(declaration->parameters[i], arguments[i]);
+    const auto declaration = function.function.declaration;
+    bind_local_params(local, *declaration, arguments);
+
+    try {
+      evaluate(declaration->body.get());
+    } catch (ReturnSignal &r) {
+      env = previous;
+      result = r.value;
+      return;
     }
 
-    evaluate(declaration->body.get());
-
+    env = previous;
     result = Value::nil_value();
   }
 };

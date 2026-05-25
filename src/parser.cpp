@@ -1,4 +1,5 @@
 #include "./parser.hpp"
+
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -30,8 +31,7 @@ std::unique_ptr<Expr> Parser::declaration() {
 
     if (!check(TokenType::RightParen)) {
       do {
-        consume(TokenType::Identifier);
-        Token token = advance();
+        Token token = consume(TokenType::Identifier);
         params.push_back(token.value);
       } while (match(TokenType::Comma));
     }
@@ -75,6 +75,11 @@ std::unique_ptr<Expr> Parser::statement() {
     consume(TokenType::LeftBrace);
     auto body = block();
     return std::make_unique<WhileExpr>(std::move(condition), std::move(body));
+  }
+
+  if (match(TokenType::Return)) {
+    auto value = expression();
+    return std::make_unique<ReturnStmt>(std::move(value));
   }
 
   return expression();
@@ -288,10 +293,10 @@ bool Parser::check(TokenType type) {
   return peek().type == type;
 }
 
-void Parser::consume(TokenType type) {
+Token Parser::consume(TokenType type) {
   if (check(type)) {
-    advance();
-    return;
+    auto token = advance();
+    return token;
   }
 
   ErrorService::syntax_error("Unexpected token", peek());
