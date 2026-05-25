@@ -1,46 +1,36 @@
+#include <iostream>
 #include "ast.hpp"
 #include "environment.hpp"
-
-#include <iostream>
-
 #include "error_service.hpp"
 
 class Interpreter : public ExprVisitor
 {
   Environment &env;
 
-  static std::string concat_expr(const std::string &left, const std::string &right)
-  {
+  static std::string concat_expr(const std::string &left, const std::string &right) {
     return left + right;
   }
 
-  static bool number_type(const Value &value1, const Value &value2)
-  {
+  static bool number_type(const Value &value1, const Value &value2) {
     return value1.is_number() && value2.is_number();
   }
 
 public:
   Value result;
 
-  explicit Interpreter(Environment &env) : env(env), result()
-  {
-  }
+  explicit Interpreter(Environment &env) : env(env), result() {}
 
-  Value evaluate(Expr *expr)
-  {
+  Value evaluate(Expr *expr) {
     expr->accept(*this);
     return result;
   }
 
-  void visit(IfStatement &stmt) override
-  {
+  void visit(IfStatement &stmt) override {
     const auto condition = evaluate(stmt.condition.get());
 
     // need to check for truthiness of condition not just if it's a boolean
-    if (condition.is_truthy())
-    {
-      for (auto &expr : stmt.then_branch)
-      {
+    if (condition.is_truthy()) {
+      for (auto &expr: stmt.then_branch) {
         evaluate(expr.get());
       }
     }
@@ -48,36 +38,30 @@ public:
     result = Value::nil_value();
   }
 
-  void visit(NumberExpr &expr) override
-  {
+  void visit(NumberExpr &expr) override {
     result = Value::number_value(expr.value);
   }
 
-  void visit(StringExpr &expr) override
-  {
+  void visit(StringExpr &expr) override {
     result = Value::string_value(expr.value);
   }
 
-  void visit(VariableExpr &expr) override
-  {
+  void visit(VariableExpr &expr) override {
     const auto value = env.get(expr.name);
-    if (value.is_undefined)
-    {
+    if (value.is_undefined) {
       ErrorService::runtime_error("Undefined variable", expr.name);
     }
     result = value;
   }
 
-  void visit(AssignExpr &expr) override
-  {
+  void visit(AssignExpr &expr) override {
     const auto value = evaluate(expr.value.get());
     env.assign(expr.name, value);
 
     result = value;
   }
 
-  void visit(LetExpr &expr) override
-  {
+  void visit(LetExpr &expr) override {
     const auto value = evaluate(expr.initialiser.get());
 
     env.define(expr.name, value);
@@ -85,107 +69,95 @@ public:
     result = Value::nil_value();
   }
 
-  void visit(BinaryExpr &expr) override
-  {
+  void visit(BinaryExpr &expr) override {
     const auto left = evaluate(expr.left.get());
     const auto right = evaluate(expr.right.get());
 
-    switch (expr.operation.type)
-    {
-    case TokenType::Plus:
-    case TokenType::Minus:
-    case TokenType::Star:
-    case TokenType::Slash:
-    case TokenType::Greater:
-    case TokenType::GreaterEqual:
-    case TokenType::Less:
-    case TokenType::LessEqual:
-    {
-      if (!number_type(left, right))
-      {
-        ErrorService::runtime_error("Expected numbers ",
-                                    "Got " + left.to_string() + " and " + right.to_string() + "");
-      }
-
-      const int left_value = left.number;
-      const int right_value = right.number;
-
-      switch (expr.operation.type)
-      {
+    switch (expr.operation.type) {
       case TokenType::Plus:
-        result = Value::number_value(left_value + right_value);
-        break;
       case TokenType::Minus:
-        result = Value::number_value(left_value - right_value);
-        break;
       case TokenType::Star:
-        result = Value::number_value(left_value * right_value);
-        break;
       case TokenType::Slash:
-        result = Value::number_value(left_value / right_value);
-        break;
-
       case TokenType::Greater:
-        result = Value::boolean_value(left_value > right_value);
-        break;
       case TokenType::GreaterEqual:
-        result = Value::boolean_value(left_value >= right_value);
-        break;
       case TokenType::Less:
-        result = Value::boolean_value(left_value < right_value);
-        break;
-      case TokenType::LessEqual:
-        result = Value::boolean_value(left_value <= right_value);
-        break;
+      case TokenType::LessEqual: {
+        if (!number_type(left, right)) {
+          ErrorService::runtime_error("Expected numbers ",
+                                      "Got " + left.to_string() + " and " + right.to_string() + "");
+        }
 
-      default:
-        break;
+        const int left_value = left.number;
+        const int right_value = right.number;
+
+        switch (expr.operation.type) {
+          case TokenType::Plus:
+            result = Value::number_value(left_value + right_value);
+            break;
+          case TokenType::Minus:
+            result = Value::number_value(left_value - right_value);
+            break;
+          case TokenType::Star:
+            result = Value::number_value(left_value * right_value);
+            break;
+          case TokenType::Slash:
+            result = Value::number_value(left_value / right_value);
+            break;
+
+          case TokenType::Greater:
+            result = Value::boolean_value(left_value > right_value);
+            break;
+          case TokenType::GreaterEqual:
+            result = Value::boolean_value(left_value >= right_value);
+            break;
+          case TokenType::Less:
+            result = Value::boolean_value(left_value < right_value);
+            break;
+          case TokenType::LessEqual:
+            result = Value::boolean_value(left_value <= right_value);
+            break;
+
+          default:
+            break;
+        }
+
+        return;
       }
-
-      return;
-    }
-    case TokenType::EqualEqual:
-      result = Value::boolean_value(left.equals(right));
-      break;
-    case TokenType::BangEqual:
-      result = Value::boolean_value(!left.equals(right));
-      break;
-    default:
-      ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
+      case TokenType::EqualEqual:
+        result = Value::boolean_value(left.equals(right));
+        break;
+      case TokenType::BangEqual:
+        result = Value::boolean_value(!left.equals(right));
+        break;
+      default:
+        ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
     }
   }
 
-  void visit(ConcatExpr &expr) override
-  {
+  void visit(ConcatExpr &expr) override {
     const auto left = evaluate(expr.left.get());
     const auto right = evaluate(expr.right.get());
 
-    if ((!left.is_string() && !left.is_number() && !left.is_boolean()) || (!right.is_string() && !right.is_number() && !right.is_boolean()))
-    {
+    if ((!left.is_string() && !left.is_number() && !left.is_boolean()) || (
+          !right.is_string() && !right.is_number() && !right.is_boolean())) {
       ErrorService::runtime_error("Concatenation requires string, number or boolean operands",
                                   "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
-                                      token_type_to_string(
-                                          static_cast<TokenType>(right.type)));
+                                  token_type_to_string(static_cast<TokenType>(right.type)));
     }
 
     result = Value::string_value(left.to_string() + right.to_string());
   }
 
-  void visit(CallExpr &expr) override
-  {
-    if (expr.function_name == "print")
-    {
-      for (auto &arg : expr.arguments)
-      {
+  void visit(CallExpr &expr) override {
+    if (expr.function_name == "print") {
+      for (auto &arg: expr.arguments) {
         auto evaluated = evaluate(arg.get());
         std::cout << evaluated.to_string();
       }
       std::cout << std::endl;
 
       result = Value::nil_value();
-    }
-    else
-    {
+    } else {
       ErrorService::runtime_error("Unknown function", expr.function_name);
     }
   }

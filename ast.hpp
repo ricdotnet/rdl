@@ -1,11 +1,9 @@
 #pragma once
 
-#include "token.hpp"
-
 #include <memory>
 #include <string>
 #include <vector>
-
+#include "token.hpp"
 #include "visitor.hpp"
 
 class Expr
@@ -20,9 +18,10 @@ class IfStatement : public Expr
 {
 public:
   std::unique_ptr<Expr> condition;
-  std::vector<std::unique_ptr<Expr>> then_branch;
 
-  explicit IfStatement(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Expr>> then);
+  std::vector<std::unique_ptr<Expr> > then_branch;
+
+  explicit IfStatement(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Expr> > then);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -51,7 +50,9 @@ class BinaryExpr : public Expr
 {
 public:
   std::unique_ptr<Expr> left;
+
   Token operation;
+
   std::unique_ptr<Expr> right;
 
   BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
@@ -63,6 +64,7 @@ class ConcatExpr : public Expr
 {
 public:
   std::unique_ptr<Expr> left;
+
   std::unique_ptr<Expr> right;
 
   ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
@@ -74,6 +76,7 @@ class AssignExpr : public Expr
 {
 public:
   std::string name;
+
   std::unique_ptr<Expr> value;
 
   AssignExpr(std::string m, std::unique_ptr<Expr> v);
@@ -95,6 +98,7 @@ class LetExpr : public Expr
 {
 public:
   std::string name;
+
   std::unique_ptr<Expr> initialiser;
 
   LetExpr(std::string n, std::unique_ptr<Expr> init);
@@ -106,9 +110,10 @@ class CallExpr : public Expr
 {
 public:
   std::string function_name;
-  std::vector<std::unique_ptr<Expr>> arguments;
 
-  CallExpr(std::string func, std::vector<std::unique_ptr<Expr>> args);
+  std::vector<std::unique_ptr<Expr> > arguments;
+
+  CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
 
   void accept(ExprVisitor &visitor) override;
 };

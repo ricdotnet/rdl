@@ -1,25 +1,19 @@
-#include "ast.hpp"
-#include "error_service.hpp"
 #include "parser.hpp"
-#include "token.hpp"
-
 #include <memory>
 #include <utility>
+#include "ast.hpp"
+#include "error_service.hpp"
+#include "token.hpp"
 
-Parser::Parser(std::vector<Token> t) : tokens(std::move(t))
-{
-}
+Parser::Parser(std::vector<Token> t) : tokens(std::move(t)) {}
 
-std::vector<std::unique_ptr<Expr>> Parser::parse()
-{
-  std::vector<std::unique_ptr<Expr>> statements;
+std::vector<std::unique_ptr<Expr> > Parser::parse() {
+  std::vector<std::unique_ptr<Expr> > statements;
 
-  while (!isAtEnd())
-  {
+  while (!isAtEnd()) {
     statements.push_back(statement());
 
-    if (match(TokenType::Semicolon))
-    {
+    if (match(TokenType::Semicolon)) {
       continue;
     }
   }
@@ -27,10 +21,8 @@ std::vector<std::unique_ptr<Expr>> Parser::parse()
   return statements;
 }
 
-std::unique_ptr<Expr> Parser::statement()
-{
-  if (match(TokenType::Let))
-  {
+std::unique_ptr<Expr> Parser::statement() {
+  if (match(TokenType::Let)) {
     Token token = advance();
     consume(TokenType::Equal);
 
@@ -38,8 +30,7 @@ std::unique_ptr<Expr> Parser::statement()
     return std::make_unique<LetExpr>(token.value, std::move(initialiser));
   }
 
-  if (check(TokenType::Identifier) && peekNext().type == TokenType::Equal)
-  {
+  if (check(TokenType::Identifier) && peekNext().type == TokenType::Equal) {
     Token token = advance();
     advance();
 
@@ -47,8 +38,7 @@ std::unique_ptr<Expr> Parser::statement()
     return std::make_unique<AssignExpr>(token.value, std::move(value));
   }
 
-  if (match(TokenType::If))
-  {
+  if (match(TokenType::If)) {
     consume(TokenType::LeftParen);
 
     auto condition = expression();
@@ -56,58 +46,44 @@ std::unique_ptr<Expr> Parser::statement()
     consume(TokenType::RightParen);
     consume(TokenType::LeftBrace);
 
-    std::vector<std::unique_ptr<Expr>> body;
+    std::vector<std::unique_ptr<Expr> > body;
 
-    while (!check(TokenType::RightBrace))
-    {
+    while (!check(TokenType::RightBrace)) {
       body.push_back(statement());
-      if (match(TokenType::Semicolon))
-      {
-      }
+      if (match(TokenType::Semicolon)) {}
     }
 
     consume(TokenType::RightBrace);
 
-    return std::make_unique<IfStatement>(
-        std::move(condition),
-        std::move(body));
+    return std::make_unique<IfStatement>(std::move(condition), std::move(body));
   }
 
-  if (match(TokenType::Else))
-  {
+  if (match(TokenType::Else)) {
     consume(TokenType::LeftBrace);
 
-    std::vector<std::unique_ptr<Expr>> body;
+    std::vector<std::unique_ptr<Expr> > body;
 
-    while (!check(TokenType::RightBrace))
-    {
+    while (!check(TokenType::RightBrace)) {
       body.push_back(statement());
-      if (match(TokenType::Semicolon))
-      {
-      }
+      if (match(TokenType::Semicolon)) {}
     }
 
     consume(TokenType::RightBrace);
 
-    return std::make_unique<IfStatement>(
-        std::make_unique<NumberExpr>(1),
-        std::move(body));
+    return std::make_unique<IfStatement>(std::make_unique<NumberExpr>(1), std::move(body));
   }
 
   return expression();
 }
 
-std::unique_ptr<Expr> Parser::expression()
-{
+std::unique_ptr<Expr> Parser::expression() {
   return equality();
 }
 
-std::unique_ptr<Expr> Parser::equality()
-{
+std::unique_ptr<Expr> Parser::equality() {
   auto expr = concat();
 
-  while (match(TokenType::EqualEqual) || match(TokenType::BangEqual))
-  {
+  while (match(TokenType::EqualEqual) || match(TokenType::BangEqual)) {
     Token op = previous();
     auto right = concat();
 
@@ -117,12 +93,10 @@ std::unique_ptr<Expr> Parser::equality()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::concat()
-{
+std::unique_ptr<Expr> Parser::concat() {
   auto expr = comparison();
 
-  while (match(TokenType::Concat))
-  {
+  while (match(TokenType::Concat)) {
     Token op = previous();
     auto right = comparison();
 
@@ -132,12 +106,11 @@ std::unique_ptr<Expr> Parser::concat()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::comparison()
-{
+std::unique_ptr<Expr> Parser::comparison() {
   auto expr = term();
 
-  while (match(TokenType::Less) || match(TokenType::LessEqual) || match(TokenType::Greater) || match(TokenType::GreaterEqual))
-  {
+  while (match(TokenType::Less) || match(TokenType::LessEqual) || match(TokenType::Greater) || match(
+           TokenType::GreaterEqual)) {
     Token op = previous();
     auto right = term();
 
@@ -147,12 +120,10 @@ std::unique_ptr<Expr> Parser::comparison()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::term()
-{
+std::unique_ptr<Expr> Parser::term() {
   auto expr = factor();
 
-  while (match(TokenType::Plus) || match(TokenType::Minus))
-  {
+  while (match(TokenType::Plus) || match(TokenType::Minus)) {
     Token op = previous();
     auto right = factor();
 
@@ -162,12 +133,10 @@ std::unique_ptr<Expr> Parser::term()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::factor()
-{
+std::unique_ptr<Expr> Parser::factor() {
   auto expr = postfix();
 
-  while (match(TokenType::Star) || match(TokenType::Slash))
-  {
+  while (match(TokenType::Star) || match(TokenType::Slash)) {
     Token op = previous();
     auto right = postfix();
 
@@ -177,21 +146,16 @@ std::unique_ptr<Expr> Parser::factor()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::postfix()
-{
+std::unique_ptr<Expr> Parser::postfix() {
   auto expr = primary();
 
   // TODO: understand this
-  while (true)
-  {
-    if (match(TokenType::LeftParen))
-    {
-      std::vector<std::unique_ptr<Expr>> args;
+  while (true) {
+    if (match(TokenType::LeftParen)) {
+      std::vector<std::unique_ptr<Expr> > args;
 
-      if (!check(TokenType::RightParen))
-      {
-        do
-        {
+      if (!check(TokenType::RightParen)) {
+        do {
           args.push_back(expression());
         } while (match(TokenType::Comma));
       }
@@ -199,18 +163,13 @@ std::unique_ptr<Expr> Parser::postfix()
       consume(TokenType::RightParen);
 
       // only valid if base is a variable for now
-      auto *var =
-          dynamic_cast<VariableExpr *>(expr.get());
+      auto *var = dynamic_cast<VariableExpr *>(expr.get());
 
-      if (!var)
-      {
-        ErrorService::runtime_error(
-            "Only identifiers can be called", "");
+      if (!var) {
+        ErrorService::runtime_error("Only identifiers can be called", "");
       }
 
-      expr = std::make_unique<CallExpr>(
-          var->name,
-          std::move(args));
+      expr = std::make_unique<CallExpr>(var->name, std::move(args));
 
       continue;
     }
@@ -221,31 +180,26 @@ std::unique_ptr<Expr> Parser::postfix()
   return expr;
 }
 
-std::unique_ptr<Expr> Parser::primary()
-{
-  if (match(TokenType::Number))
-  {
+std::unique_ptr<Expr> Parser::primary() {
+  if (match(TokenType::Number)) {
     Token token = previous();
 
     return std::make_unique<NumberExpr>(std::stoi(token.value));
   }
 
-  if (match(TokenType::Identifier))
-  {
+  if (match(TokenType::Identifier)) {
     Token token = previous();
 
     return std::make_unique<VariableExpr>(token.value);
   }
 
-  if (match(TokenType::String))
-  {
+  if (match(TokenType::String)) {
     Token token = previous();
 
     return std::make_unique<StringExpr>(token.value);
   }
 
-  if (match(TokenType::LeftParen))
-  {
+  if (match(TokenType::LeftParen)) {
     auto expr = expression();
     consume(TokenType::RightParen);
     return expr;
@@ -255,10 +209,8 @@ std::unique_ptr<Expr> Parser::primary()
   return nullptr;
 }
 
-bool Parser::match(TokenType type)
-{
-  if (check(type))
-  {
+bool Parser::match(TokenType type) {
+  if (check(type)) {
     advance();
     return true;
   }
@@ -268,10 +220,8 @@ bool Parser::match(TokenType type)
 
 Token Parser::peek() { return tokens[current]; }
 
-Token Parser::peekNext()
-{
-  if (current + 1 >= tokens.size())
-  {
+Token Parser::peekNext() {
+  if (current + 1 >= tokens.size()) {
     return tokens.back();
   }
   return tokens[current + 1];
@@ -279,10 +229,8 @@ Token Parser::peekNext()
 
 bool Parser::isAtEnd() { return peek().type == TokenType::EndOfFile; }
 
-Token Parser::advance()
-{
-  if (!isAtEnd())
-  {
+Token Parser::advance() {
+  if (!isAtEnd()) {
     current++;
   }
 
@@ -291,20 +239,16 @@ Token Parser::advance()
 
 Token Parser::previous() { return tokens[current - 1]; }
 
-bool Parser::check(TokenType type)
-{
-  if (isAtEnd())
-  {
+bool Parser::check(TokenType type) {
+  if (isAtEnd()) {
     return false;
   }
 
   return peek().type == type;
 }
 
-void Parser::consume(TokenType type)
-{
-  if (check(type))
-  {
+void Parser::consume(TokenType type) {
+  if (check(type)) {
     advance();
     return;
   }

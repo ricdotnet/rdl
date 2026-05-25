@@ -1,13 +1,11 @@
 #include <utility>
-
 #include "environment.hpp"
 #include "interpreter.cpp"
 #include "io.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
-void run(std::string source)
-{
+void run(std::string source) {
   Lexer lexer(std::move(source));
   auto tokens = lexer.tokenize();
   Parser parser(tokens);
@@ -17,17 +15,14 @@ void run(std::string source)
   Environment env;
   Interpreter interpreter(env);
 
-  for (auto &statement : program)
-  {
+  for (auto &statement: program) {
     const auto stmt = statement.get();
     interpreter.evaluate(stmt);
   }
 }
 
-int main(const int argc, char **argv)
-{
-  if (argc < 2)
-  {
+int main(const int argc, char **argv) {
+  if (argc < 2) {
     std::cout << "Usage: ./language <file>\n";
     return 1;
   }

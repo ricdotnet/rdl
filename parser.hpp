@@ -1,53 +1,54 @@
 #pragma once
 
+#include <memory>
+#include <vector>
 #include "ast.hpp"
 #include "token.hpp"
 
-#include <memory>
-#include <vector>
-
-class Parser {
+class Parser
+{
 private:
-    std::vector<Token> tokens;
-    size_t current = 0;
+  std::vector<Token> tokens;
+
+  size_t current = 0;
 
 public:
-    explicit Parser(std::vector<Token> t);
+  explicit Parser(std::vector<Token> t);
 
-    std::vector<std::unique_ptr<Expr> > parse();
+  std::vector<std::unique_ptr<Expr> > parse();
 
 private:
-    std::unique_ptr<Expr> statement();
+  std::unique_ptr<Expr> statement();
 
-    std::unique_ptr<Expr> expression();
+  std::unique_ptr<Expr> expression();
 
-    std::unique_ptr<Expr> equality();
+  std::unique_ptr<Expr> equality();
 
-    std::unique_ptr<Expr> comparison();
+  std::unique_ptr<Expr> comparison();
 
-    std::unique_ptr<Expr> concat();
+  std::unique_ptr<Expr> concat();
 
-    std::unique_ptr<Expr> term();
+  std::unique_ptr<Expr> term();
 
-    std::unique_ptr<Expr> factor();
+  std::unique_ptr<Expr> factor();
 
-    std::unique_ptr<Expr> postfix();
+  std::unique_ptr<Expr> postfix();
 
-    std::unique_ptr<Expr> primary();
+  std::unique_ptr<Expr> primary();
 
-    Token peek();
+  Token peek();
 
-    Token peekNext();
+  Token peekNext();
 
-    Token advance();
+  Token advance();
 
-    Token previous();
+  Token previous();
 
-    bool match(TokenType type);
+  bool match(TokenType type);
 
-    bool check(TokenType type);
+  bool check(TokenType type);
 
-    bool isAtEnd();
+  bool isAtEnd();
 
-    void consume(TokenType type);
+  void consume(TokenType type);
 };
