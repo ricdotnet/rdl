@@ -1,5 +1,4 @@
 #include <utility>
-
 #include "environment.hpp"
 #include "interpreter.cpp"
 #include "io.hpp"
@@ -7,29 +6,35 @@
 #include "parser.hpp"
 
 void run(std::string source) {
-    Lexer lexer(std::move(source));
-    Parser parser(lexer.tokenize());
+  Lexer lexer(std::move(source));
+  auto tokens = lexer.tokenize();
+  Parser parser(tokens);
 
-    const auto program = parser.parse();
+  // std::cout << "Tokens:" << std::endl;
+  // for (const auto &token: tokens) {
+  //   std::cout << token_type_to_string(token.type) << ": " << token.value << std::endl;
+  // }
 
-    Environment env;
-    Interpreter interpreter(env);
+  const auto program = parser.parse();
 
-    for (auto &statement: program) {
-        const auto stmt = statement.get();
-        interpreter.evaluate(stmt);
-    }
+  Environment env;
+  Interpreter interpreter(env);
+
+  for (auto &statement: program) {
+    const auto stmt = statement.get();
+    interpreter.evaluate(stmt);
+  }
 }
 
 int main(const int argc, char **argv) {
-    if (argc < 2) {
-        std::cout << "Usage: ./language <file>\n";
-        return 1;
-    }
+  if (argc < 2) {
+    std::cout << "Usage: ./language <file>\n";
+    return 1;
+  }
 
-    const std::string source = read_file(argv[1]);
+  const std::string source = read_file(argv[1]);
 
-    run(source);
+  run(source);
 
-    return 0;
+  return 0;
 }

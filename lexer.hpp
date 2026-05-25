@@ -1,24 +1,26 @@
 #pragma once
 
+#include <vector>
 #include "token.hpp"
 
-#include <vector>
+class Lexer
+{
+  std::string source;
 
-class Lexer {
-    std::string source;
-    size_t current = 0;
+  size_t current = 0;
 
-    int line = 1;
-    int column = 1;
+  int line = 1;
 
-    static bool is_digit(char c);
+  int column = 1;
 
-    static bool is_alpha(char c);
+  static bool is_digit(char c);
 
-    static char peek(const std::string &source, size_t index);
+  static bool is_alpha(char c);
+
+  static char peek(const std::string &source, size_t index);
 
 public:
-    explicit Lexer(std::string src);
+  explicit Lexer(std::string src);
 
-    std::vector<Token> tokenize();
+  std::vector<Token> tokenize();
 };

@@ -1,94 +1,131 @@
 #pragma once
 
-#include "token.hpp"
-
 #include <memory>
 #include <string>
 #include <vector>
-
+#include "token.hpp"
 #include "visitor.hpp"
 
-class Expr {
+class Expr
+{
 public:
-    virtual ~Expr() = default;
+  virtual ~Expr() = default;
 
-    virtual void accept(ExprVisitor& visitor) = 0;
+  virtual void accept(ExprVisitor &visitor) = 0;
 };
 
-class NumberExpr : public Expr {
+class IfStmt : public Expr
+{
 public:
-    int value;
+  std::unique_ptr<Expr> condition;
 
-    explicit NumberExpr(int val);
+  std::unique_ptr<Expr> then_branch;
 
-    void accept(ExprVisitor& visitor) override;
+  std::unique_ptr<Expr> else_branch;
+
+  explicit IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Expr> then, std::unique_ptr<Expr> else_branch);
+
+  void accept(ExprVisitor &visitor) override;
 };
 
-class StringExpr : public Expr {
+class BlockStmt : public Expr
+{
 public:
-    std::string value;
+  std::vector<std::unique_ptr<Expr> > statements;
 
-    explicit StringExpr(std::string val);
+  explicit BlockStmt(std::vector<std::unique_ptr<Expr> > stmts);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class BinaryExpr : public Expr {
+class NumberExpr : public Expr
+{
 public:
-    std::unique_ptr<Expr> left;
-    Token operation;
-    std::unique_ptr<Expr> right;
+  int value;
 
-    BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
+  explicit NumberExpr(int val);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class ConcatExpr : public Expr {
+class StringExpr : public Expr
+{
 public:
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
+  std::string value;
 
-    ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
+  explicit StringExpr(std::string val);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
 };
 
-class AssignExpr : public Expr {
+class BinaryExpr : public Expr
+{
 public:
-    std::string name;
-    std::unique_ptr<Expr> value;
+  std::unique_ptr<Expr> left;
 
-    AssignExpr(std::string m, std::unique_ptr<Expr> v);
+  Token operation;
 
-    void accept(ExprVisitor& visitor) override;
+  std::unique_ptr<Expr> right;
+
+  BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
+
+  void accept(ExprVisitor &visitor) override;
 };
 
-class VariableExpr : public Expr {
+class ConcatExpr : public Expr
+{
 public:
-    std::string name;
+  std::unique_ptr<Expr> left;
 
-    explicit VariableExpr(std::string);
+  std::unique_ptr<Expr> right;
 
-    void accept(ExprVisitor& visitor) override;
+  ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
+
+  void accept(ExprVisitor &visitor) override;
 };
 
-class LetExpr : public Expr {
+class AssignExpr : public Expr
+{
 public:
-    std::string name;
-    std::unique_ptr<Expr> initialiser;
+  std::string name;
 
-    LetExpr(std::string n, std::unique_ptr<Expr> init);
+  std::unique_ptr<Expr> value;
 
-    void accept(ExprVisitor& visitor) override;
+  AssignExpr(std::string m, std::unique_ptr<Expr> v);
+
+  void accept(ExprVisitor &visitor) override;
 };
 
-class CallExpr : public Expr {
+class VariableExpr : public Expr
+{
 public:
-    std::string function_name;
-    std::vector<std::unique_ptr<Expr> > arguments;
+  std::string name;
 
-    CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+  explicit VariableExpr(std::string);
 
-    void accept(ExprVisitor& visitor) override;
+  void accept(ExprVisitor &visitor) override;
+};
+
+class LetExpr : public Expr
+{
+public:
+  std::string name;
+
+  std::unique_ptr<Expr> initialiser;
+
+  LetExpr(std::string n, std::unique_ptr<Expr> init);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class CallExpr : public Expr
+{
+public:
+  std::string function_name;
+
+  std::vector<std::unique_ptr<Expr> > arguments;
+
+  CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+
+  void accept(ExprVisitor &visitor) override;
 };
