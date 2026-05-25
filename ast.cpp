@@ -1,12 +1,16 @@
 #include "ast.hpp"
 #include <utility>
 
-IfStatement::IfStatement(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Expr> > then)
-  : condition(std::move(cond)), then_branch(std::move(then)) {}
+IfStmt::IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Expr> then, std::unique_ptr<Expr> else_branch)
+  : condition(std::move(cond)), then_branch(std::move(then)), else_branch(std::move(else_branch)) {}
 
-void IfStatement::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+void IfStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-NumberExpr::NumberExpr(int val) : value(val) {}
+BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std::move(stmts)) {}
+
+void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+NumberExpr::NumberExpr(const int val) : value(val) {}
 
 void NumberExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 

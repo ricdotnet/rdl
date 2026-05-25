@@ -39,41 +39,47 @@ std::unique_ptr<Expr> Parser::statement() {
   }
 
   if (match(TokenType::If)) {
-    consume(TokenType::LeftParen);
-
-    auto condition = expression();
-
-    consume(TokenType::RightParen);
-    consume(TokenType::LeftBrace);
-
-    std::vector<std::unique_ptr<Expr> > body;
-
-    while (!check(TokenType::RightBrace)) {
-      body.push_back(statement());
-      if (match(TokenType::Semicolon)) {}
-    }
-
-    consume(TokenType::RightBrace);
-
-    return std::make_unique<IfStatement>(std::move(condition), std::move(body));
-  }
-
-  if (match(TokenType::Else)) {
-    consume(TokenType::LeftBrace);
-
-    std::vector<std::unique_ptr<Expr> > body;
-
-    while (!check(TokenType::RightBrace)) {
-      body.push_back(statement());
-      if (match(TokenType::Semicolon)) {}
-    }
-
-    consume(TokenType::RightBrace);
-
-    return std::make_unique<IfStatement>(std::make_unique<NumberExpr>(1), std::move(body));
+    return ifStatement();
   }
 
   return expression();
+}
+
+std::unique_ptr<Expr> Parser::ifStatement() {
+  consume(TokenType::LeftParen);
+
+  auto condition = expression();
+
+  consume(TokenType::RightParen);
+  consume(TokenType::LeftBrace);
+
+  auto then_branch = block();
+  std::unique_ptr<Expr> else_branch = nullptr;
+
+  if (match(TokenType::ElseIf)) {
+    else_branch = ifStatement();
+  } else if (match(TokenType::Else)) {
+    consume(TokenType::LeftBrace);
+    else_branch = block();
+  }
+
+  return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
+}
+
+std::unique_ptr<Expr> Parser::block() {
+  std::vector<std::unique_ptr<Expr> > statements;
+
+  while (!check(TokenType::RightBrace) && !isAtEnd()) {
+    statements.push_back(statement());
+
+    if (match(TokenType::Semicolon)) {
+      continue;
+    }
+  }
+
+  consume(TokenType::RightBrace);
+
+  return std::make_unique<BlockStmt>(std::move(statements));
 }
 
 std::unique_ptr<Expr> Parser::expression() {

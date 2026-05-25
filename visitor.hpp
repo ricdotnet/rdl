@@ -1,6 +1,8 @@
 #pragma once
 
-class IfStatement;
+class IfStmt;
+
+class BlockStmt;
 
 class NumberExpr;
 
@@ -23,7 +25,9 @@ class ExprVisitor
 public:
   virtual ~ExprVisitor() = default;
 
-  virtual void visit(IfStatement &expr) = 0;
+  virtual void visit(IfStmt &expr) = 0;
+
+  virtual void visit(BlockStmt &expr) = 0;
 
   virtual void visit(NumberExpr &expr) = 0;
 

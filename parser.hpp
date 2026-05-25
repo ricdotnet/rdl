@@ -20,6 +20,10 @@ public:
 private:
   std::unique_ptr<Expr> statement();
 
+  std::unique_ptr<Expr> ifStatement();
+
+  std::unique_ptr<Expr> block();
+
   std::unique_ptr<Expr> expression();
 
   std::unique_ptr<Expr> equality();

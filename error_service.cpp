@@ -10,6 +10,7 @@ void ErrorService::runtime_error(const std::string &message, const std::string &
 
 void ErrorService::syntax_error(const std::string &message, const Token &token) {
   std::cerr << "Error: " << message << "\n";
+  std::cerr << "  token: " << token.value << "\n";
   std::cerr << "  at line " << token.line << ", column " << token.column << "\n\n";
 
   std::exit(1);

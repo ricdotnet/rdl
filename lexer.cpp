@@ -52,6 +52,11 @@ std::vector<Token> Lexer::tokenize() {
         continue;
       }
 
+      if (value == "elseif") {
+        tokens.push_back({TokenType::ElseIf, value, line, column});
+        continue;
+      }
+
       if (value == "let") {
         tokens.push_back({TokenType::Let, value, line, column});
         continue;

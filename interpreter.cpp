@@ -25,16 +25,23 @@ public:
     return result;
   }
 
-  void visit(IfStatement &stmt) override {
+  void visit(IfStmt &stmt) override {
     const auto condition = evaluate(stmt.condition.get());
 
     // need to check for truthiness of condition not just if it's a boolean
     if (condition.is_truthy()) {
-      for (auto &expr: stmt.then_branch) {
-        evaluate(expr.get());
-      }
+      evaluate(stmt.then_branch.get());
+    } else if (stmt.else_branch) {
+      evaluate(stmt.else_branch.get());
     }
 
+    result = Value::nil_value();
+  }
+
+  void visit(BlockStmt &stmt) override {
+    for (auto &expr: stmt.statements) {
+      evaluate(expr.get());
+    }
     result = Value::nil_value();
   }
 

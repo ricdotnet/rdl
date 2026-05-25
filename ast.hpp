@@ -14,14 +14,26 @@ public:
   virtual void accept(ExprVisitor &visitor) = 0;
 };
 
-class IfStatement : public Expr
+class IfStmt : public Expr
 {
 public:
   std::unique_ptr<Expr> condition;
 
-  std::vector<std::unique_ptr<Expr> > then_branch;
+  std::unique_ptr<Expr> then_branch;
 
-  explicit IfStatement(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Expr> > then);
+  std::unique_ptr<Expr> else_branch;
+
+  explicit IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Expr> then, std::unique_ptr<Expr> else_branch);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class BlockStmt : public Expr
+{
+public:
+  std::vector<std::unique_ptr<Expr> > statements;
+
+  explicit BlockStmt(std::vector<std::unique_ptr<Expr> > stmts);
 
   void accept(ExprVisitor &visitor) override;
 };
