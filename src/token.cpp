@@ -60,6 +60,8 @@ std::string token_type_to_string(TokenType type) {
       return "BangEqual";
     case TokenType::Return:
       return "Return";
+    case TokenType::Comment:
+      return "Comment";
     case TokenType::EndOfFile:
       return "EndOfFile";
     case TokenType::Unknown:

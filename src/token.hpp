@@ -33,6 +33,7 @@ enum class TokenType
   Bang,
   BangEqual,
   Return,
+  Comment,
   EndOfFile,
   Unknown,
 };

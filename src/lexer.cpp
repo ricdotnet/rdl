@@ -30,6 +30,17 @@ std::vector<Token> Lexer::tokenize() {
       continue;
     }
 
+    // comments... I got a token, but I don't think it will ever be necessary?
+    if (c == '/') {
+      if (peek(source, current + 1) == '/') {
+        while (current < source.size() && peek(source, current) != '\n') {
+          current++;
+          column++;
+        }
+        continue;
+      }
+    }
+
     // this allows an identifier to start with an alpha char only while allowing
     // numbers anywhere else will not allow any invalid character though
     if (is_alpha(c) || c == '_') {
