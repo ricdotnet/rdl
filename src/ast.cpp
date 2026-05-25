@@ -1,6 +1,12 @@
 #include "./ast.hpp"
 #include <utility>
 
+FunctionExpr::FunctionExpr(std::string name, std::vector<std::string> parameters,
+                           std::unique_ptr<BlockStmt> body) : name(std::move(name)), parameters(std::move(parameters)),
+                                                              body(std::move(body)) {}
+
+void FunctionExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 IfStmt::IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Expr> then, std::unique_ptr<Expr> else_branch)
   : condition(std::move(cond)), then_branch(std::move(then)), else_branch(std::move(else_branch)) {}
 
@@ -9,6 +15,11 @@ void IfStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std::move(stmts)) {}
 
 void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
+  : condition(std::move(cond)), body(std::move(body)) {}
+
+void WhileExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 NumberExpr::NumberExpr(const int val) : value(val) {}
 

@@ -6,6 +6,11 @@
 
 class Environment;
 
+struct FunctionValue
+{
+  FunctionExpr *declaration;
+};
+
 struct Value
 {
   enum Type
@@ -14,7 +19,8 @@ struct Value
     String,
     Boolean,
     Nil,
-    Undefined
+    Undefined,
+    Function,
   } type;
 
   int number{};
@@ -25,6 +31,8 @@ struct Value
 
   bool is_undefined{};
 
+  FunctionValue function{};
+
   [[nodiscard]] std::string to_string() const {
     if (type == Number) {
       return std::to_string(number);
@@ -34,6 +42,9 @@ struct Value
     }
     if (type == Boolean) {
       return boolean ? "true" : "false";
+    }
+    if (type == Function) {
+      return "<function>";
     }
 
     ErrorService::runtime_error("Cannot convert value of type to string", std::to_string(static_cast<int>(type)));
@@ -47,6 +58,8 @@ struct Value
   [[nodiscard]] bool is_boolean() const { return type == Boolean; }
 
   [[nodiscard]] bool is_nil() const { return type == Nil; }
+
+  [[nodiscard]] bool is_function() const { return type == Function; }
 
   [[nodiscard]] bool equals(const Value &other) const {
     if (type != other.type) {
@@ -64,6 +77,8 @@ struct Value
         return true;
       case Undefined:
         break;
+      case Function:
+        return false;
     }
 
     return false;
@@ -75,6 +90,12 @@ struct Value
     }
     if (is_boolean()) {
       return boolean;
+    }
+    if (is_number()) {
+      return number != 0;
+    }
+    if (is_string()) {
+      return !string.empty();
     }
     return true;
   }
@@ -88,4 +109,25 @@ struct Value
   static Value nil_value() { return Value{Nil, 0, ""}; }
 
   static Value undefined_value() { return Value{Undefined, 0, "", false, true}; }
+
+  static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
+
+  static std::string type_name(Type type) {
+    switch (type) {
+      case Number:
+        return "Number";
+      case String:
+        return "String";
+      case Boolean:
+        return "Boolean";
+      case Nil:
+        return "Nil";
+      case Undefined:
+        return "Undefined";
+      case Function:
+        return "Function";
+      default:
+        return "Unknown";
+    }
+  }
 };

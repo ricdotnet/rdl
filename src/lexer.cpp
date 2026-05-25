@@ -30,13 +30,23 @@ std::vector<Token> Lexer::tokenize() {
       continue;
     }
 
-    // this allows an identifier to start with an alpha char only while allowing
-    // numbers anywhere else will not allow any invalid character though
-    if (is_alpha(c) || c == '_') {
+    // comments... I got a token, but I don't think it will ever be necessary?
+    if (c == '/') {
+      if (peek(source, current + 1) == '/') {
+        while (current < source.size() && peek(source, current) != '\n') {
+          current++;
+          column++;
+        }
+        continue;
+      }
+    }
+
+    // identifiers started by $ will be mutable
+    if (is_alpha(c) || c == '_' || c == '$') {
       std::string value;
 
       while (current < source.size() && (is_alpha(peek(source, current)) || is_digit(peek(source, current)) ||
-                                         peek(source, current) == '_')) {
+                                         peek(source, current) == '_' || peek(source, current) == '$')) {
         value += peek(source, current);
         current++;
         column++;
@@ -57,8 +67,23 @@ std::vector<Token> Lexer::tokenize() {
         continue;
       }
 
+      if (value == "while") {
+        tokens.push_back({TokenType::While, value, line, column});
+        continue;
+      }
+
       if (value == "let") {
         tokens.push_back({TokenType::Let, value, line, column});
+        continue;
+      }
+
+      if (value == "func") {
+        tokens.push_back({TokenType::Func, value, line, column});
+        continue;
+      }
+
+      if (value == "return") {
+        tokens.push_back({TokenType::Return, value, line, column});
         continue;
       }
 

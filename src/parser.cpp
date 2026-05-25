@@ -11,7 +11,7 @@ std::vector<std::unique_ptr<Expr> > Parser::parse() {
   std::vector<std::unique_ptr<Expr> > statements;
 
   while (!isAtEnd()) {
-    statements.push_back(statement());
+    statements.push_back(declaration());
 
     if (match(TokenType::Semicolon)) {
       continue;
@@ -19,6 +19,32 @@ std::vector<std::unique_ptr<Expr> > Parser::parse() {
   }
 
   return statements;
+}
+
+std::unique_ptr<Expr> Parser::declaration() {
+  if (match(TokenType::Func)) {
+    Token name = advance();
+    consume(TokenType::LeftParen);
+
+    std::vector<std::string> params;
+
+    if (!check(TokenType::RightParen)) {
+      do {
+        consume(TokenType::Identifier);
+        Token token = advance();
+        params.push_back(token.value);
+      } while (match(TokenType::Comma));
+    }
+
+    consume(TokenType::RightParen);
+    consume(TokenType::LeftBrace);
+
+    auto body = block();
+
+    return std::make_unique<FunctionExpr>(name.value, std::move(params), std::move(body));
+  }
+
+  return statement();
 }
 
 std::unique_ptr<Expr> Parser::statement() {
@@ -40,6 +66,15 @@ std::unique_ptr<Expr> Parser::statement() {
 
   if (match(TokenType::If)) {
     return ifStatement();
+  }
+
+  if (match(TokenType::While)) {
+    consume(TokenType::LeftParen);
+    auto condition = expression();
+    consume(TokenType::RightParen);
+    consume(TokenType::LeftBrace);
+    auto body = block();
+    return std::make_unique<WhileExpr>(std::move(condition), std::move(body));
   }
 
   return expression();
@@ -66,7 +101,7 @@ std::unique_ptr<Expr> Parser::ifStatement() {
   return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
 }
 
-std::unique_ptr<Expr> Parser::block() {
+std::unique_ptr<BlockStmt> Parser::block() {
   std::vector<std::unique_ptr<Expr> > statements;
 
   while (!check(TokenType::RightBrace) && !isAtEnd()) {

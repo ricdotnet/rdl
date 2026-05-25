@@ -4,10 +4,12 @@
 
 enum class TokenType
 {
+  Func,
   Let,
   If,
   Else,
   ElseIf,
+  While,
   Identifier,
   Number,
   String,
@@ -31,6 +33,8 @@ enum class TokenType
   EqualEqual,
   Bang,
   BangEqual,
+  Return,
+  Comment,
   EndOfFile,
   Unknown,
 };

@@ -2,6 +2,8 @@
 
 std::string token_type_to_string(TokenType type) {
   switch (type) {
+    case TokenType::Func:
+      return "Func";
     case TokenType::Let:
       return "Let";
     case TokenType::If:
@@ -10,6 +12,8 @@ std::string token_type_to_string(TokenType type) {
       return "Else";
     case TokenType::ElseIf:
       return "ElseIf";
+    case TokenType::While:
+      return "While";
     case TokenType::Identifier:
       return "Identifier";
     case TokenType::Number:
@@ -56,6 +60,10 @@ std::string token_type_to_string(TokenType type) {
       return "Bang";
     case TokenType::BangEqual:
       return "BangEqual";
+    case TokenType::Return:
+      return "Return";
+    case TokenType::Comment:
+      return "Comment";
     case TokenType::EndOfFile:
       return "EndOfFile";
     case TokenType::Unknown:

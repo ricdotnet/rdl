@@ -1,8 +1,12 @@
 #pragma once
 
+class FunctionExpr;
+
 class IfStmt;
 
 class BlockStmt;
+
+class WhileExpr;
 
 class NumberExpr;
 
@@ -25,9 +29,13 @@ class ExprVisitor
 public:
   virtual ~ExprVisitor() = default;
 
+  virtual void visit(FunctionExpr &expr) = 0;
+
   virtual void visit(IfStmt &expr) = 0;
 
   virtual void visit(BlockStmt &expr) = 0;
+
+  virtual void visit(WhileExpr &expr) = 0;
 
   virtual void visit(NumberExpr &expr) = 0;
 

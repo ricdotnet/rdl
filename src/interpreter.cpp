@@ -25,6 +25,12 @@ public:
     return result;
   }
 
+  void visit(FunctionExpr &expr) override {
+    result = Value::function_value(&expr);
+
+    env.define(expr.name, result);
+  }
+
   void visit(IfStmt &stmt) override {
     const auto condition = evaluate(stmt.condition.get());
 
@@ -42,6 +48,14 @@ public:
     for (auto &expr: stmt.statements) {
       evaluate(expr.get());
     }
+    result = Value::nil_value();
+  }
+
+  void visit(WhileExpr &expr) override {
+    while (evaluate(expr.condition.get()).is_truthy()) {
+      evaluate(expr.body.get());
+    }
+
     result = Value::nil_value();
   }
 
@@ -91,7 +105,7 @@ public:
       case TokenType::LessEqual: {
         if (!number_type(left, right)) {
           ErrorService::runtime_error("Expected numbers ",
-                                      "Got " + left.to_string() + " and " + right.to_string() + "");
+                                      "Found " + left.to_string() + " and " + right.to_string() + "");
         }
 
         const int left_value = left.number;
@@ -148,8 +162,7 @@ public:
     if ((!left.is_string() && !left.is_number() && !left.is_boolean()) || (
           !right.is_string() && !right.is_number() && !right.is_boolean())) {
       ErrorService::runtime_error("Concatenation requires string, number or boolean operands",
-                                  "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
-                                  token_type_to_string(static_cast<TokenType>(right.type)));
+                                  "Found " + Value::type_name(left.type) + " and " + Value::type_name(right.type));
     }
 
     result = Value::string_value(left.to_string() + right.to_string());
@@ -162,7 +175,26 @@ public:
       arguments.push_back(evaluate(arg.get()));
     }
 
-    const auto callable = env.builtins.at(expr.function_name);
-    result = callable.operator()(arguments);
+    if (env.builtins.contains(expr.function_name)) {
+      result = env.builtins.at(expr.function_name)(arguments);
+
+      return;
+    }
+
+    const auto function = env.get(expr.function_name);
+
+    if (!function.is_function()) {
+      ErrorService::runtime_error("Not a function", expr.function_name);
+    }
+
+    const auto declaration = function.function.declaration;
+
+    for (size_t i = 0; i < declaration->parameters.size(); i++) {
+      env.define(declaration->parameters[i], arguments[i]);
+    }
+
+    evaluate(declaration->body.get());
+
+    result = Value::nil_value();
   }
 };
