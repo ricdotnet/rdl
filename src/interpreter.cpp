@@ -97,7 +97,7 @@ public:
       case TokenType::LessEqual: {
         if (!number_type(left, right)) {
           ErrorService::runtime_error("Expected numbers ",
-                                      "Got " + left.to_string() + " and " + right.to_string() + "");
+                                      "Found " + left.to_string() + " and " + right.to_string() + "");
         }
 
         const int left_value = left.number;
@@ -154,8 +154,7 @@ public:
     if ((!left.is_string() && !left.is_number() && !left.is_boolean()) || (
           !right.is_string() && !right.is_number() && !right.is_boolean())) {
       ErrorService::runtime_error("Concatenation requires string, number or boolean operands",
-                                  "Got " + token_type_to_string(static_cast<TokenType>(left.type)) + " and " +
-                                  token_type_to_string(static_cast<TokenType>(right.type)));
+                                  "Found " + Value::type_name(left.type) + " and " + Value::type_name(right.type));
     }
 
     result = Value::string_value(left.to_string() + right.to_string());

@@ -111,4 +111,23 @@ struct Value
   static Value undefined_value() { return Value{Undefined, 0, "", false, true}; }
 
   static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
+
+  static std::string type_name(Type type) {
+    switch (type) {
+      case Number:
+        return "Number";
+      case String:
+        return "String";
+      case Boolean:
+        return "Boolean";
+      case Nil:
+        return "Nil";
+      case Undefined:
+        return "Undefined";
+      case Function:
+        return "Function";
+      default:
+        return "Unknown";
+    }
+  }
 };
