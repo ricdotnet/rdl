@@ -10,14 +10,18 @@ void run(std::string source) {
   auto tokens = lexer.tokenize();
   Parser parser(tokens);
 
-  // std::cout << "Tokens:" << std::endl;
-  // for (const auto &token: tokens) {
-  //   std::cout << token_type_to_string(token.type) << ": " << token.value << std::endl;
-  // }
-
   const auto program = parser.parse();
 
   Environment env;
+
+  env.define_builtin("print", [](const std::vector<Value> &args) -> Value {
+    for (const auto &arg: args) {
+      std::cout << arg.to_string() << " ";
+    }
+    std::cout << std::endl;
+    return Value::nil_value();
+  });
+
   Interpreter interpreter(env);
 
   for (auto &statement: program) {

@@ -156,16 +156,13 @@ public:
   }
 
   void visit(CallExpr &expr) override {
-    if (expr.function_name == "print") {
-      for (auto &arg: expr.arguments) {
-        auto evaluated = evaluate(arg.get());
-        std::cout << evaluated.to_string();
-      }
-      std::cout << std::endl;
+    std::vector<Value> arguments;
 
-      result = Value::nil_value();
-    } else {
-      ErrorService::runtime_error("Unknown function", expr.function_name);
+    for (auto &arg: expr.arguments) {
+      arguments.push_back(evaluate(arg.get()));
     }
+
+    const auto callable = env.builtins.at(expr.function_name);
+    result = callable.operator()(arguments);
   }
 };

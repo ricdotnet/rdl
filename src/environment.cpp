@@ -31,3 +31,11 @@ void Environment::assign(const std::string &name, const Value &value) {
 
   current->second.value = value;
 }
+
+void Environment::define_builtin(const std::string &name, const builtin_function &function) {
+  if (builtins.contains(name)) {
+    ErrorService::runtime_error("Builtin function already defined", name);
+  }
+
+  builtins[name] = function;
+}
