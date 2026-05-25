@@ -1,7 +1,7 @@
 #include <iostream>
-#include "ast.hpp"
-#include "environment.hpp"
-#include "error_service.hpp"
+#include "./ast.hpp"
+#include "./environment.hpp"
+#include "./error_service.hpp"
 
 class Interpreter : public ExprVisitor
 {

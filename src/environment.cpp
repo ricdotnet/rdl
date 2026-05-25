@@ -1,6 +1,6 @@
-#include "environment.hpp"
-#include "error_service.hpp"
-#include "interpreter.hpp"
+#include "./environment.hpp"
+#include "./error_service.hpp"
+#include "./interpreter.hpp"
 
 void Environment::define(const std::string &name, const Value &value) {
   if (values.contains(name)) {

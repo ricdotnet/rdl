@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "token.hpp"
-#include "visitor.hpp"
+#include "./token.hpp"
+#include "./visitor.hpp"
 
 class Expr
 {

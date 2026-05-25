@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "token.hpp"
+#include "./token.hpp"
 
 class Lexer
 {

@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <vector>
-#include "ast.hpp"
-#include "token.hpp"
+#include "./ast.hpp"
+#include "./token.hpp"
 
 class Parser
 {

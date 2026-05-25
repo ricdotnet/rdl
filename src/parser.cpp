@@ -1,9 +1,9 @@
-#include "parser.hpp"
+#include "./parser.hpp"
 #include <memory>
 #include <utility>
-#include "ast.hpp"
-#include "error_service.hpp"
-#include "token.hpp"
+#include "./ast.hpp"
+#include "./error_service.hpp"
+#include "./token.hpp"
 
 Parser::Parser(std::vector<Token> t) : tokens(std::move(t)) {}
 

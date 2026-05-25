@@ -2,7 +2,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "interpreter.hpp"
+#include "./interpreter.hpp"
 
 struct Binding
 {

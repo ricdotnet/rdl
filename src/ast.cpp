@@ -1,4 +1,4 @@
-#include "ast.hpp"
+#include "./ast.hpp"
 #include <utility>
 
 IfStmt::IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Expr> then, std::unique_ptr<Expr> else_branch)

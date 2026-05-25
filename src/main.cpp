@@ -1,9 +1,9 @@
 #include <utility>
-#include "environment.hpp"
-#include "interpreter.cpp"
-#include "io.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
+#include "./environment.hpp"
+#include "./interpreter.cpp"
+#include "./io.hpp"
+#include "./lexer.hpp"
+#include "./parser.hpp"
 
 void run(std::string source) {
   Lexer lexer(std::move(source));

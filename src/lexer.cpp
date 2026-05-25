@@ -1,9 +1,9 @@
-#include "lexer.hpp"
+#include "./lexer.hpp"
 #include <cctype>
 #include <iostream>
 #include <string>
-#include "error_service.hpp"
-#include "token.hpp"
+#include "./error_service.hpp"
+#include "./token.hpp"
 
 bool Lexer::is_digit(char c) { return std::isdigit(c); }
 

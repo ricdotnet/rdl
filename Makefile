@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++20 -Wall -Wextra -g
 
 TARGET = language
-SRC = $(wildcard *.cpp)
+SRC = $(wildcard ./src/*.cpp)
 
 all:
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
