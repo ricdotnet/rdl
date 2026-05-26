@@ -28,15 +28,36 @@ greet();
 
 You can also use global variables inside functions.
 
-## String Concatenation
+## Type Methods
 
-You can concatenate strings using the `..` operator.
+You can define methods on existing types using the `::` syntax. The receiver is accessible via the `self` keyword.
 
 ```
-print("Hello" .. " " .. "World");
+func Number::greet() {
+  print("hello " .. self);
+}
+
+let name = 10;
+name.greet();
 ```
 
-## While Loops
+## Control Flow
+
+### If/Else Statements
+
+Ricdotlang supports `if`, `else if`, and `else` blocks.
+
+```
+if (x < 10) {
+  print("Small");
+} else if (x < 20) {
+  print("Medium");
+} else {
+  print("Large");
+}
+```
+
+### While Loops
 
 Ricdotlang supports `while` loops for iteration.
 
@@ -47,4 +68,22 @@ while (counter < 5) {
   print(counter);
   counter = counter + 1;
 }
+```
+
+## Return
+
+You can return a value from a function using the `return` keyword.
+
+```
+func add(a, b) {
+  return a + b;
+}
+```
+
+## String Concatenation
+
+You can concatenate strings using the `..` operator.
+
+```
+print("Hello" .. " " .. "World");
 ```
