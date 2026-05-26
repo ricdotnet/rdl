@@ -21,7 +21,11 @@ public:
 
   std::unordered_map<Value::Type, std::unordered_map<std::string, type_method> > type_methods;
 
+  std::unordered_map<std::string, std::unordered_map<std::string, FunctionExpr *> > user_methods;
+
   void define_builtin(const std::string &name, const builtin_function &function);
 
   void define_type_method(Value::Type type, const std::string &method_name, const type_method &method);
+
+  void define_user_method(const std::string &name, FunctionExpr &expr);
 };

@@ -81,3 +81,13 @@ void Runtime::define_type_method(Value::Type type, const std::string &method_nam
 
   type_methods[type][method_name] = method;
 }
+
+void Runtime::define_user_method(const std::string &name, FunctionExpr &expr)
+{
+  if (user_methods[expr.receiver_type.value()].contains(name))
+  {
+    ErrorService::runtime_error("User method already defined for this type", name);
+  }
+
+  user_methods[expr.receiver_type.value()][name] = &expr;
+}

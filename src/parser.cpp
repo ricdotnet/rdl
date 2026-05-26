@@ -29,7 +29,15 @@ std::unique_ptr<Expr> Parser::declaration()
 {
   if (match(TokenType::Func))
   {
-    Token name = advance();
+    Token name = consume(TokenType::Identifier);
+    auto receiver_type = std::optional<std::string>();
+
+    if (match(TokenType::ColonColon))
+    {
+      receiver_type = name.value;
+      name = consume(TokenType::Identifier);
+    }
+
     consume(TokenType::LeftParen);
 
     std::vector<std::string> params;
@@ -48,7 +56,7 @@ std::unique_ptr<Expr> Parser::declaration()
 
     auto body = block();
 
-    return std::make_unique<FunctionExpr>(name.value, std::move(params), std::move(body));
+    return std::make_unique<FunctionExpr>(name.value, std::move(params), std::move(body), std::move(receiver_type));
   }
 
   return statement();

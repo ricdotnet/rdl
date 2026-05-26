@@ -1,9 +1,10 @@
 #include "./ast.hpp"
 #include <utility>
 
-FunctionExpr::FunctionExpr(std::string name, std::vector<std::string> parameters,
-                           std::unique_ptr<BlockStmt> body) : name(std::move(name)), parameters(std::move(parameters)),
-                                                              body(std::move(body)) {}
+FunctionExpr::FunctionExpr(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockStmt> body,
+                           std::optional<std::string> receiver_type)
+  : name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)),
+    receiver_type(std::move(receiver_type)) {}
 
 void FunctionExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 

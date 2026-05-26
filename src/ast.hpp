@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "./token.hpp"
@@ -23,7 +24,10 @@ public:
 
   std::unique_ptr<BlockStmt> body;
 
-  explicit FunctionExpr(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockStmt> body);
+  std::optional<std::string> receiver_type;
+
+  explicit FunctionExpr(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockStmt> body,
+                        std::optional<std::string> receiver_type = std::nullopt);
 
   void accept(ExprVisitor &visitor) override;
 };

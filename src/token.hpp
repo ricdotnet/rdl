@@ -36,6 +36,7 @@ enum class TokenType
   Return,
   Comment,
   Dot,
+  ColonColon,
   EndOfFile,
   Unknown,
 };

@@ -43,6 +43,12 @@ public:
   {
     result = Value::function_value(&expr);
 
+    if (expr.receiver_type)
+    {
+      runtime->define_user_method(expr.name, expr);
+      return;
+    }
+
     env->define(expr.name, result);
   }
 
@@ -262,15 +268,37 @@ public:
   {
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
-    const auto &methods = runtime->type_methods[receiver.type];
+    const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
+    const auto &user_type_method = runtime->user_methods[Value::type_name(receiver.type)][expr.method_name];
 
-    if (!methods.contains(expr.method_name))
+    if (!type_method && !user_type_method)
     {
       ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
       return;
     }
 
-    const auto method = methods.at(expr.method_name);
-    result = method(receiver, std::vector<Value>());
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
+    try
+    {
+      if (user_type_method)
+      {
+        env->define("self", receiver);
+        result = evaluate(user_type_method->body.get());
+      } else
+      {
+        result = type_method(receiver, std::vector<Value>());
+      }
+    } catch (ReturnSignal &r)
+    {
+      env = previous;
+      result = r.value;
+      return;
+    }
+
+    env = previous;
+    result = Value::nil_value();
   }
 };
