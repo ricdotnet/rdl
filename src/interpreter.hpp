@@ -33,17 +33,22 @@ struct Value
 
   FunctionValue function{};
 
-  [[nodiscard]] std::string to_string() const {
-    if (type == Number) {
+  [[nodiscard]] std::string to_string() const
+  {
+    if (type == Number)
+    {
       return std::to_string(number);
     }
-    if (type == String) {
+    if (type == String)
+    {
       return string;
     }
-    if (type == Boolean) {
+    if (type == Boolean)
+    {
       return boolean ? "true" : "false";
     }
-    if (type == Function) {
+    if (type == Function)
+    {
       return "<function>";
     }
 
@@ -61,12 +66,15 @@ struct Value
 
   [[nodiscard]] bool is_function() const { return type == Function; }
 
-  [[nodiscard]] bool equals(const Value &other) const {
-    if (type != other.type) {
+  [[nodiscard]] bool equals(const Value &other) const
+  {
+    if (type != other.type)
+    {
       return false;
     }
 
-    switch (type) {
+    switch (type)
+    {
       case Number:
         return number == other.number;
       case String:
@@ -84,17 +92,22 @@ struct Value
     return false;
   }
 
-  [[nodiscard]] bool is_truthy() const {
-    if (is_nil()) {
+  [[nodiscard]] bool is_truthy() const
+  {
+    if (is_nil())
+    {
       return false;
     }
-    if (is_boolean()) {
+    if (is_boolean())
+    {
       return boolean;
     }
-    if (is_number()) {
+    if (is_number())
+    {
       return number != 0;
     }
-    if (is_string()) {
+    if (is_string())
+    {
       return !string.empty();
     }
     return true;
@@ -112,8 +125,10 @@ struct Value
 
   static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
 
-  static std::string type_name(Type type) {
-    switch (type) {
+  static std::string type_name(Type type)
+  {
+    switch (type)
+    {
       case Number:
         return "Number";
       case String:

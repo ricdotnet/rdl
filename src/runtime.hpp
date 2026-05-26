@@ -14,7 +14,7 @@ public:
 
   std::unordered_map<std::string, builtin_function> builtins;
 
-  std::unordered_map<Value::Type, std::unordered_map<std::string, type_method>> type_methods;
+  std::unordered_map<Value::Type, std::unordered_map<std::string, type_method> > type_methods;
 
   void define_builtin(const std::string &name, const builtin_function &function);
 

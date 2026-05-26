@@ -1,7 +1,9 @@
 #include "./token.hpp"
 
-std::string token_type_to_string(TokenType type) {
-  switch (type) {
+std::string token_type_to_string(TokenType type)
+{
+  switch (type)
+  {
     case TokenType::Func:
       return "Func";
     case TokenType::Let:

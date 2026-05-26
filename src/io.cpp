@@ -4,10 +4,12 @@
 #include "./error_service.hpp"
 
 
-std::string read_file(const std::string &path) {
+std::string read_file(const std::string &path)
+{
   std::ifstream file(path);
 
-  if (!file.is_open()) {
+  if (!file.is_open())
+  {
     ErrorService::runtime_error("Could not open file", path);
   }
 
