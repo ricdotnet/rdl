@@ -8,7 +8,8 @@
 #include "src/parser.hpp"
 #include "src/runtime.hpp"
 
-void run(std::string source) {
+void run(std::string source)
+{
   Lexer lexer(std::move(source));
   auto tokens = lexer.tokenize();
   Parser parser(tokens);
@@ -25,15 +26,16 @@ void run(std::string source) {
   Environment env;
   Runtime runtime;
 
-  runtime.define_builtin("print", [](const std::vector<Value> &args) -> Value {
+  runtime.define_builtin("print", [](const std::vector<Value> &args) -> Value
+                         {
     for (const auto &arg: args) {
       std::cout << arg.to_string() << " ";
     }
     std::cout << std::endl;
-    return Value::nil_value();
-  });
+    return Value::nil_value(); });
 
-  runtime.define_builtin("sleep", [](const std::vector<Value> &args) -> Value {
+  runtime.define_builtin("sleep", [](const std::vector<Value> &args) -> Value
+                         {
     if (args.size() != 1) {
       ErrorService::runtime_error("Expected 1 argument for sleep in milliseconds.",
                                   "Found " + std::to_string(args.size()));
@@ -48,19 +50,30 @@ void run(std::string source) {
     const auto duration = duration_value->number;
     std::this_thread::sleep_for(std::chrono::milliseconds(duration));
 
-    return Value::nil_value();
-  });
+    return Value::nil_value(); });
+
+  runtime.define_type_method(Value::String, "length", [](const Value &receiver, const std::vector<Value> &args) -> Value
+                             {
+    if (!args.empty()) {
+      ErrorService::runtime_error("Expected 0 arguments for string length method.",
+                                  "Found " + std::to_string(args.size()));
+    }
+
+    return Value::number_value(static_cast<int>(receiver.string.length())); });
 
   Interpreter interpreter(&env, &runtime);
 
-  for (auto &statement: program) {
+  for (auto &statement : program)
+  {
     const auto stmt = statement.get();
     interpreter.evaluate(stmt);
   }
 }
 
-int main(const int argc, char **argv) {
-  if (argc < 2) {
+int main(const int argc, char **argv)
+{
+  if (argc < 2)
+  {
     std::cout << "Usage: ./language <file>\n";
     return 1;
   }
