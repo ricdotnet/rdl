@@ -257,4 +257,20 @@ public:
     env = previous;
     result = Value::nil_value();
   }
+
+  void visit(MethodCallExpr &expr) override
+  {
+    // The initial implementations for type methods do not need arguments
+    const auto receiver = evaluate(expr.receiver.get());
+    const auto &methods = runtime->type_methods[receiver.type];
+
+    if (!methods.contains(expr.method_name))
+    {
+      ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
+      return;
+    }
+
+    const auto method = methods.at(expr.method_name);
+    result = method(receiver, std::vector<Value>());
+  }
 };

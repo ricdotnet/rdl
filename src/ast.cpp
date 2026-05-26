@@ -61,3 +61,8 @@ CallExpr::CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args)
   : function_name(std::move(func)), arguments(std::move(args)) {}
 
 void CallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+MethodCallExpr::MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args)
+  : receiver(std::move(recv)), method_name(std::move(method)), arguments(std::move(args)) {}
+
+void MethodCallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

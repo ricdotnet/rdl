@@ -66,6 +66,8 @@ std::string token_type_to_string(TokenType type)
       return "Return";
     case TokenType::Comment:
       return "Comment";
+    case TokenType::Dot:
+      return "Dot";
     case TokenType::EndOfFile:
       return "EndOfFile";
     case TokenType::Unknown:

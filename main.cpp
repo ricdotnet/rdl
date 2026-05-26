@@ -52,15 +52,6 @@ void run(std::string source)
 
     return Value::nil_value(); });
 
-  runtime.define_type_method(Value::String, "length", [](const Value &receiver, const std::vector<Value> &args) -> Value
-                             {
-    if (!args.empty()) {
-      ErrorService::runtime_error("Expected 0 arguments for string length method.",
-                                  "Found " + std::to_string(args.size()));
-    }
-
-    return Value::number_value(static_cast<int>(receiver.string.length())); });
-
   Interpreter interpreter(&env, &runtime);
 
   for (auto &statement : program)

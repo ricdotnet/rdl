@@ -256,6 +256,19 @@ std::unique_ptr<Expr> Parser::postfix()
       continue;
     }
 
+    if (match(TokenType::Dot))
+    {
+      Token method = consume(TokenType::Identifier);
+
+      // We don't need any argument support for now, so just consume left and right parents
+      consume(TokenType::LeftParen);
+      consume(TokenType::RightParen);
+
+      expr = std::make_unique<MethodCallExpr>(std::move(expr), method.value, std::vector<std::unique_ptr<Expr> >());
+
+      continue;
+    }
+
     break;
   }
 

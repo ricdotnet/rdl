@@ -166,3 +166,17 @@ public:
 
   void accept(ExprVisitor &visitor) override;
 };
+
+class MethodCallExpr : public Expr
+{
+public:
+  std::unique_ptr<Expr> receiver;
+
+  std::string method_name;
+
+  std::vector<std::unique_ptr<Expr> > arguments;
+
+  MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args);
+
+  void accept(ExprVisitor &visitor) override;
+};

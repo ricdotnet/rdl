@@ -229,6 +229,9 @@ std::vector<Token> Lexer::tokenize()
         }
         tokens.push_back({TokenType::Bang, "!", line, column});
         break;
+      case '.':
+        tokens.push_back({TokenType::Dot, ".", line, column});
+        break;
       default:
         ErrorService::syntax_error("Unexpected character: " + std::string(1, c),
                                    {TokenType::Unknown, std::string(1, c), line, column});

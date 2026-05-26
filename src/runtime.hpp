@@ -7,7 +7,12 @@
 
 class Runtime
 {
+private:
+  void init_type_methods();
+
 public:
+  Runtime();
+
   using builtin_function = std::function<Value(const std::vector<Value> &)>;
 
   using type_method = std::function<Value(const Value &, const std::vector<Value> &)>;
