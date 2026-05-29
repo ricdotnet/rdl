@@ -1,7 +1,9 @@
 #include "./token.hpp"
 
-std::string token_type_to_string(TokenType type) {
-  switch (type) {
+std::string token_type_to_string(TokenType type)
+{
+  switch (type)
+  {
     case TokenType::Func:
       return "Func";
     case TokenType::Let:
@@ -64,6 +66,10 @@ std::string token_type_to_string(TokenType type) {
       return "Return";
     case TokenType::Comment:
       return "Comment";
+    case TokenType::Dot:
+      return "Dot";
+    case TokenType::ColonColon:
+      return "ColonColon";
     case TokenType::EndOfFile:
       return "EndOfFile";
     case TokenType::Unknown:

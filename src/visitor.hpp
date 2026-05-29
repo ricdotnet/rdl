@@ -26,6 +26,8 @@ class LetExpr;
 
 class CallExpr;
 
+class MethodCallExpr;
+
 class ExprVisitor
 {
 public:
@@ -56,4 +58,6 @@ public:
   virtual void visit(LetExpr &expr) = 0;
 
   virtual void visit(CallExpr &expr) = 0;
+
+  virtual void visit(MethodCallExpr &expr) = 0;
 };

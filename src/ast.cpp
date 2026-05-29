@@ -1,9 +1,10 @@
 #include "./ast.hpp"
 #include <utility>
 
-FunctionExpr::FunctionExpr(std::string name, std::vector<std::string> parameters,
-                           std::unique_ptr<BlockStmt> body) : name(std::move(name)), parameters(std::move(parameters)),
-                                                              body(std::move(body)) {}
+FunctionExpr::FunctionExpr(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockStmt> body,
+                           std::optional<std::string> receiver_type)
+  : name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)),
+    receiver_type(std::move(receiver_type)) {}
 
 void FunctionExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
@@ -61,3 +62,8 @@ CallExpr::CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args)
   : function_name(std::move(func)), arguments(std::move(args)) {}
 
 void CallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+MethodCallExpr::MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args)
+  : receiver(std::move(recv)), method_name(std::move(method)), arguments(std::move(args)) {}
+
+void MethodCallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

@@ -5,29 +5,35 @@ class ASTPrinter : public ExprVisitor
 {
   int indent = 0;
 
-  void print_indent() const {
-    for (int i = 0; i < indent; i++) {
+  void print_indent() const
+  {
+    for (int i = 0; i < indent; i++)
+    {
       std::cout << "  ";
     }
   }
 
 public:
-  void visit(NumberExpr &expr) override {
+  void visit(NumberExpr &expr) override
+  {
     print_indent();
     std::cout << "Number(" << expr.value << ")\n";
   }
 
-  void visit(StringExpr &expr) override {
+  void visit(StringExpr &expr) override
+  {
     print_indent();
     std::cout << "String(" << expr.value << ")\n";
   }
 
-  void visit(VariableExpr &expr) override {
+  void visit(VariableExpr &expr) override
+  {
     print_indent();
     std::cout << "Variable(" << expr.name << ")\n";
   }
 
-  void visit(AssignExpr &expr) override {
+  void visit(AssignExpr &expr) override
+  {
     print_indent();
     std::cout << "Assign(" << expr.name << ")\n";
 
@@ -36,7 +42,8 @@ public:
     indent--;
   }
 
-  void visit(LetExpr &expr) override {
+  void visit(LetExpr &expr) override
+  {
     print_indent();
     std::cout << "Let(" << expr.name << ")\n";
 
@@ -45,7 +52,8 @@ public:
     indent--;
   }
 
-  void visit(BinaryExpr &expr) override {
+  void visit(BinaryExpr &expr) override
+  {
     print_indent();
     std::cout << "Binary(" << expr.operation.value << ")\n";
 
@@ -55,7 +63,8 @@ public:
     indent--;
   }
 
-  void visit(ConcatExpr &expr) override {
+  void visit(ConcatExpr &expr) override
+  {
     print_indent();
     std::cout << "Concat(";
 
@@ -65,13 +74,15 @@ public:
     indent--;
   }
 
-  void visit(CallExpr &expr) override {
+  void visit(CallExpr &expr) override
+  {
     print_indent();
     std::cout << "Call(" << expr.function_name << ")\n";
     std::cout << std::endl;
 
     indent++;
-    for (const auto &arg: expr.arguments) {
+    for (const auto &arg: expr.arguments)
+    {
       arg->accept(*this);
     }
     indent--;
