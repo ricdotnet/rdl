@@ -13,12 +13,29 @@ void Environment::define(const std::string &name, const Value &value)
     name_copy = name.substr(1);
   }
 
-  if (values.contains(name))
+  if (values.contains(name_copy))
   {
-    ErrorService::runtime_error("Variable already defined", name);
+    ErrorService::runtime_error("Variable already defined", name_copy);
   }
 
   values[name_copy] = {value, is_mutable};
+}
+
+void Environment::remove(const std::string &name)
+{
+  std::string name_copy = name;
+
+  if (!name.empty() && name[0] == '$')
+  {
+    name_copy = name.substr(1);
+  }
+
+  if (!values.contains(name_copy))
+  {
+    ErrorService::runtime_error("Variable not defined", name_copy);
+  }
+
+  values.erase(name_copy);
 }
 
 Value Environment::get(const std::string &name)

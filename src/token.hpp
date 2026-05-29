@@ -9,6 +9,8 @@ enum class TokenType
   If,
   Else,
   ElseIf,
+  For,
+  In,
   While,
   Identifier,
   Number,

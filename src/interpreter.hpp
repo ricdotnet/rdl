@@ -125,7 +125,7 @@ struct Value
 
   static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
 
-  static std::string type_name(Type type)
+  static std::string type_name(const Type type)
   {
     switch (type)
     {

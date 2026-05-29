@@ -79,6 +79,24 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class ForStmt : public Expr
+{
+public:
+  std::string iterator;
+
+  int init;
+
+  int end;
+
+  int step;
+
+  std::unique_ptr<BlockStmt> body;
+
+  explicit ForStmt(std::string i, int init, int end, int step, std::unique_ptr<BlockStmt> body);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class NumberExpr : public Expr
 {
 public:

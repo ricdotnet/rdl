@@ -70,6 +70,26 @@ while (counter < 5) {
 }
 ```
 
+### For Loops
+
+Ricdotlang supports `for` loops for iteration.
+
+```
+for $i in 0..5 {
+  print(i);
+}
+```
+
+### For Loops with Step
+
+Ricdotlang supports `for` loops with a step value for iteration.
+
+```
+for $i in 0..10, 2 {
+  print(i);
+}
+```
+
 ## Return
 
 You can return a value from a function using the `return` keyword.

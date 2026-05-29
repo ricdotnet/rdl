@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -103,6 +104,12 @@ std::unique_ptr<Expr> Parser::statement()
     return std::make_unique<ReturnStmt>(std::move(value));
   }
 
+  if (match(TokenType::For))
+  {
+    std::cout << "For loop" << std::endl;
+    return forLoop();
+  }
+
   return expression();
 }
 
@@ -130,6 +137,29 @@ std::unique_ptr<Expr> Parser::ifStatement()
   return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
 }
 
+std::unique_ptr<Expr> Parser::forLoop()
+{
+  auto identifier_token = consume(TokenType::Identifier);
+  consume(TokenType::In);
+  const auto init = consume(TokenType::Number).value;
+  consume(TokenType::Concat);
+  const auto end = consume(TokenType::Number).value;
+
+  std::string step = "1";
+
+  if (peek().type == TokenType::Comma)
+  {
+    consume(TokenType::Comma);
+    step = consume(TokenType::Number).value;
+  }
+
+  consume(TokenType::LeftBrace);
+  auto body = block();
+
+  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::stoi(init), std::stoi(end), std::stoi(step),
+                                   std::move(body));
+}
+
 std::unique_ptr<BlockStmt> Parser::block()
 {
   std::vector<std::unique_ptr<Expr> > statements;
@@ -151,6 +181,11 @@ std::unique_ptr<BlockStmt> Parser::block()
 
 std::unique_ptr<Expr> Parser::expression()
 {
+  if (match(TokenType::Semicolon))
+  {
+    return nullptr;
+  }
+
   return equality();
 }
 

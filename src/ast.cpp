@@ -24,6 +24,13 @@ void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
   : condition(std::move(cond)), body(std::move(body)) {}
 
+ForStmt::ForStmt(std::string i, const int init, const int end, const int step,
+                 std::unique_ptr<BlockStmt> body) : iterator(std::move(i)), init(init), end(end), step(step),
+                                                    body(std::move(body))
+{}
+
+void ForStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 void WhileExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 NumberExpr::NumberExpr(const int val) : value(val) {}

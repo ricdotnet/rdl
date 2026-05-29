@@ -86,6 +86,7 @@ public:
     {
       evaluate(expr.get());
     }
+
     result = Value::nil_value();
   }
 
@@ -96,6 +97,31 @@ public:
       evaluate(expr.body.get());
     }
 
+    result = Value::nil_value();
+  }
+
+  void visit(ForStmt &expr) override
+  {
+    env->define(expr.iterator, Value::nil_value());
+
+    // we have to normalize a non-const identifier
+    const auto iterator = expr.iterator.substr(1);
+    const auto init = expr.init;
+    const auto end = expr.end;
+    const auto step = expr.step;
+
+    try {
+    for (int i = init; i < end; i += step)
+    {
+      env->assign(iterator, Value::number_value(i));
+      evaluate(expr.body.get());
+    }
+    } catch (ReturnSignal &r) {
+      env->remove(expr.iterator);
+      return;
+    }
+
+    env->remove(expr.iterator);
     result = Value::nil_value();
   }
 

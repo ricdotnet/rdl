@@ -5,9 +5,9 @@
 #include "./error_service.hpp"
 #include "./token.hpp"
 
-bool Lexer::is_digit(char c) { return std::isdigit(c); }
+bool Lexer::is_digit(const char c) { return std::isdigit(c); }
 
-bool Lexer::is_alpha(char c) { return std::isalpha(c); }
+bool Lexer::is_alpha(const char c) { return std::isalpha(c); }
 
 char Lexer::peek(const std::string &source, const size_t index) { return source[index]; }
 
@@ -76,6 +76,18 @@ std::vector<Token> Lexer::tokenize()
       if (value == "elseif")
       {
         tokens.push_back({TokenType::ElseIf, value, line, column});
+        continue;
+      }
+
+      if (value == "for")
+      {
+        tokens.push_back({TokenType::For, value, line, column});
+        continue;
+      }
+
+      if (value == "in")
+      {
+        tokens.push_back({TokenType::In, value, line, column});
         continue;
       }
 
