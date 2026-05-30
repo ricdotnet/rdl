@@ -195,7 +195,23 @@ std::unique_ptr<Expr> Parser::expression()
     return nullptr;
   }
 
-  return equality();
+  auto expr = equality();
+
+  if (peek().type == TokenType::And)
+  {
+    const auto oper = consume(TokenType::And);
+    auto right = equality();
+
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+  } else if (peek().type == TokenType::Or)
+  {
+    const auto oper = consume(TokenType::Or);
+    auto right = equality();
+
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+  }
+
+  return expr;
 }
 
 std::unique_ptr<Expr> Parser::equality()

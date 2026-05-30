@@ -254,6 +254,12 @@ public:
       case TokenType::BangEqual:
         result = Value::boolean_value(!left.equals(right));
         break;
+      case TokenType::And:
+        result = Value::boolean_value(left.is_truthy() && right.is_truthy());
+        break;
+      case TokenType::Or:
+        result = Value::boolean_value(left.is_truthy() || right.is_truthy());
+        break;
       default:
         ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
     }

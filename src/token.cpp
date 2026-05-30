@@ -32,6 +32,10 @@ std::string token_type_to_string(TokenType type)
       return "True";
     case TokenType::False:
       return "False";
+    case TokenType::And:
+      return "And";
+    case TokenType::Or:
+      return "Or";
     case TokenType::Plus:
       return "Plus";
     case TokenType::Minus:

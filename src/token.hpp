@@ -18,6 +18,8 @@ enum class TokenType
   String,
   True,
   False,
+  And,
+  Or,
   Plus,
   Minus,
   Star,
