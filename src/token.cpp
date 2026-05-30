@@ -18,6 +18,8 @@ std::string token_type_to_string(TokenType type)
       return "For";
     case TokenType::In:
       return "In";
+    case TokenType::Range:
+      return "Range";
     case TokenType::While:
       return "While";
     case TokenType::Identifier:

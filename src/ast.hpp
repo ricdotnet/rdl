@@ -84,15 +84,26 @@ class ForStmt : public Expr
 public:
   std::string iterator;
 
-  int init;
+  // Can be RangeExpr or ArrayExpr in the future
+  std::unique_ptr<Expr> iterable;
+
+  std::unique_ptr<BlockStmt> body;
+
+  explicit ForStmt(std::string i, std::unique_ptr<Expr> iter, std::unique_ptr<BlockStmt> body);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class RangeExpr : public Expr
+{
+public:
+  int start;
 
   int end;
 
   int step;
 
-  std::unique_ptr<BlockStmt> body;
-
-  explicit ForStmt(std::string i, int init, int end, int step, std::unique_ptr<BlockStmt> body);
+  explicit RangeExpr(int start, int end, int step);
 
   void accept(ExprVisitor &visitor) override;
 };

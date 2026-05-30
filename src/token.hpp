@@ -11,6 +11,7 @@ enum class TokenType
   ElseIf,
   For,
   In,
+  Range,
   While,
   Identifier,
   Number,

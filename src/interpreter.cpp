@@ -105,33 +105,38 @@ public:
     result = Value::nil_value();
   }
 
+  void visit(RangeExpr &expr) override
+  {
+    result = Value::range_value(expr.start, expr.end, expr.step);
+  }
+
   void visit(ForStmt &expr) override
   {
     Environment local(env);
     Environment *previous = env;
     env = &local;
 
-
     env->define(expr.iterator, Value::nil_value());
 
-    // we have to normalize a non-const identifier
+    // we have to normalize a mutable identifier
     const auto iterator = expr.iterator.substr(1);
-    const auto init = expr.init;
-    const auto end = expr.end;
-    const auto step = expr.step;
 
-
-    try
+    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range())
     {
-      for (int i = init; i < end; i += step)
+      const auto &[start, end, step] = iterable.range;
+
+      try
       {
-        env->assign(iterator, Value::number_value(i));
-        evaluate(expr.body.get());
+        for (int i = start; i < end; i += step)
+        {
+          env->assign(iterator, Value::number_value(i));
+          evaluate(expr.body.get());
+        }
+      } catch (ReturnSignal &r)
+      {
+        env = previous;
+        return;
       }
-    } catch (ReturnSignal &r)
-    {
-      env = previous;
-      return;
     }
 
     env = previous;
