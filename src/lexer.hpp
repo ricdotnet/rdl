@@ -19,6 +19,8 @@ class Lexer
 
   static char peek(const std::string &source, size_t index);
 
+  static Token previous_token(const std::vector<Token> &tokens, size_t index_back);
+
 public:
   explicit Lexer(std::string src);
 

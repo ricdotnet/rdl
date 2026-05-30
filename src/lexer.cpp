@@ -5,11 +5,17 @@
 #include "./error_service.hpp"
 #include "./token.hpp"
 
-bool Lexer::is_digit(char c) { return std::isdigit(c); }
+bool Lexer::is_digit(const char c) { return std::isdigit(c); }
 
-bool Lexer::is_alpha(char c) { return std::isalpha(c); }
+bool Lexer::is_alpha(const char c) { return std::isalpha(c); }
 
 char Lexer::peek(const std::string &source, const size_t index) { return source[index]; }
+
+Token Lexer::previous_token(const std::vector<Token> &tokens, const size_t index_back)
+{
+  // TODO: handle empty tokens list
+  return tokens[tokens.size() - index_back];
+}
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {};
 
@@ -76,6 +82,18 @@ std::vector<Token> Lexer::tokenize()
       if (value == "elseif")
       {
         tokens.push_back({TokenType::ElseIf, value, line, column});
+        continue;
+      }
+
+      if (value == "for")
+      {
+        tokens.push_back({TokenType::For, value, line, column});
+        continue;
+      }
+
+      if (value == "in")
+      {
+        tokens.push_back({TokenType::In, value, line, column});
         continue;
       }
 
@@ -151,7 +169,13 @@ std::vector<Token> Lexer::tokenize()
 
     if (c == '.' && peek(source, current + 1) == '.')
     {
-      tokens.push_back({TokenType::Concat, "..", line, column});
+      if (previous_token(tokens, 2).type == TokenType::In)
+      {
+        tokens.push_back({TokenType::Range, "..", line, column});
+      } else
+      {
+        tokens.push_back({TokenType::Concat, "..", line, column});
+      }
       current += 2;
       column += 2;
       continue;

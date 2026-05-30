@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <string>
 #include "./ast.hpp"
 #include "./error_service.hpp"
@@ -9,6 +10,15 @@ class Environment;
 struct FunctionValue
 {
   FunctionExpr *declaration;
+};
+
+struct RangeValue
+{
+  int start;
+
+  int end;
+
+  int step;
 };
 
 struct Value
@@ -21,6 +31,7 @@ struct Value
     Nil,
     Undefined,
     Function,
+    Range,
   } type;
 
   int number{};
@@ -32,6 +43,8 @@ struct Value
   bool is_undefined{};
 
   FunctionValue function{};
+
+  RangeValue range{};
 
   [[nodiscard]] std::string to_string() const
   {
@@ -51,6 +64,10 @@ struct Value
     {
       return "<function>";
     }
+    if (type == Range)
+    {
+      return std::format("range({},{},{})", range.start, range.end, range.step);
+    }
 
     ErrorService::runtime_error("Cannot convert value of type to string", std::to_string(static_cast<int>(type)));
     return "";
@@ -65,6 +82,8 @@ struct Value
   [[nodiscard]] bool is_nil() const { return type == Nil; }
 
   [[nodiscard]] bool is_function() const { return type == Function; }
+
+  [[nodiscard]] bool is_range() const { return type == Range; }
 
   [[nodiscard]] bool equals(const Value &other) const
   {
@@ -84,9 +103,9 @@ struct Value
       case Nil:
         return true;
       case Undefined:
-        break;
       case Function:
-        return false;
+      case Range:
+        break;
     }
 
     return false;
@@ -125,7 +144,12 @@ struct Value
 
   static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
 
-  static std::string type_name(Type type)
+  static Value range_value(int start, int end, int step)
+  {
+    return Value{Range, 0, "", false, false, {nullptr}, {start, end, step}};
+  }
+
+  static std::string type_name(const Type type)
   {
     switch (type)
     {

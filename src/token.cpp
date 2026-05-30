@@ -14,6 +14,12 @@ std::string token_type_to_string(TokenType type)
       return "Else";
     case TokenType::ElseIf:
       return "ElseIf";
+    case TokenType::For:
+      return "For";
+    case TokenType::In:
+      return "In";
+    case TokenType::Range:
+      return "Range";
     case TokenType::While:
       return "While";
     case TokenType::Identifier:

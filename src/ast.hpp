@@ -79,6 +79,35 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class ForStmt : public Expr
+{
+public:
+  std::string iterator;
+
+  // Can be RangeExpr or ArrayExpr in the future
+  std::unique_ptr<Expr> iterable;
+
+  std::unique_ptr<BlockStmt> body;
+
+  explicit ForStmt(std::string i, std::unique_ptr<Expr> iter, std::unique_ptr<BlockStmt> body);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class RangeExpr : public Expr
+{
+public:
+  int start;
+
+  int end;
+
+  int step;
+
+  explicit RangeExpr(int start, int end, int step);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class NumberExpr : public Expr
 {
 public:

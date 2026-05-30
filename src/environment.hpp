@@ -24,6 +24,8 @@ public:
 
   void define(const std::string &name, const Value &value);
 
+  void remove(const std::string &name);
+
   Value get(const std::string &name);
 
   void assign(const std::string &name, const Value &value);

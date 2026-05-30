@@ -70,6 +70,25 @@ while (counter < 5) {
 }
 ```
 
+### For Loops
+
+Ricdotlang supports `for` loops for iteration.
+
+For loops must use the `$` operator so that the variable is mutable.
+
+```
+for $i in 0..5 {
+  print(i);
+}
+```
+
+```
+// For loop with a step value
+for $i in 0..10, 2 {
+  print(i);
+}
+```
+
 ## Return
 
 You can return a value from a function using the `return` keyword.

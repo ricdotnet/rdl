@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -103,6 +104,11 @@ std::unique_ptr<Expr> Parser::statement()
     return std::make_unique<ReturnStmt>(std::move(value));
   }
 
+  if (match(TokenType::For))
+  {
+    return forLoop();
+  }
+
   return expression();
 }
 
@@ -130,6 +136,39 @@ std::unique_ptr<Expr> Parser::ifStatement()
   return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
 }
 
+std::unique_ptr<Expr> Parser::forLoop()
+{
+  auto identifier_token = consume(TokenType::Identifier);
+  consume(TokenType::In);
+
+  Expr *expr = nullptr;
+
+  // TODO: for handling ArrayExpr in the future
+  if (peek().type != TokenType::Number)
+  {
+    return nullptr;
+  } else
+  {
+    const auto init = consume(TokenType::Number).value;
+    consume(TokenType::Range);
+    const auto end = consume(TokenType::Number).value;
+    std::string step = "1";
+
+    if (peek().type == TokenType::Comma)
+    {
+      consume(TokenType::Comma);
+      step = consume(TokenType::Number).value;
+    }
+
+    expr = new RangeExpr(std::stoi(init), std::stoi(end), std::stoi(step));
+  }
+
+  consume(TokenType::LeftBrace);
+  auto body = block();
+
+  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::unique_ptr<Expr>(expr), std::move(body));
+}
+
 std::unique_ptr<BlockStmt> Parser::block()
 {
   std::vector<std::unique_ptr<Expr> > statements;
@@ -151,6 +190,11 @@ std::unique_ptr<BlockStmt> Parser::block()
 
 std::unique_ptr<Expr> Parser::expression()
 {
+  if (match(TokenType::Semicolon))
+  {
+    return nullptr;
+  }
+
   return equality();
 }
 
@@ -317,7 +361,7 @@ std::unique_ptr<Expr> Parser::primary()
   return nullptr;
 }
 
-bool Parser::match(TokenType type)
+bool Parser::match(const TokenType type)
 {
   if (check(type))
   {
@@ -353,7 +397,7 @@ Token Parser::advance()
 
 Token Parser::previous() { return tokens[current - 1]; }
 
-bool Parser::check(TokenType type)
+bool Parser::check(const TokenType type)
 {
   if (isAtEnd())
   {
@@ -363,7 +407,7 @@ bool Parser::check(TokenType type)
   return peek().type == type;
 }
 
-Token Parser::consume(TokenType type)
+Token Parser::consume(const TokenType type)
 {
   if (check(type))
   {
@@ -371,5 +415,9 @@ Token Parser::consume(TokenType type)
     return token;
   }
 
-  ErrorService::syntax_error("Unexpected token", peek());
+  auto token = peek();
+  ErrorService::syntax_error("Unexpected token", token);
+
+  // we exit the program before reaching here
+  return token;
 }

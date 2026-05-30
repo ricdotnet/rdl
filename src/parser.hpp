@@ -24,6 +24,8 @@ private:
 
   std::unique_ptr<Expr> ifStatement();
 
+  std::unique_ptr<Expr> forLoop();
+
   std::unique_ptr<BlockStmt> block();
 
   std::unique_ptr<Expr> expression();

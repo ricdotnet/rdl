@@ -10,6 +10,10 @@ class BlockStmt;
 
 class WhileExpr;
 
+class ForStmt;
+
+class RangeExpr;
+
 class NumberExpr;
 
 class StringExpr;
@@ -42,6 +46,10 @@ public:
   virtual void visit(BlockStmt &expr) = 0;
 
   virtual void visit(WhileExpr &expr) = 0;
+
+  virtual void visit(ForStmt &expr) = 0;
+
+  virtual void visit(RangeExpr &expr) = 0;
 
   virtual void visit(NumberExpr &expr) = 0;
 

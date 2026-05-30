@@ -86,16 +86,60 @@ public:
     {
       evaluate(expr.get());
     }
+
     result = Value::nil_value();
   }
 
   void visit(WhileExpr &expr) override
   {
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
     while (evaluate(expr.condition.get()).is_truthy())
     {
       evaluate(expr.body.get());
     }
 
+    env = previous;
+    result = Value::nil_value();
+  }
+
+  void visit(RangeExpr &expr) override
+  {
+    result = Value::range_value(expr.start, expr.end, expr.step);
+  }
+
+  void visit(ForStmt &expr) override
+  {
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
+    env->define(expr.iterator, Value::nil_value());
+
+    // we have to normalize a mutable identifier
+    const auto iterator = expr.iterator.substr(1);
+
+    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range())
+    {
+      const auto &[start, end, step] = iterable.range;
+
+      try
+      {
+        for (int i = start; i < end; i += step)
+        {
+          env->assign(iterator, Value::number_value(i));
+          evaluate(expr.body.get());
+        }
+      } catch (ReturnSignal &r)
+      {
+        env = previous;
+        return;
+      }
+    }
+
+    env = previous;
     result = Value::nil_value();
   }
 
