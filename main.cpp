@@ -59,6 +59,17 @@ void run(std::string source, const bool debug)
     return Value::nil_value();
   });
 
+  runtime.define_builtin("now", [](const std::vector<Value> &args) -> Value {
+    if (!args.empty())
+    {
+      ErrorService::runtime_error("Expected 0 arguments for now, found ", std::to_string(args.size()));
+    }
+
+    return Value::number_value(
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).
+      count());
+  });
+
   Interpreter interpreter(&env, &runtime);
 
   for (auto &statement: program)

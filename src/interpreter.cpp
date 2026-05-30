@@ -126,8 +126,9 @@ public:
 
     // we have to normalize a mutable identifier
     const auto iterator = expr.iterator.substr(1);
+    const auto body = expr.body.get();
 
-    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range())
+    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range() && !body->statements.empty())
     {
       const auto &[start, end, step] = iterable.range;
 
@@ -136,7 +137,7 @@ public:
         for (int i = start; i < end; i += step)
         {
           env->assign(iterator, Value::number_value(i));
-          evaluate(expr.body.get());
+          evaluate(body);
         }
       } catch (ReturnSignal &)
       {
