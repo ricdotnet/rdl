@@ -92,16 +92,26 @@ public:
 
   void visit(WhileExpr &expr) override
   {
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
     while (evaluate(expr.condition.get()).is_truthy())
     {
       evaluate(expr.body.get());
     }
 
+    env = previous;
     result = Value::nil_value();
   }
 
   void visit(ForStmt &expr) override
   {
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
+
     env->define(expr.iterator, Value::nil_value());
 
     // we have to normalize a non-const identifier
@@ -110,18 +120,21 @@ public:
     const auto end = expr.end;
     const auto step = expr.step;
 
-    try {
-    for (int i = init; i < end; i += step)
+
+    try
     {
-      env->assign(iterator, Value::number_value(i));
-      evaluate(expr.body.get());
-    }
-    } catch (ReturnSignal &r) {
-      env->remove(expr.iterator);
+      for (int i = init; i < end; i += step)
+      {
+        env->assign(iterator, Value::number_value(i));
+        evaluate(expr.body.get());
+      }
+    } catch (ReturnSignal &r)
+    {
+      env = previous;
       return;
     }
 
-    env->remove(expr.iterator);
+    env = previous;
     result = Value::nil_value();
   }
 

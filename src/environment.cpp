@@ -40,8 +40,19 @@ void Environment::remove(const std::string &name)
 
 Value Environment::get(const std::string &name)
 {
+  Value value;
+
   if (!values.contains(name))
   {
+    // Check parent if identifier does not exist in the current scope
+    if (parent)
+    {
+      if (parent->values.contains(name))
+      {
+        return parent->get(name);
+      }
+    }
+
     return Value::undefined_value();
   }
 
