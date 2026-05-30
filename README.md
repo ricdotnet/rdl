@@ -74,17 +74,16 @@ while (counter < 5) {
 
 Ricdotlang supports `for` loops for iteration.
 
+For loops must use the `$` operator so that the variable is mutable.
+
 ```
 for $i in 0..5 {
   print(i);
 }
 ```
 
-### For Loops with Step
-
-Ricdotlang supports `for` loops with a step value for iteration.
-
 ```
+// For loop with a step value
 for $i in 0..10, 2 {
   print(i);
 }
