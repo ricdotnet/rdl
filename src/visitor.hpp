@@ -18,6 +18,8 @@ class NumberExpr;
 
 class StringExpr;
 
+class BooleanExpr;
+
 class BinaryExpr;
 
 class ConcatExpr;
@@ -54,6 +56,8 @@ public:
   virtual void visit(NumberExpr &expr) = 0;
 
   virtual void visit(StringExpr &expr) = 0;
+
+  virtual void visit(BooleanExpr &expr) = 0;
 
   virtual void visit(BinaryExpr &expr) = 0;
 

@@ -128,6 +128,16 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class BooleanExpr : public Expr
+{
+public:
+  bool value;
+
+  explicit BooleanExpr(bool val);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class BinaryExpr : public Expr
 {
 public:

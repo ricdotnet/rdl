@@ -121,6 +121,18 @@ std::vector<Token> Lexer::tokenize()
         continue;
       }
 
+      if (value == "true")
+      {
+        tokens.push_back({TokenType::True, value, line, column});
+        continue;
+      }
+
+      if (value == "false")
+      {
+        tokens.push_back({TokenType::False, value, line, column});
+        continue;
+      }
+
       tokens.push_back({TokenType::Identifier, value, line, column});
 
       continue;

@@ -165,6 +165,8 @@ struct Value
         return "Undefined";
       case Function:
         return "Function";
+      case Range:
+        return "Range";
       default:
         return "Unknown";
     }

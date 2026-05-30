@@ -204,10 +204,10 @@ std::unique_ptr<Expr> Parser::equality()
 
   while (match(TokenType::EqualEqual) || match(TokenType::BangEqual))
   {
-    Token op = previous();
+    const auto oper = previous();
     auto right = concat();
 
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
   }
 
   return expr;
@@ -301,6 +301,7 @@ std::unique_ptr<Expr> Parser::postfix()
       if (!var)
       {
         ErrorService::runtime_error("Only identifiers can be called", "");
+        return nullptr;
       }
 
       expr = std::make_unique<CallExpr>(var->name, std::move(args));
@@ -331,23 +332,30 @@ std::unique_ptr<Expr> Parser::primary()
 {
   if (match(TokenType::Number))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<NumberExpr>(std::stoi(token.value));
   }
 
   if (match(TokenType::Identifier))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<VariableExpr>(token.value);
   }
 
   if (match(TokenType::String))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<StringExpr>(token.value);
+  }
+
+  if (match(TokenType::True) || match(TokenType::False))
+  {
+    const auto token = previous();
+
+    return std::make_unique<BooleanExpr>(token.type == TokenType::True);
   }
 
   if (match(TokenType::LeftParen))

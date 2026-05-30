@@ -16,6 +16,8 @@ enum class TokenType
   Identifier,
   Number,
   String,
+  True,
+  False,
   Plus,
   Minus,
   Star,

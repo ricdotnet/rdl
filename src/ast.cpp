@@ -45,6 +45,10 @@ StringExpr::StringExpr(std::string val) : value(std::move(val)) {}
 
 void StringExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
+BooleanExpr::BooleanExpr(bool val) : value(val) {}
+
+void BooleanExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 BinaryExpr::BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r)
   : left(std::move(l)), operation(oper), right(std::move(r)) {}
 

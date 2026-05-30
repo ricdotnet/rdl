@@ -1,4 +1,7 @@
 #include "./environment.hpp"
+
+#include <iostream>
+
 #include "./error_service.hpp"
 #include "./interpreter.hpp"
 
@@ -65,6 +68,16 @@ void Environment::assign(const std::string &name, const Value &value)
 
   if (current == values.end())
   {
+    // Assign in parent scope if exists
+    if (parent)
+    {
+      if (parent->values.contains(name))
+      {
+        parent->assign(name, value);
+        return;
+      }
+    }
+
     ErrorService::runtime_error("Undefined variable", name);
   }
 

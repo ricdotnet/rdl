@@ -96,9 +96,15 @@ public:
     Environment *previous = env;
     env = &local;
 
-    while (evaluate(expr.condition.get()).is_truthy())
+    try
     {
-      evaluate(expr.body.get());
+      while (evaluate(expr.condition.get()).is_truthy())
+      {
+        evaluate(expr.body.get());
+      }
+    } catch (ReturnSignal &)
+    {
+      // ignore since there is no actual return value
     }
 
     env = previous;
@@ -132,10 +138,9 @@ public:
           env->assign(iterator, Value::number_value(i));
           evaluate(expr.body.get());
         }
-      } catch (ReturnSignal &r)
+      } catch (ReturnSignal &)
       {
-        env = previous;
-        return;
+        // ignore since there is no actual return value
       }
     }
 
@@ -151,6 +156,11 @@ public:
   void visit(StringExpr &expr) override
   {
     result = Value::string_value(expr.value);
+  }
+
+  void visit(BooleanExpr &expr) override
+  {
+    result = Value::boolean_value(expr.value);
   }
 
   void visit(VariableExpr &expr) override
@@ -266,6 +276,8 @@ public:
 
   void visit(CallExpr &expr) override
   {
+    result = Value::nil_value();
+
     std::vector<Value> arguments;
 
     for (auto &arg: expr.arguments)
@@ -305,11 +317,12 @@ public:
     }
 
     env = previous;
-    result = Value::nil_value();
   }
 
   void visit(MethodCallExpr &expr) override
   {
+    result = Value::nil_value();
+
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
     const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
@@ -343,6 +356,5 @@ public:
     }
 
     env = previous;
-    result = Value::nil_value();
   }
 };
