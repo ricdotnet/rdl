@@ -1,6 +1,7 @@
 #include <chrono>
 #include <thread>
 #include <utility>
+#include "src/ast_printer.cpp"
 #include "src/environment.hpp"
 #include "src/interpreter.cpp"
 #include "src/io.hpp"
@@ -70,11 +71,18 @@ void run(std::string source, const bool debug)
       count());
   });
 
+  ASTPrinter printer;
   Interpreter interpreter(&env, &runtime);
 
   for (auto &statement: program)
   {
     const auto stmt = statement.get();
+
+    if (debug)
+    {
+      stmt->accept(printer);
+    }
+
     interpreter.evaluate(stmt);
   }
 }

@@ -66,10 +66,8 @@ public:
 
   void visit(IfStmt &stmt) override
   {
-    const auto condition = evaluate(stmt.condition.get());
-
     // need to check for truthiness of condition not just if it's a boolean
-    if (condition.is_truthy())
+    if (const auto condition = evaluate(stmt.condition.get()); condition.is_truthy())
     {
       evaluate(stmt.then_branch.get());
     } else if (stmt.else_branch)
@@ -263,6 +261,35 @@ public:
         break;
       default:
         ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
+    }
+  }
+
+  void visit(UnaryExpr &expr) override
+  {
+    result = Value::nil_value();
+
+    const auto operation = expr.operation.type;
+    const auto operand = evaluate(expr.operand.get());
+
+    switch (operation)
+    {
+      case TokenType::Bang:
+        result = Value::boolean_value(!operand.is_truthy());
+        break;
+      case TokenType::Minus: {
+        if (!operand.is_number())
+        {
+          ErrorService::runtime_error("Expected number", operand.to_string());
+        }
+
+        const int value = operand.number;
+        result = Value::number_value(-value);
+        return;
+      }
+
+      default:
+        ErrorService::runtime_error("Unknown unary operation", "\"" + expr.operation.value + "\"");
+        break;
     }
   }
 

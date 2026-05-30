@@ -45,14 +45,19 @@ StringExpr::StringExpr(std::string val) : value(std::move(val)) {}
 
 void StringExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-BooleanExpr::BooleanExpr(bool val) : value(val) {}
+BooleanExpr::BooleanExpr(const bool val) : value(val) {}
 
 void BooleanExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 BinaryExpr::BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r)
-  : left(std::move(l)), operation(oper), right(std::move(r)) {}
+  : left(std::move(l)), operation(std::move(oper)), right(std::move(r)) {}
 
 void BinaryExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+UnaryExpr::UnaryExpr(Token op, std::unique_ptr<Expr> operand)
+  : operation(std::move(op)), operand(std::move(operand)) {}
+
+void UnaryExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 ConcatExpr::ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
   : left(std::move(l)), right(std::move(r)) {}

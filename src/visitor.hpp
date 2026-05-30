@@ -22,6 +22,8 @@ class BooleanExpr;
 
 class BinaryExpr;
 
+class UnaryExpr;
+
 class ConcatExpr;
 
 class VariableExpr;
@@ -60,6 +62,8 @@ public:
   virtual void visit(BooleanExpr &expr) = 0;
 
   virtual void visit(BinaryExpr &expr) = 0;
+
+  virtual void visit(UnaryExpr &expr) = 0;
 
   virtual void visit(ConcatExpr &expr) = 0;
 

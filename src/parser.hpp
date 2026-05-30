@@ -40,6 +40,8 @@ private:
 
   std::unique_ptr<Expr> factor();
 
+  std::unique_ptr<Expr> unary();
+
   std::unique_ptr<Expr> postfix();
 
   std::unique_ptr<Expr> primary();
@@ -50,7 +52,7 @@ private:
 
   Token advance();
 
-  Token previous();
+  Token previous(int prev = 1);
 
   bool match(TokenType type);
 

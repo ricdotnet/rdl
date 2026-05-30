@@ -147,7 +147,19 @@ public:
 
   std::unique_ptr<Expr> right;
 
-  BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
+  explicit BinaryExpr(std::unique_ptr<Expr> l, Token oper, std::unique_ptr<Expr> r);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class UnaryExpr : public Expr
+{
+public:
+  Token operation;
+
+  std::unique_ptr<Expr> operand;
+
+  explicit UnaryExpr(Token op, std::unique_ptr<Expr> operand);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -159,7 +171,7 @@ public:
 
   std::unique_ptr<Expr> right;
 
-  ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
+  explicit ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -171,7 +183,7 @@ public:
 
   std::unique_ptr<Expr> value;
 
-  AssignExpr(std::string m, std::unique_ptr<Expr> v);
+  explicit AssignExpr(std::string n, std::unique_ptr<Expr> v);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -193,7 +205,7 @@ public:
 
   std::unique_ptr<Expr> initialiser;
 
-  LetExpr(std::string n, std::unique_ptr<Expr> init);
+  explicit LetExpr(std::string n, std::unique_ptr<Expr> init);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -205,7 +217,7 @@ public:
 
   std::vector<std::unique_ptr<Expr> > arguments;
 
-  CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+  explicit CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -219,7 +231,7 @@ public:
 
   std::vector<std::unique_ptr<Expr> > arguments;
 
-  MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args);
+  explicit MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args);
 
   void accept(ExprVisitor &visitor) override;
 };
