@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <functional>
 #include <string>
 #include "./ast.hpp"
 #include "./error_service.hpp"
@@ -12,7 +13,11 @@ class Environment;
 
 struct FunctionValue
 {
-  FunctionExpr *declaration;
+  FunctionExpr *declaration = nullptr;
+
+  std::function<Value(std::vector<Value> &)> builtin;
+
+  bool is_builtin = false;
 };
 
 struct RangeValue
@@ -171,9 +176,14 @@ struct Value
 
   static Value undefined_value() { return Value{Undefined, 0, "", false, {}, true}; }
 
-  static Value function_value(FunctionExpr *declaration)
+  static Value builtin_function_value(std::function<Value(std::vector<Value> &)> body)
   {
-    return Value{Function, 0, "", false, {}, false, {declaration}};
+    return Value{Function, 0, "", false, {}, false, {nullptr, body, true}};
+  }
+
+  static Value user_function_value(FunctionExpr *declaration)
+  {
+    return Value{Function, 0, "", false, {}, false, {declaration, nullptr, false}};
   }
 
   static Value range_value(const int start, const int end, const int step)

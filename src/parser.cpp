@@ -1,6 +1,5 @@
 #include "./parser.hpp"
 
-#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -369,16 +368,7 @@ std::unique_ptr<Expr> Parser::postfix()
 
       consume(TokenType::RightParen);
 
-      // only valid if base is a variable for now
-      auto *var = dynamic_cast<VariableExpr *>(expr.get());
-
-      if (!var)
-      {
-        ErrorService::runtime_error("Only identifiers can be called", "");
-        return nullptr;
-      }
-
-      expr = std::make_unique<CallExpr>(var->name, std::move(args));
+      expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
 
       continue;
     }

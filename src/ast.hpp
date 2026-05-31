@@ -214,11 +214,11 @@ public:
 class CallExpr : public Expr
 {
 public:
-  std::string function_name;
+  std::unique_ptr<Expr> callee;
 
   std::vector<std::unique_ptr<Expr> > arguments;
 
-  explicit CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+  explicit CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr> > args);
 
   void accept(ExprVisitor &visitor) override;
 };

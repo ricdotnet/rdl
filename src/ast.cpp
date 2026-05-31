@@ -78,8 +78,8 @@ LetExpr::LetExpr(std::string n, std::unique_ptr<Expr> init)
 
 void LetExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-CallExpr::CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args)
-  : function_name(std::move(func)), arguments(std::move(args)) {}
+CallExpr::CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr> > args)
+  : callee(std::move(callee)), arguments(std::move(args)) {}
 
 void CallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
