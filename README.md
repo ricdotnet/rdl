@@ -2,6 +2,34 @@
 
 Ricdotlang is a simple programming language.
 
+## Types
+
+At the moment only a few types are supported:
+
+- Number
+- String
+  - Use `""` to start and end a string
+- Bolean
+  - Use `true` or `false` to create boolean variables.
+
+Other internal types:
+
+- Function
+- Nil
+- Undefined
+
+## Comments
+
+For writing comments use the `//` prefix.
+
+```
+// This is a comment
+
+func hello() {
+  return "World"; // This is a comment
+}
+```
+
 ## Variables
 
 Variables are declared using the `let` keyword. By default, variables are immutable. 
@@ -28,24 +56,22 @@ greet();
 
 You can also use global variables inside functions.
 
-## Type Methods
+## Type methods
 
-You can define methods on existing types using the `::` syntax. The receiver is accessible via the `self` keyword.
+You can define methods on existing types using the `::` syntax. The receiver's value is accessible via the `self` keyword.
 
 ```
-func Number::greet() {
+func String::greet() {
   print("hello " .. self);
 }
 
-let name = 10;
+let name = "User";
 name.greet();
 ```
 
-## Control Flow
+## If/Else statements
 
-### If/Else Statements
-
-Ricdotlang supports `if`, `else if`, and `else` blocks.
+You can use `if`, `else if`, and `else` blocks to implement control flow paths.
 
 ```
 if (x < 10) {
@@ -57,9 +83,10 @@ if (x < 10) {
 }
 ```
 
-### While Loops
+## While loops
 
-Ricdotlang supports `while` loops for iteration.
+While loops are also supported using the `while` keyword loops for iteration.
+For mutable counter variables, make use of the `$` so that they can be properly reassigned a new counter value.
 
 ```
 let $counter = 0;
@@ -70,10 +97,9 @@ while (counter < 5) {
 }
 ```
 
-### For Loops
+## For loops
 
-Ricdotlang supports `for` loops for iteration.
-
+Implementing for loops is easy with using the `for` keyword and defining a range with `{start}..{end}`.
 For loops must use the `$` operator so that the variable is mutable.
 
 ```
@@ -89,7 +115,8 @@ for $i in 0..10, 2 {
 }
 ```
 
-## Return
+
+## Return statements
 
 You can return a value from a function using the `return` keyword.
 
@@ -99,10 +126,42 @@ func add(a, b) {
 }
 ```
 
-## String Concatenation
+## String concatenation
 
 You can concatenate strings using the `..` operator.
 
 ```
 print("Hello" .. " " .. "World");
+```
+
+## Unary and Binary expressions
+
+Use `&&` or `||` to implement logical operations.
+
+```
+func test() {
+  return 12 > 10 && 10 < 9;
+}
+
+test(); // false
+```
+
+Use `+ - * /` to perform binary and arithmetic operations.
+
+```
+print(1 + 1 * 2 + 3); // 6
+```
+
+Use `!` to invert the truthyness of a value.
+
+```
+print(!false); // true
+```
+
+Use `-` to flip a numbers sign.
+
+```
+let a = 1;
+print(-a); // -1
+print(-(-a)) // 1
 ```

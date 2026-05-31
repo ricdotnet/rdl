@@ -144,7 +144,7 @@ struct Value
 
   static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
 
-  static Value range_value(int start, int end, int step)
+  static Value range_value(const int start, const int end, const int step)
   {
     return Value{Range, 0, "", false, false, {nullptr}, {start, end, step}};
   }
@@ -165,6 +165,8 @@ struct Value
         return "Undefined";
       case Function:
         return "Function";
+      case Range:
+        return "Range";
       default:
         return "Unknown";
     }

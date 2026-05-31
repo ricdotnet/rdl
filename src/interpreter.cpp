@@ -66,10 +66,8 @@ public:
 
   void visit(IfStmt &stmt) override
   {
-    const auto condition = evaluate(stmt.condition.get());
-
     // need to check for truthiness of condition not just if it's a boolean
-    if (condition.is_truthy())
+    if (const auto condition = evaluate(stmt.condition.get()); condition.is_truthy())
     {
       evaluate(stmt.then_branch.get());
     } else if (stmt.else_branch)
@@ -96,9 +94,15 @@ public:
     Environment *previous = env;
     env = &local;
 
-    while (evaluate(expr.condition.get()).is_truthy())
+    try
     {
-      evaluate(expr.body.get());
+      while (evaluate(expr.condition.get()).is_truthy())
+      {
+        evaluate(expr.body.get());
+      }
+    } catch (ReturnSignal &)
+    {
+      // ignore since there is no actual return value
     }
 
     env = previous;
@@ -120,8 +124,9 @@ public:
 
     // we have to normalize a mutable identifier
     const auto iterator = expr.iterator.substr(1);
+    const auto body = expr.body.get();
 
-    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range())
+    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range() && !body->statements.empty())
     {
       const auto &[start, end, step] = iterable.range;
 
@@ -130,12 +135,11 @@ public:
         for (int i = start; i < end; i += step)
         {
           env->assign(iterator, Value::number_value(i));
-          evaluate(expr.body.get());
+          evaluate(body);
         }
-      } catch (ReturnSignal &r)
+      } catch (ReturnSignal &)
       {
-        env = previous;
-        return;
+        // ignore since there is no actual return value
       }
     }
 
@@ -151,6 +155,11 @@ public:
   void visit(StringExpr &expr) override
   {
     result = Value::string_value(expr.value);
+  }
+
+  void visit(BooleanExpr &expr) override
+  {
+    result = Value::boolean_value(expr.value);
   }
 
   void visit(VariableExpr &expr) override
@@ -244,8 +253,43 @@ public:
       case TokenType::BangEqual:
         result = Value::boolean_value(!left.equals(right));
         break;
+      case TokenType::And:
+        result = Value::boolean_value(left.is_truthy() && right.is_truthy());
+        break;
+      case TokenType::Or:
+        result = Value::boolean_value(left.is_truthy() || right.is_truthy());
+        break;
       default:
         ErrorService::runtime_error("Unknown binary operation", "\"" + expr.operation.value + "\"");
+    }
+  }
+
+  void visit(UnaryExpr &expr) override
+  {
+    result = Value::nil_value();
+
+    const auto operation = expr.operation.type;
+    const auto operand = evaluate(expr.operand.get());
+
+    switch (operation)
+    {
+      case TokenType::Bang:
+        result = Value::boolean_value(!operand.is_truthy());
+        break;
+      case TokenType::Minus: {
+        if (!operand.is_number())
+        {
+          ErrorService::runtime_error("Expected number", operand.to_string());
+        }
+
+        const int value = operand.number;
+        result = Value::number_value(-value);
+        return;
+      }
+
+      default:
+        ErrorService::runtime_error("Unknown unary operation", "\"" + expr.operation.value + "\"");
+        break;
     }
   }
 
@@ -266,6 +310,8 @@ public:
 
   void visit(CallExpr &expr) override
   {
+    result = Value::nil_value();
+
     std::vector<Value> arguments;
 
     for (auto &arg: expr.arguments)
@@ -305,11 +351,12 @@ public:
     }
 
     env = previous;
-    result = Value::nil_value();
   }
 
   void visit(MethodCallExpr &expr) override
   {
+    result = Value::nil_value();
+
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
     const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
@@ -343,6 +390,5 @@ public:
     }
 
     env = previous;
-    result = Value::nil_value();
   }
 };

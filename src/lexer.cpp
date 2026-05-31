@@ -121,6 +121,18 @@ std::vector<Token> Lexer::tokenize()
         continue;
       }
 
+      if (value == "true")
+      {
+        tokens.push_back({TokenType::True, value, line, column});
+        continue;
+      }
+
+      if (value == "false")
+      {
+        tokens.push_back({TokenType::False, value, line, column});
+        continue;
+      }
+
       tokens.push_back({TokenType::Identifier, value, line, column});
 
       continue;
@@ -266,6 +278,24 @@ std::vector<Token> Lexer::tokenize()
         }
         // We might need this at one point if we get to implement explicit types
         // tokens.push_back({TokenType::Colon, ":", line, column});
+        break;
+      case '&':
+        if (peek(source, current + 1) == '&')
+        {
+          tokens.push_back({TokenType::And, "&&", line, column});
+          current++;
+          column++;
+          break;
+        }
+        break;
+      case '|':
+        if (peek(source, current + 1) == '|')
+        {
+          tokens.push_back({TokenType::Or, "||", line, column});
+          current++;
+          column++;
+          break;
+        }
         break;
       default:
         ErrorService::syntax_error("Unexpected character: " + std::string(1, c),

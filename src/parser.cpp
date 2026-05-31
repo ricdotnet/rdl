@@ -30,7 +30,7 @@ std::unique_ptr<Expr> Parser::declaration()
 {
   if (match(TokenType::Func))
   {
-    Token name = consume(TokenType::Identifier);
+    auto name = consume(TokenType::Identifier);
     auto receiver_type = std::optional<std::string>();
 
     if (match(TokenType::ColonColon))
@@ -47,7 +47,7 @@ std::unique_ptr<Expr> Parser::declaration()
     {
       do
       {
-        Token token = consume(TokenType::Identifier);
+        auto token = consume(TokenType::Identifier);
         params.push_back(token.value);
       } while (match(TokenType::Comma));
     }
@@ -67,7 +67,7 @@ std::unique_ptr<Expr> Parser::statement()
 {
   if (match(TokenType::Let))
   {
-    Token token = advance();
+    auto token = consume(TokenType::Identifier);
     consume(TokenType::Equal);
 
     auto initialiser = expression();
@@ -76,8 +76,8 @@ std::unique_ptr<Expr> Parser::statement()
 
   if (check(TokenType::Identifier) && peekNext().type == TokenType::Equal)
   {
-    Token token = advance();
-    advance();
+    auto token = consume(TokenType::Identifier);
+    consume(TokenType::Equal);
 
     auto value = expression();
     return std::make_unique<AssignExpr>(token.value, std::move(value));
@@ -195,7 +195,23 @@ std::unique_ptr<Expr> Parser::expression()
     return nullptr;
   }
 
-  return equality();
+  auto expr = equality();
+
+  if (peek().type == TokenType::And)
+  {
+    const auto oper = consume(TokenType::And);
+    auto right = equality();
+
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+  } else if (peek().type == TokenType::Or)
+  {
+    const auto oper = consume(TokenType::Or);
+    auto right = equality();
+
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+  }
+
+  return expr;
 }
 
 std::unique_ptr<Expr> Parser::equality()
@@ -204,10 +220,10 @@ std::unique_ptr<Expr> Parser::equality()
 
   while (match(TokenType::EqualEqual) || match(TokenType::BangEqual))
   {
-    Token op = previous();
+    const auto oper = previous();
     auto right = concat();
 
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
   }
 
   return expr;
@@ -261,17 +277,29 @@ std::unique_ptr<Expr> Parser::term()
 
 std::unique_ptr<Expr> Parser::factor()
 {
-  auto expr = postfix();
+  auto expr = unary();
 
   while (match(TokenType::Star) || match(TokenType::Slash))
   {
     Token op = previous();
-    auto right = postfix();
+    auto right = unary();
 
     expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
   }
 
   return expr;
+}
+
+std::unique_ptr<Expr> Parser::unary()
+{
+  if (match(TokenType::Bang) || match(TokenType::Minus))
+  {
+    const auto token = previous();
+    auto value = expression();
+    return std::make_unique<UnaryExpr>(token, std::move(value));
+  }
+
+  return postfix();
 }
 
 std::unique_ptr<Expr> Parser::postfix()
@@ -301,6 +329,7 @@ std::unique_ptr<Expr> Parser::postfix()
       if (!var)
       {
         ErrorService::runtime_error("Only identifiers can be called", "");
+        return nullptr;
       }
 
       expr = std::make_unique<CallExpr>(var->name, std::move(args));
@@ -331,23 +360,30 @@ std::unique_ptr<Expr> Parser::primary()
 {
   if (match(TokenType::Number))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<NumberExpr>(std::stoi(token.value));
   }
 
   if (match(TokenType::Identifier))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<VariableExpr>(token.value);
   }
 
   if (match(TokenType::String))
   {
-    Token token = previous();
+    const auto token = previous();
 
     return std::make_unique<StringExpr>(token.value);
+  }
+
+  if (match(TokenType::True) || match(TokenType::False))
+  {
+    const auto token = previous();
+
+    return std::make_unique<BooleanExpr>(token.type == TokenType::True);
   }
 
   if (match(TokenType::LeftParen))
@@ -395,7 +431,7 @@ Token Parser::advance()
   return previous();
 }
 
-Token Parser::previous() { return tokens[current - 1]; }
+Token Parser::previous(const int prev) { return tokens[current - prev]; }
 
 bool Parser::check(const TokenType type)
 {
