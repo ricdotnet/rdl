@@ -134,6 +134,8 @@ public:
     expr.left->accept(*this);
     expr.right->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(VariableExpr &expr) override
@@ -145,11 +147,14 @@ public:
   void visit(AssignExpr &expr) override
   {
     print_indent();
-    std::cout << "Assign(" << expr.name << ")\n";
+    std::cout << "Assign(\n";
 
     indent++;
+    expr.left->accept(*this);
     expr.value->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(LetExpr &expr) override
@@ -197,6 +202,16 @@ public:
     indent--;
     print_indent();
     std::cout << ")\n";
+  }
+
+  void visit(ObjectAssignExpr &expr) override
+  {
+    print_indent();
+    std::cout << "ObjectAssign(" << expr.value << ")\n";
+
+    indent++;
+    expr.value->accept(*this);
+    indent--;
   }
 
   void visit(DotExpr &expr) override

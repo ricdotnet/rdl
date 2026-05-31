@@ -180,11 +180,11 @@ public:
 class AssignExpr : public Expr
 {
 public:
-  std::string name;
+  std::unique_ptr<Expr> left;
 
   std::unique_ptr<Expr> value;
 
-  explicit AssignExpr(std::string n, std::unique_ptr<Expr> v);
+  explicit AssignExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> v);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -243,6 +243,18 @@ public:
   std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
 
   explicit ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class ObjectAssignExpr : public Expr
+{
+public:
+  std::unique_ptr<Expr> receiver;
+
+  std::unique_ptr<Expr> value;
+
+  explicit ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value);
 
   void accept(ExprVisitor &visitor) override;
 };

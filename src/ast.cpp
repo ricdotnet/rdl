@@ -64,8 +64,8 @@ ConcatExpr::ConcatExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
 
 void ConcatExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-AssignExpr::AssignExpr(std::string n, std::unique_ptr<Expr> (v))
-  : name(std::move(n)), value(std::move(v)) {}
+AssignExpr::AssignExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> v)
+  : left(std::move(l)), value(std::move(v)) {}
 
 void AssignExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
@@ -92,6 +92,11 @@ ObjectExpr::ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > f
   : fields(std::move(fields)) {}
 
 void ObjectExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+ObjectAssignExpr::ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value)
+  : receiver(std::move(receiver)), value(std::move(value)) {}
+
+void ObjectAssignExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
   : field_name(std::move(field_name)), receiver(std::move(recv)) {}

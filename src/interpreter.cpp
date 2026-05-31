@@ -175,9 +175,24 @@ public:
   void visit(AssignExpr &expr) override
   {
     const auto value = evaluate(expr.value.get());
-    env->assign(expr.name, value);
 
-    result = value;
+    if (const auto *left = dynamic_cast<VariableExpr *>(expr.left.get()))
+    {
+      env->assign(left->name, value);
+      result = value;
+      return;
+    }
+
+    if (const auto *left = dynamic_cast<DotExpr *>(expr.left.get()))
+    {
+      const auto receiver = evaluate(left->receiver.get());
+      auto &prop_map = *receiver.object.properties;
+      prop_map[left->field_name] = value;
+      result = value;
+      return;
+    }
+
+    ErrorService::runtime_error("Invalid assignment target", "");
   }
 
   void visit(LetExpr &expr) override
@@ -401,6 +416,11 @@ public:
       internal_map->insert({field_name, evaluate(field_expr.get())});
     }
     result = Value::object_value(internal_map);
+  }
+
+  void visit(ObjectAssignExpr &expr) override
+  {
+    result = Value::nil_value();
   }
 
   void visit(DotExpr &expr) override

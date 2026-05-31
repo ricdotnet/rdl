@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -74,15 +75,6 @@ std::unique_ptr<Expr> Parser::statement()
 
     auto initialiser = expression();
     return std::make_unique<LetExpr>(token.value, std::move(initialiser));
-  }
-
-  if (check(TokenType::Identifier) && peek_next().type == TokenType::Equal)
-  {
-    auto token = consume(TokenType::Identifier);
-    consume(TokenType::Equal);
-
-    auto value = expression();
-    return std::make_unique<AssignExpr>(token.value, std::move(value));
   }
 
   if (match(TokenType::If))
@@ -222,20 +214,31 @@ std::unique_ptr<Expr> Parser::expression()
     return nullptr;
   }
 
+  auto expr = assignment();
+
+  while (match(TokenType::And))
+  {
+    auto right = assignment();
+    expr = std::make_unique<BinaryExpr>(std::move(expr), consume(TokenType::And), std::move(right));
+  }
+
+  while (match(TokenType::Or))
+  {
+    auto right = assignment();
+    expr = std::make_unique<BinaryExpr>(std::move(expr), consume(TokenType::Or), std::move(right));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::assignment()
+{
   auto expr = equality();
 
-  if (peek().type == TokenType::And)
+  if (match(TokenType::Equal))
   {
-    const auto oper = consume(TokenType::And);
-    auto right = equality();
-
-    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
-  } else if (peek().type == TokenType::Or)
-  {
-    const auto oper = consume(TokenType::Or);
-    auto right = equality();
-
-    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+    auto value = assignment();
+    return std::make_unique<AssignExpr>(std::move(expr), std::move(value));
   }
 
   return expr;
@@ -322,7 +325,7 @@ std::unique_ptr<Expr> Parser::unary()
   if (match(TokenType::Bang) || match(TokenType::Minus))
   {
     const auto token = previous();
-    auto value = expression();
+    auto value = unary();
     return std::make_unique<UnaryExpr>(token, std::move(value));
   }
 
@@ -366,12 +369,12 @@ std::unique_ptr<Expr> Parser::postfix()
 
     if (match(TokenType::Dot))
     {
-      const auto method = consume(TokenType::Identifier);
+      const auto dot_identifier = consume(TokenType::Identifier);
 
       if (peek_next().type != TokenType::LeftParen)
       {
         // We can assume object access here
-        expr = std::make_unique<DotExpr>(method.value, std::move(expr));
+        expr = std::make_unique<DotExpr>(dot_identifier.value, std::move(expr));
         continue;
       }
 
@@ -379,7 +382,8 @@ std::unique_ptr<Expr> Parser::postfix()
       consume(TokenType::LeftParen);
       consume(TokenType::RightParen);
 
-      expr = std::make_unique<MethodCallExpr>(std::move(expr), method.value, std::vector<std::unique_ptr<Expr> >());
+      expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value,
+                                              std::vector<std::unique_ptr<Expr> >());
 
       continue;
     }
