@@ -216,29 +216,45 @@ std::unique_ptr<Expr> Parser::expression()
 
   auto expr = assignment();
 
-  while (match(TokenType::And))
-  {
-    auto right = assignment();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), consume(TokenType::And), std::move(right));
-  }
-
-  while (match(TokenType::Or))
-  {
-    auto right = assignment();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), consume(TokenType::Or), std::move(right));
-  }
-
   return expr;
 }
 
 std::unique_ptr<Expr> Parser::assignment()
 {
-  auto expr = equality();
+  auto expr = logical_or();
 
   if (match(TokenType::Equal))
   {
     auto value = assignment();
     return std::make_unique<AssignExpr>(std::move(expr), std::move(value));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::logical_or()
+{
+  auto expr = logical_and();
+
+  while (match(TokenType::Or))
+  {
+    const auto oper = previous();
+    auto right = assignment();
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::logical_and()
+{
+  auto expr = equality();
+
+  while (match(TokenType::And))
+  {
+    const auto oper = previous();
+    auto right = assignment();
+    expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
   }
 
   return expr;
