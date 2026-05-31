@@ -182,4 +182,26 @@ public:
     std::cout << "MethodCall(" << expr.method_name << ")\n";
     std::cout << std::endl;
   }
+
+  void visit(ObjectExpr &expr) override
+  {
+    print_indent();
+    std::cout << "Object(\n";
+    indent++;
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      print_indent();
+      std::cout << "Identifier(" << field_name << "):";
+      field_expr->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(DotExpr &expr) override
+  {
+    print_indent();
+    std::cout << "DotExpr(" << expr.field_name << ")\n";
+  }
 };

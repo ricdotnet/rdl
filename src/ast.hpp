@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "./token.hpp"
 #include "./visitor.hpp"
@@ -232,6 +233,28 @@ public:
   std::vector<std::unique_ptr<Expr> > arguments;
 
   explicit MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, std::vector<std::unique_ptr<Expr> > args);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class ObjectExpr : public Expr
+{
+public:
+  std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
+
+  explicit ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class DotExpr : public Expr
+{
+public:
+  std::string field_name;
+
+  std::unique_ptr<Expr> receiver;
+
+  explicit DotExpr(std::string field_name, std::unique_ptr<Expr> recv);
 
   void accept(ExprVisitor &visitor) override;
 };

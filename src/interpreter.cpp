@@ -391,4 +391,30 @@ public:
 
     env = previous;
   }
+
+  void visit(ObjectExpr &expr) override
+  {
+    const auto internal_map = std::make_shared<std::unordered_map<std::string, Value> >();
+
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      internal_map->insert({field_name, evaluate(field_expr.get())});
+    }
+    result = Value::object_value(internal_map);
+  }
+
+  void visit(DotExpr &expr) override
+  {
+    const auto field_name = expr.field_name;
+    const auto receiver = evaluate(expr.receiver.get());
+    const auto prop_map = receiver.object.properties;
+
+    if (prop_map->contains(field_name))
+    {
+      result = prop_map->at(field_name);
+      return;
+    }
+
+    ErrorService::runtime_error("Undefined field for type " + Value::type_name(receiver.type), field_name);
+  }
 };

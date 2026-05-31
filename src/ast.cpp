@@ -87,3 +87,13 @@ MethodCallExpr::MethodCallExpr(std::unique_ptr<Expr> recv, std::string method, s
   : receiver(std::move(recv)), method_name(std::move(method)), arguments(std::move(args)) {}
 
 void MethodCallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+ObjectExpr::ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > fields)
+  : fields(std::move(fields)) {}
+
+void ObjectExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
+  : field_name(std::move(field_name)), receiver(std::move(recv)) {}
+
+void DotExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

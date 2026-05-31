@@ -43,6 +43,7 @@ enum class TokenType
   Return,
   Comment,
   Dot,
+  Colon,
   ColonColon,
   EndOfFile,
   Unknown,
