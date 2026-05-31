@@ -239,7 +239,7 @@ std::unique_ptr<Expr> Parser::logical_or()
   while (match(TokenType::Or))
   {
     const auto oper = previous();
-    auto right = assignment();
+    auto right = logical_and();
     expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
   }
 
@@ -253,7 +253,7 @@ std::unique_ptr<Expr> Parser::logical_and()
   while (match(TokenType::And))
   {
     const auto oper = previous();
-    auto right = assignment();
+    auto right = equality();
     expr = std::make_unique<BinaryExpr>(std::move(expr), oper, std::move(right));
   }
 
