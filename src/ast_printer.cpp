@@ -134,6 +134,8 @@ public:
     expr.left->accept(*this);
     expr.right->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(VariableExpr &expr) override
@@ -145,11 +147,14 @@ public:
   void visit(AssignExpr &expr) override
   {
     print_indent();
-    std::cout << "Assign(" << expr.name << ")\n";
+    std::cout << "Assign(\n";
 
     indent++;
+    expr.left->accept(*this);
     expr.value->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(LetExpr &expr) override
@@ -160,26 +165,59 @@ public:
     indent++;
     expr.initialiser->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(CallExpr &expr) override
   {
     print_indent();
-    std::cout << "Call(" << expr.function_name << ")\n";
-    std::cout << std::endl;
-
+    std::cout << "Call(\n";
+    expr.callee->accept(*this);
     indent++;
     for (const auto &arg: expr.arguments)
     {
       arg->accept(*this);
     }
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(MethodCallExpr &expr) override
   {
     print_indent();
-    std::cout << "MethodCall(" << expr.method_name << ")\n";
-    std::cout << std::endl;
+    std::cout << "MethodCall(\n";
+    expr.receiver->accept(*this);
+    indent++;
+    for (const auto &arg: expr.arguments)
+    {
+      arg->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(ObjectExpr &expr) override
+  {
+    print_indent();
+    std::cout << "Object(\n";
+    indent++;
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      print_indent();
+      std::cout << "Identifier(" << field_name << "):";
+      field_expr->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(DotExpr &expr) override
+  {
+    print_indent();
+    std::cout << "DotExpr(" << expr.field_name << ")\n";
   }
 };

@@ -31,45 +31,7 @@ void run(std::string source, const bool debug)
   Environment env;
   Runtime runtime;
 
-  runtime.define_builtin("print", [](const std::vector<Value> &args) -> Value {
-    for (const auto &arg: args)
-    {
-      std::cout << arg.to_string() << " ";
-    }
-    std::cout << std::endl;
-    return Value::nil_value();
-  });
-
-  runtime.define_builtin("sleep", [](const std::vector<Value> &args) -> Value {
-    if (args.size() != 1)
-    {
-      ErrorService::runtime_error("Expected 1 argument for sleep in milliseconds.",
-                                  "Found " + std::to_string(args.size()));
-    }
-
-    const auto duration_value = &args[0];
-    if (!duration_value->is_number())
-    {
-      ErrorService::runtime_error("Expected number in milliseconds for sleep duration.",
-                                  "Found " + Value::type_name(duration_value->type));
-    }
-
-    const auto duration = duration_value->number;
-    std::this_thread::sleep_for(std::chrono::milliseconds(duration));
-
-    return Value::nil_value();
-  });
-
-  runtime.define_builtin("now", [](const std::vector<Value> &args) -> Value {
-    if (!args.empty())
-    {
-      ErrorService::runtime_error("Expected 0 arguments for now, found ", std::to_string(args.size()));
-    }
-
-    return Value::number_value(
-      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).
-      count());
-  });
+  Runtime::init_builtins(env);
 
   ASTPrinter printer;
   Interpreter interpreter(&env, &runtime);

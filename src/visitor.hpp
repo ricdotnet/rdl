@@ -36,6 +36,10 @@ class CallExpr;
 
 class MethodCallExpr;
 
+class ObjectExpr;
+
+class DotExpr;
+
 class ExprVisitor
 {
 public:
@@ -76,4 +80,8 @@ public:
   virtual void visit(CallExpr &expr) = 0;
 
   virtual void visit(MethodCallExpr &expr) = 0;
+
+  virtual void visit(ObjectExpr &expr) = 0;
+
+  virtual void visit(DotExpr &expr) = 0;
 };

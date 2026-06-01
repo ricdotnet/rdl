@@ -43,48 +43,37 @@ void Environment::remove(const std::string &name)
 
 Value Environment::get(const std::string &name)
 {
-  Value value;
-
-  if (!values.contains(name))
+  if (values.contains(name))
   {
-    // Check parent if identifier does not exist in the current scope
-    if (parent)
-    {
-      if (parent->values.contains(name))
-      {
-        return parent->get(name);
-      }
-    }
-
-    return Value::undefined_value();
+    return values.at(name).value;
   }
 
-  return values.at(name).value;
+  if (parent)
+  {
+    return parent->get(name);
+  }
+
+  return Value::undefined_value();
 }
 
 void Environment::assign(const std::string &name, const Value &value)
 {
-  const auto current = values.find(name);
-
-  if (current == values.end())
+  if (const auto current = values.find(name); current != values.end())
   {
-    // Assign in parent scope if exists
-    if (parent)
+    if (!current->second.is_mutable)
     {
-      if (parent->values.contains(name))
-      {
-        parent->assign(name, value);
-        return;
-      }
+      ErrorService::runtime_error("Cannot reassign to immutable variable", name);
     }
 
-    ErrorService::runtime_error("Undefined variable", name);
+    current->second.value = value;
+    return;
   }
 
-  if (!current->second.is_mutable)
+  if (parent)
   {
-    ErrorService::runtime_error("Cannot reassign to immutable variable", name);
+    parent->assign(name, value);
+    return;
   }
 
-  current->second.value = value;
+  ErrorService::runtime_error("Undefined variable", name);
 }

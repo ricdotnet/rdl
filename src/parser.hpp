@@ -22,13 +22,21 @@ private:
 
   std::unique_ptr<Expr> statement();
 
-  std::unique_ptr<Expr> ifStatement();
+  std::unique_ptr<Expr> if_statement();
 
-  std::unique_ptr<Expr> forLoop();
+  std::unique_ptr<Expr> for_loop();
 
   std::unique_ptr<BlockStmt> block();
 
+  std::unique_ptr<Expr> object();
+
   std::unique_ptr<Expr> expression();
+
+  std::unique_ptr<Expr> assignment();
+
+  std::unique_ptr<Expr> logical_or();
+
+  std::unique_ptr<Expr> logical_and();
 
   std::unique_ptr<Expr> equality();
 
@@ -48,7 +56,7 @@ private:
 
   Token peek();
 
-  Token peekNext();
+  Token peek_next();
 
   Token advance();
 
@@ -58,7 +66,9 @@ private:
 
   bool check(TokenType type);
 
-  bool isAtEnd();
+  bool is_at_end();
 
   Token consume(TokenType type);
+
+  bool try_consume(TokenType type);
 };

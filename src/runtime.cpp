@@ -1,10 +1,57 @@
 #include "./runtime.hpp"
+#include <iostream>
 #include <sstream>
+#include <thread>
+
 #include "./error_service.hpp"
+#include "environment.hpp"
 
 Runtime::Runtime()
 {
   init_type_methods();
+}
+
+void Runtime::init_builtins(Environment &env)
+{
+  env.define("print", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+    for (const auto &arg: args)
+    {
+      std::cout << arg.to_string() << " ";
+    }
+    std::cout << std::endl;
+    return Value::nil_value();
+  }));
+
+  env.define("sleep", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+    if (args.size() != 1)
+    {
+      ErrorService::runtime_error("Expected 1 argument for sleep in milliseconds.",
+                                  "Found " + std::to_string(args.size()));
+    }
+
+    const auto duration_value = &args[0];
+    if (!duration_value->is_number())
+    {
+      ErrorService::runtime_error("Expected number in milliseconds for sleep duration.",
+                                  "Found " + Value::type_name(duration_value->type));
+    }
+
+    const auto duration = duration_value->number;
+    std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+
+    return Value::nil_value();
+  }));
+
+  env.define("now", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+    if (!args.empty())
+    {
+      ErrorService::runtime_error("Expected 0 arguments for now, found ", std::to_string(args.size()));
+    }
+
+    return Value::number_value(
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).
+      count());
+  }));
 }
 
 void Runtime::init_type_methods()
@@ -62,32 +109,23 @@ void Runtime::init_type_methods()
                            });
 }
 
-void Runtime::define_builtin(const std::string &name, const builtin_function &function)
-{
-  if (builtins.contains(name))
-  {
-    ErrorService::runtime_error("Builtin function already defined", name);
-  }
-
-  builtins[name] = function;
-}
-
-void Runtime::define_type_method(Value::Type type, const std::string &method_name, const type_method &method)
+void Runtime::define_type_method(const Value::Type type, const std::string &method_name, const type_method &method)
 {
   if (type_methods[type].contains(method_name))
   {
-    ErrorService::runtime_error("Method already defined for this type", method_name);
+    ErrorService::runtime_error("Method " + method_name + " already defined for this type", Value::type_name(type));
   }
 
   type_methods[type][method_name] = method;
 }
 
-void Runtime::define_user_method(const std::string &name, FunctionExpr &expr)
+void Runtime::define_user_method(const Value::Type type, const std::string &method_name, const Value &value)
 {
-  if (user_methods[expr.receiver_type.value()].contains(name))
+  if (user_methods[type].contains(method_name))
   {
-    ErrorService::runtime_error("User method already defined for this type", name);
+    ErrorService::runtime_error("User method " + method_name + " already defined for this type",
+                                Value::type_name(type));
   }
 
-  user_methods[expr.receiver_type.value()][name] = &expr;
+  user_methods[type][method_name] = value;
 }

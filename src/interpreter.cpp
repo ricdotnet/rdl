@@ -3,6 +3,7 @@
 #include "./environment.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
+#include "environment_guard.hpp"
 
 class Interpreter : public ExprVisitor
 {
@@ -41,11 +42,11 @@ public:
 
   void visit(FunctionExpr &expr) override
   {
-    result = Value::function_value(&expr);
+    result = Value::user_function_value(&expr);
 
     if (expr.receiver_type)
     {
-      runtime->define_user_method(expr.name, expr);
+      runtime->define_user_method(Value::type_of(expr.receiver_type), expr.name, result);
       return;
     }
 
@@ -90,22 +91,21 @@ public:
 
   void visit(WhileExpr &expr) override
   {
-    Environment local(env);
-    Environment *previous = env;
-    env = &local;
-
-    try
+    while (evaluate(expr.condition.get()).is_truthy())
     {
-      while (evaluate(expr.condition.get()).is_truthy())
+      Environment local(env);
+      EnvironmentGuard guard(env, &local);
+
+      try
       {
         evaluate(expr.body.get());
+      } catch (ReturnSignal &r)
+      {
+        result = r.value;
+        return;
       }
-    } catch (ReturnSignal &)
-    {
-      // ignore since there is no actual return value
     }
 
-    env = previous;
     result = Value::nil_value();
   }
 
@@ -117,8 +117,7 @@ public:
   void visit(ForStmt &expr) override
   {
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
     env->define(expr.iterator, Value::nil_value());
 
@@ -143,7 +142,6 @@ public:
       }
     }
 
-    env = previous;
     result = Value::nil_value();
   }
 
@@ -165,19 +163,36 @@ public:
   void visit(VariableExpr &expr) override
   {
     const auto value = env->get(expr.name);
+
     if (value.is_undefined)
     {
       ErrorService::runtime_error("Undefined variable", expr.name);
     }
+
     result = value;
   }
 
   void visit(AssignExpr &expr) override
   {
     const auto value = evaluate(expr.value.get());
-    env->assign(expr.name, value);
 
-    result = value;
+    if (const auto *left = dynamic_cast<VariableExpr *>(expr.left.get()))
+    {
+      env->assign(left->name, value);
+      result = value;
+      return;
+    }
+
+    if (const auto *left = dynamic_cast<DotExpr *>(expr.left.get()))
+    {
+      const auto receiver = evaluate(left->receiver.get());
+      auto &prop_map = *receiver.object.properties;
+      prop_map[left->field_name] = value;
+      result = value;
+      return;
+    }
+
+    ErrorService::runtime_error("Invalid assignment target", "");
   }
 
   void visit(LetExpr &expr) override
@@ -314,43 +329,37 @@ public:
 
     std::vector<Value> arguments;
 
+    const auto callee = evaluate(expr.callee.get());
+
+    if (!callee.is_function())
+    {
+      ErrorService::runtime_error("Not callable", "");
+    }
+
     for (auto &arg: expr.arguments)
     {
       arguments.push_back(evaluate(arg.get()));
     }
 
-    if (runtime->builtins.contains(expr.function_name))
+    if (callee.function.is_builtin)
     {
-      result = runtime->builtins.at(expr.function_name)(arguments);
-
+      result = callee.function.builtin(arguments);
       return;
-    }
-
-    const auto function = env->get(expr.function_name);
-
-    if (!function.is_function())
-    {
-      ErrorService::runtime_error("Not a function", expr.function_name);
     }
 
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
-    const auto declaration = function.function.declaration;
-    bind_local_params(local, *declaration, arguments);
+    bind_local_params(local, *callee.function.declaration, arguments);
 
     try
     {
-      evaluate(declaration->body.get());
+      evaluate(callee.function.declaration->body.get());
     } catch (ReturnSignal &r)
     {
-      env = previous;
       result = r.value;
       return;
     }
-
-    env = previous;
   }
 
   void visit(MethodCallExpr &expr) override
@@ -360,35 +369,57 @@ public:
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
     const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
-    const auto &user_type_method = runtime->user_methods[Value::type_name(receiver.type)][expr.method_name];
+    const auto &user_type_method = runtime->user_methods[receiver.type][expr.method_name];
 
-    if (!type_method && !user_type_method)
+    if (!type_method && !user_type_method.is_function())
     {
       ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
       return;
     }
 
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
     try
     {
-      if (user_type_method)
+      if (user_type_method.is_function())
       {
         env->define("self", receiver);
-        result = evaluate(user_type_method->body.get());
+        result = evaluate(user_type_method.function.declaration->body.get());
       } else
       {
         result = type_method(receiver, std::vector<Value>());
       }
     } catch (ReturnSignal &r)
     {
-      env = previous;
       result = r.value;
       return;
     }
+  }
 
-    env = previous;
+  void visit(ObjectExpr &expr) override
+  {
+    const auto internal_map = std::make_shared<std::unordered_map<std::string, Value> >();
+
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      internal_map->insert({field_name, evaluate(field_expr.get())});
+    }
+    result = Value::object_value(internal_map);
+  }
+
+  void visit(DotExpr &expr) override
+  {
+    const auto field_name = expr.field_name;
+    const auto receiver = evaluate(expr.receiver.get());
+    const auto prop_map = receiver.object.properties;
+
+    if (prop_map->contains(field_name))
+    {
+      result = prop_map->at(field_name);
+      return;
+    }
+
+    ErrorService::runtime_error("Undefined field for type " + Value::type_name(receiver.type), field_name);
   }
 };

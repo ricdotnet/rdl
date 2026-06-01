@@ -1,15 +1,23 @@
 #pragma once
 
 #include <format>
+#include <functional>
 #include <string>
 #include "./ast.hpp"
 #include "./error_service.hpp"
+
+// Forward declaration
+struct Value;
 
 class Environment;
 
 struct FunctionValue
 {
-  FunctionExpr *declaration;
+  FunctionExpr *declaration = nullptr;
+
+  std::function<Value(std::vector<Value> &)> builtin;
+
+  bool is_builtin = false;
 };
 
 struct RangeValue
@@ -21,6 +29,11 @@ struct RangeValue
   int step;
 };
 
+struct ObjectValue
+{
+  std::shared_ptr<std::unordered_map<std::string, Value> > properties;
+};
+
 struct Value
 {
   enum Type
@@ -28,6 +41,7 @@ struct Value
     Number,
     String,
     Boolean,
+    Object,
     Nil,
     Undefined,
     Function,
@@ -39,6 +53,8 @@ struct Value
   std::string string{};
 
   bool boolean{};
+
+  ObjectValue object{};
 
   bool is_undefined{};
 
@@ -59,6 +75,18 @@ struct Value
     if (type == Boolean)
     {
       return boolean ? "true" : "false";
+    }
+    if (type == Object)
+    {
+      return "<object>";
+    }
+    if (type == Nil)
+    {
+      return "nil";
+    }
+    if (type == Undefined)
+    {
+      return "undefined";
     }
     if (type == Function)
     {
@@ -85,6 +113,8 @@ struct Value
 
   [[nodiscard]] bool is_range() const { return type == Range; }
 
+  [[nodiscard]] bool is_object() const { return type == Object; }
+
   [[nodiscard]] bool equals(const Value &other) const
   {
     if (type != other.type)
@@ -102,6 +132,10 @@ struct Value
         return boolean == other.boolean;
       case Nil:
         return true;
+      // an object can never be equal to another one
+      // but because we will share references for the same object then they will be equal
+      // TODO: implement object equality check
+      case Object:
       case Undefined:
       case Function:
       case Range:
@@ -140,13 +174,26 @@ struct Value
 
   static Value nil_value() { return Value{Nil, 0, ""}; }
 
-  static Value undefined_value() { return Value{Undefined, 0, "", false, true}; }
+  static Value undefined_value() { return Value{Undefined, 0, "", false, {}, true}; }
 
-  static Value function_value(FunctionExpr *declaration) { return Value{Function, 0, "", false, false, {declaration}}; }
+  static Value builtin_function_value(std::function<Value(std::vector<Value> &)> body)
+  {
+    return Value{Function, 0, "", false, {}, false, {nullptr, body, true}};
+  }
+
+  static Value user_function_value(FunctionExpr *declaration)
+  {
+    return Value{Function, 0, "", false, {}, false, {declaration, nullptr, false}};
+  }
 
   static Value range_value(const int start, const int end, const int step)
   {
-    return Value{Range, 0, "", false, false, {nullptr}, {start, end, step}};
+    return Value{Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
+  }
+
+  static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
+  {
+    return Value{Object, 0, "", false, {properties},};
   }
 
   static std::string type_name(const Type type)
@@ -167,9 +214,51 @@ struct Value
         return "Function";
       case Range:
         return "Range";
+      case Object:
+        return "Object";
       default:
         return "Unknown";
     }
+  }
+
+  static Type type_of(const std::optional<std::string> &value)
+  {
+    if (!value.has_value()) return Nil;
+    if (*value == "Number")
+    {
+      return Number;
+    }
+    if (*value == "String")
+    {
+      return String;
+    }
+    if (*value == "Boolean")
+    {
+      return Boolean;
+    }
+    if (*value == "Nil")
+    {
+      return Nil;
+    }
+    if (*value == "Undefined")
+    {
+      return Undefined;
+    }
+    if (*value == "Function")
+    {
+      return Function;
+    }
+    if (*value == "Range")
+    {
+      return Range;
+    }
+    if (*value == "Object")
+    {
+      return Object;
+    }
+
+    ErrorService::runtime_error("Unknown type", *value);
+    return Nil;
   }
 };
 

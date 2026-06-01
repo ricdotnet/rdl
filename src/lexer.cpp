@@ -276,8 +276,7 @@ std::vector<Token> Lexer::tokenize()
           column++;
           break;
         }
-        // We might need this at one point if we get to implement explicit types
-        // tokens.push_back({TokenType::Colon, ":", line, column});
+        tokens.push_back({TokenType::Colon, ":", line, column});
         break;
       case '&':
         if (peek(source, current + 1) == '&')
