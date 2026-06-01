@@ -3,6 +3,7 @@
 #include "./environment.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
+#include "environment_guard.hpp"
 
 class Interpreter : public ExprVisitor
 {
@@ -93,20 +94,16 @@ public:
     while (evaluate(expr.condition.get()).is_truthy())
     {
       Environment local(env);
-      Environment *previous = env;
-      env = &local;
+      EnvironmentGuard guard(env, &local);
 
       try
       {
         evaluate(expr.body.get());
       } catch (ReturnSignal &r)
       {
-        env = previous;
         result = r.value;
         return;
       }
-
-      env = previous;
     }
 
     result = Value::nil_value();
@@ -120,8 +117,7 @@ public:
   void visit(ForStmt &expr) override
   {
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
     env->define(expr.iterator, Value::nil_value());
 
@@ -146,7 +142,6 @@ public:
       }
     }
 
-    env = previous;
     result = Value::nil_value();
   }
 
@@ -353,8 +348,7 @@ public:
     }
 
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
     bind_local_params(local, *callee.function.declaration, arguments);
 
@@ -363,12 +357,9 @@ public:
       evaluate(callee.function.declaration->body.get());
     } catch (ReturnSignal &r)
     {
-      env = previous;
       result = r.value;
       return;
     }
-
-    env = previous;
   }
 
   void visit(MethodCallExpr &expr) override
@@ -387,8 +378,7 @@ public:
     }
 
     Environment local(env);
-    Environment *previous = env;
-    env = &local;
+    EnvironmentGuard guard(env, &local);
 
     try
     {
@@ -402,12 +392,9 @@ public:
       }
     } catch (ReturnSignal &r)
     {
-      env = previous;
       result = r.value;
       return;
     }
-
-    env = previous;
   }
 
   void visit(ObjectExpr &expr) override
