@@ -109,22 +109,23 @@ void Runtime::init_type_methods()
                            });
 }
 
-void Runtime::define_type_method(Value::Type type, const std::string &method_name, const type_method &method)
+void Runtime::define_type_method(const Value::Type type, const std::string &method_name, const type_method &method)
 {
   if (type_methods[type].contains(method_name))
   {
-    ErrorService::runtime_error("Method already defined for this type", method_name);
+    ErrorService::runtime_error("Method " + method_name + " already defined for this type", Value::type_name(type));
   }
 
   type_methods[type][method_name] = method;
 }
 
-void Runtime::define_user_method(const std::string &name, FunctionExpr &expr)
+void Runtime::define_user_method(const Value::Type type, const std::string &method_name, const Value &value)
 {
-  if (user_methods[expr.receiver_type.value()].contains(name))
+  if (user_methods[type].contains(method_name))
   {
-    ErrorService::runtime_error("User method already defined for this type", name);
+    ErrorService::runtime_error("User method " + method_name + " already defined for this type",
+                                Value::type_name(type));
   }
 
-  // user_methods[expr.receiver_type.value()][name] = &expr;
+  user_methods[type][method_name] = value;
 }

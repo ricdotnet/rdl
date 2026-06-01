@@ -377,19 +377,18 @@ std::unique_ptr<Expr> Parser::postfix()
     {
       const auto dot_identifier = consume(TokenType::Identifier);
 
-      if (peek_next().type != TokenType::LeftParen)
+      if (match(TokenType::LeftParen))
       {
-        // We can assume object access here
-        expr = std::make_unique<DotExpr>(dot_identifier.value, std::move(expr));
+        // We don't need any argument support for now, so just consume left and right parents
+        consume(TokenType::RightParen);
+
+        expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value,
+                                                std::vector<std::unique_ptr<Expr> >());
         continue;
       }
 
-      // We don't need any argument support for now, so just consume left and right parents
-      consume(TokenType::LeftParen);
-      consume(TokenType::RightParen);
-
-      expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value,
-                                              std::vector<std::unique_ptr<Expr> >());
+      // We can assume object access here
+      expr = std::make_unique<DotExpr>(dot_identifier.value, std::move(expr));
 
       continue;
     }

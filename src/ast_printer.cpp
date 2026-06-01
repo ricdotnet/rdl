@@ -215,16 +215,6 @@ public:
     std::cout << ")\n";
   }
 
-  void visit(ObjectAssignExpr &expr) override
-  {
-    print_indent();
-    std::cout << "ObjectAssign(" << expr.value << ")\n";
-
-    indent++;
-    expr.value->accept(*this);
-    indent--;
-  }
-
   void visit(DotExpr &expr) override
   {
     print_indent();

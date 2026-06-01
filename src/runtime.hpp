@@ -19,11 +19,11 @@ public:
 
   std::unordered_map<Value::Type, std::unordered_map<std::string, type_method> > type_methods;
 
-  std::unordered_map<std::string, std::unordered_map<std::string, Value> > user_methods;
+  std::unordered_map<Value::Type, std::unordered_map<std::string, Value> > user_methods;
 
   static void init_builtins(Environment &);
 
   void define_type_method(Value::Type type, const std::string &method_name, const type_method &method);
 
-  void define_user_method(const std::string &name, FunctionExpr &expr);
+  void define_user_method(Value::Type type, const std::string &method_name, const Value &value);
 };

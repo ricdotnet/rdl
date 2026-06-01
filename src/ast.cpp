@@ -93,11 +93,6 @@ ObjectExpr::ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > f
 
 void ObjectExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-ObjectAssignExpr::ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value)
-  : receiver(std::move(receiver)), value(std::move(value)) {}
-
-void ObjectAssignExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
-
 DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
   : field_name(std::move(field_name)), receiver(std::move(recv)) {}
 

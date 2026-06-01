@@ -45,7 +45,7 @@ public:
 
     if (expr.receiver_type)
     {
-      runtime->define_user_method(expr.name, expr);
+      runtime->define_user_method(Value::type_of(expr.receiver_type), expr.name, result);
       return;
     }
 
@@ -166,16 +166,11 @@ public:
   {
     const auto value = env->get(expr.name);
 
-    if (value.is_function())
-    {
-      result = value;
-      return;
-    }
-
     if (value.is_undefined)
     {
       ErrorService::runtime_error("Undefined variable", expr.name);
     }
+
     result = value;
   }
 
@@ -380,36 +375,36 @@ public:
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
     const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
-    const auto &user_type_method = runtime->user_methods[Value::type_name(receiver.type)][expr.method_name];
+    const auto &user_type_method = runtime->user_methods[receiver.type][expr.method_name];
 
-    // if (!type_method && !user_type_method)
-    // {
-    //   ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
-    //   return;
-    // }
-    //
-    // Environment local(env);
-    // Environment *previous = env;
-    // env = &local;
-    //
-    // try
-    // {
-    //   if (user_type_method)
-    //   {
-    //     env->define("self", receiver);
-    //     result = evaluate(user_type_method->body.get());
-    //   } else
-    //   {
-    //     result = type_method(receiver, std::vector<Value>());
-    //   }
-    // } catch (ReturnSignal &r)
-    // {
-    //   env = previous;
-    //   result = r.value;
-    //   return;
-    // }
-    //
-    // env = previous;
+    if (!type_method && !user_type_method.is_function())
+    {
+      ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
+      return;
+    }
+
+    Environment local(env);
+    Environment *previous = env;
+    env = &local;
+
+    try
+    {
+      if (user_type_method.is_function())
+      {
+        env->define("self", receiver);
+        result = evaluate(user_type_method.function.declaration->body.get());
+      } else
+      {
+        result = type_method(receiver, std::vector<Value>());
+      }
+    } catch (ReturnSignal &r)
+    {
+      env = previous;
+      result = r.value;
+      return;
+    }
+
+    env = previous;
   }
 
   void visit(ObjectExpr &expr) override
@@ -421,11 +416,6 @@ public:
       internal_map->insert({field_name, evaluate(field_expr.get())});
     }
     result = Value::object_value(internal_map);
-  }
-
-  void visit(ObjectAssignExpr &expr) override
-  {
-    result = Value::nil_value();
   }
 
   void visit(DotExpr &expr) override

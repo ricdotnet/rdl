@@ -7,6 +7,7 @@
 #include <vector>
 #include "./token.hpp"
 #include "./visitor.hpp"
+#include "interpreter.hpp"
 
 class Expr
 {
@@ -243,18 +244,6 @@ public:
   std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
 
   explicit ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
-
-  void accept(ExprVisitor &visitor) override;
-};
-
-class ObjectAssignExpr : public Expr
-{
-public:
-  std::unique_ptr<Expr> receiver;
-
-  std::unique_ptr<Expr> value;
-
-  explicit ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value);
 
   void accept(ExprVisitor &visitor) override;
 };

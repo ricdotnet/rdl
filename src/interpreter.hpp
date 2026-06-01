@@ -188,12 +188,12 @@ struct Value
 
   static Value range_value(const int start, const int end, const int step)
   {
-    return Value{Range, 0, "", false, {}, false, {nullptr}, {start, end, step}};
+    return Value{Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
   }
 
   static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
   {
-    return Value{Object, 0, "", false, {properties}};
+    return Value{Object, 0, "", false, {properties},};
   }
 
   static std::string type_name(const Type type)
@@ -214,9 +214,51 @@ struct Value
         return "Function";
       case Range:
         return "Range";
+      case Object:
+        return "Object";
       default:
         return "Unknown";
     }
+  }
+
+  static Type type_of(const std::optional<std::string> &value)
+  {
+    if (!value.has_value()) return Nil;
+    if (*value == "Number")
+    {
+      return Number;
+    }
+    if (*value == "String")
+    {
+      return String;
+    }
+    if (*value == "Boolean")
+    {
+      return Boolean;
+    }
+    if (*value == "Nil")
+    {
+      return Nil;
+    }
+    if (*value == "Undefined")
+    {
+      return Undefined;
+    }
+    if (*value == "Function")
+    {
+      return Function;
+    }
+    if (*value == "Range")
+    {
+      return Range;
+    }
+    if (*value == "Object")
+    {
+      return Object;
+    }
+
+    ErrorService::runtime_error("Unknown type", *value);
+    return Nil;
   }
 };
 
