@@ -7,6 +7,7 @@
 #include <vector>
 #include "./token.hpp"
 #include "./visitor.hpp"
+#include "interpreter.hpp"
 
 class Expr
 {
@@ -214,11 +215,11 @@ public:
 class CallExpr : public Expr
 {
 public:
-  std::string function_name;
+  std::unique_ptr<Expr> callee;
 
   std::vector<std::unique_ptr<Expr> > arguments;
 
-  explicit CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args);
+  explicit CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr> > args);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -243,18 +244,6 @@ public:
   std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
 
   explicit ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
-
-  void accept(ExprVisitor &visitor) override;
-};
-
-class ObjectAssignExpr : public Expr
-{
-public:
-  std::unique_ptr<Expr> receiver;
-
-  std::unique_ptr<Expr> value;
-
-  explicit ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value);
 
   void accept(ExprVisitor &visitor) override;
 };

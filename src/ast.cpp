@@ -78,8 +78,8 @@ LetExpr::LetExpr(std::string n, std::unique_ptr<Expr> init)
 
 void LetExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-CallExpr::CallExpr(std::string func, std::vector<std::unique_ptr<Expr> > args)
-  : function_name(std::move(func)), arguments(std::move(args)) {}
+CallExpr::CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr> > args)
+  : callee(std::move(callee)), arguments(std::move(args)) {}
 
 void CallExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
@@ -92,11 +92,6 @@ ObjectExpr::ObjectExpr(std::unordered_map<std::string, std::unique_ptr<Expr> > f
   : fields(std::move(fields)) {}
 
 void ObjectExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
-
-ObjectAssignExpr::ObjectAssignExpr(std::unique_ptr<Expr> receiver, std::unique_ptr<Expr> value)
-  : receiver(std::move(receiver)), value(std::move(value)) {}
-
-void ObjectAssignExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
 DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
   : field_name(std::move(field_name)), receiver(std::move(recv)) {}

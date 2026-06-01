@@ -165,27 +165,38 @@ public:
     indent++;
     expr.initialiser->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(CallExpr &expr) override
   {
     print_indent();
-    std::cout << "Call(" << expr.function_name << ")\n";
-    std::cout << std::endl;
-
+    std::cout << "Call(\n";
+    expr.callee->accept(*this);
     indent++;
     for (const auto &arg: expr.arguments)
     {
       arg->accept(*this);
     }
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(MethodCallExpr &expr) override
   {
     print_indent();
-    std::cout << "MethodCall(" << expr.method_name << ")\n";
-    std::cout << std::endl;
+    std::cout << "MethodCall(\n";
+    expr.receiver->accept(*this);
+    indent++;
+    for (const auto &arg: expr.arguments)
+    {
+      arg->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(ObjectExpr &expr) override
@@ -202,16 +213,6 @@ public:
     indent--;
     print_indent();
     std::cout << ")\n";
-  }
-
-  void visit(ObjectAssignExpr &expr) override
-  {
-    print_indent();
-    std::cout << "ObjectAssign(" << expr.value << ")\n";
-
-    indent++;
-    expr.value->accept(*this);
-    indent--;
   }
 
   void visit(DotExpr &expr) override

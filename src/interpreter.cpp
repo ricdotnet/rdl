@@ -41,11 +41,11 @@ public:
 
   void visit(FunctionExpr &expr) override
   {
-    result = Value::function_value(&expr);
+    result = Value::user_function_value(&expr);
 
     if (expr.receiver_type)
     {
-      runtime->define_user_method(expr.name, expr);
+      runtime->define_user_method(Value::type_of(expr.receiver_type), expr.name, result);
       return;
     }
 
@@ -165,10 +165,12 @@ public:
   void visit(VariableExpr &expr) override
   {
     const auto value = env->get(expr.name);
+
     if (value.is_undefined)
     {
       ErrorService::runtime_error("Undefined variable", expr.name);
     }
+
     result = value;
   }
 
@@ -329,35 +331,33 @@ public:
 
     std::vector<Value> arguments;
 
+    const auto callee = evaluate(expr.callee.get());
+
+    if (!callee.is_function())
+    {
+      ErrorService::runtime_error("Not callable", "");
+    }
+
     for (auto &arg: expr.arguments)
     {
       arguments.push_back(evaluate(arg.get()));
     }
 
-    if (runtime->builtins.contains(expr.function_name))
+    if (callee.function.is_builtin)
     {
-      result = runtime->builtins.at(expr.function_name)(arguments);
-
+      result = callee.function.builtin(arguments);
       return;
-    }
-
-    const auto function = env->get(expr.function_name);
-
-    if (!function.is_function())
-    {
-      ErrorService::runtime_error("Not a function", expr.function_name);
     }
 
     Environment local(env);
     Environment *previous = env;
     env = &local;
 
-    const auto declaration = function.function.declaration;
-    bind_local_params(local, *declaration, arguments);
+    bind_local_params(local, *callee.function.declaration, arguments);
 
     try
     {
-      evaluate(declaration->body.get());
+      evaluate(callee.function.declaration->body.get());
     } catch (ReturnSignal &r)
     {
       env = previous;
@@ -375,9 +375,9 @@ public:
     // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
     const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
-    const auto &user_type_method = runtime->user_methods[Value::type_name(receiver.type)][expr.method_name];
+    const auto &user_type_method = runtime->user_methods[receiver.type][expr.method_name];
 
-    if (!type_method && !user_type_method)
+    if (!type_method && !user_type_method.is_function())
     {
       ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
       return;
@@ -389,10 +389,10 @@ public:
 
     try
     {
-      if (user_type_method)
+      if (user_type_method.is_function())
       {
         env->define("self", receiver);
-        result = evaluate(user_type_method->body.get());
+        result = evaluate(user_type_method.function.declaration->body.get());
       } else
       {
         result = type_method(receiver, std::vector<Value>());
@@ -416,11 +416,6 @@ public:
       internal_map->insert({field_name, evaluate(field_expr.get())});
     }
     result = Value::object_value(internal_map);
-  }
-
-  void visit(ObjectAssignExpr &expr) override
-  {
-    result = Value::nil_value();
   }
 
   void visit(DotExpr &expr) override
