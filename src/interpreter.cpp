@@ -90,22 +90,25 @@ public:
 
   void visit(WhileExpr &expr) override
   {
-    Environment local(env);
-    Environment *previous = env;
-    env = &local;
-
-    try
+    while (evaluate(expr.condition.get()).is_truthy())
     {
-      while (evaluate(expr.condition.get()).is_truthy())
+      Environment local(env);
+      Environment *previous = env;
+      env = &local;
+
+      try
       {
         evaluate(expr.body.get());
+      } catch (ReturnSignal &r)
+      {
+        env = previous;
+        result = r.value;
+        return;
       }
-    } catch (ReturnSignal &)
-    {
-      // ignore since there is no actual return value
+
+      env = previous;
     }
 
-    env = previous;
     result = Value::nil_value();
   }
 
