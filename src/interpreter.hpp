@@ -21,6 +21,7 @@ enum class ValueType
   Undefined,
   Function,
   Range,
+  Array,
 };
 
 struct FunctionValue
@@ -46,6 +47,13 @@ struct ObjectValue
   std::shared_ptr<std::unordered_map<std::string, Value> > properties;
 };
 
+struct ArrayValue
+{
+  ValueType type;
+
+  std::shared_ptr<std::vector<Value> > elements;
+};
+
 struct Value
 {
   ValueType type;
@@ -63,6 +71,8 @@ struct Value
   FunctionValue function{};
 
   RangeValue range{};
+
+  ArrayValue array{};
 
   [[nodiscard]] std::string to_string() const
   {
@@ -98,6 +108,10 @@ struct Value
     {
       return std::format("range({},{},{})", range.start, range.end, range.step);
     }
+    if (type == ValueType::Array)
+    {
+      return "<array>";
+    }
 
     ErrorService::runtime_error("Cannot convert value of type to string", std::to_string(static_cast<int>(type)));
     return "";
@@ -116,6 +130,8 @@ struct Value
   [[nodiscard]] bool is_range() const { return type == ValueType::Range; }
 
   [[nodiscard]] bool is_object() const { return type == ValueType::Object; }
+
+  [[nodiscard]] bool is_array() const { return type == ValueType::Array; }
 
   [[nodiscard]] bool equals(const Value &other) const
   {
@@ -141,6 +157,7 @@ struct Value
       case ValueType::Undefined:
       case ValueType::Function:
       case ValueType::Range:
+      case ValueType::Array:
         break;
     }
 
@@ -165,8 +182,14 @@ struct Value
     {
       return !string.empty();
     }
+    if (is_array())
+    {
+      return !array.elements->empty();
+    }
     return true;
   }
+
+  static Value nil_value() { return Value{ValueType::Nil}; }
 
   static Value number_value(const int n) { return Value{ValueType::Number, n}; }
 
@@ -174,7 +197,10 @@ struct Value
 
   static Value boolean_value(const bool b) { return Value{ValueType::Boolean, 0, "", b}; }
 
-  static Value nil_value() { return Value{ValueType::Nil, 0, ""}; }
+  static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
+  {
+    return Value{ValueType::Object, 0, "", false, {properties},};
+  }
 
   static Value undefined_value() { return Value{ValueType::Undefined, 0, "", false, {}, true}; }
 
@@ -193,9 +219,9 @@ struct Value
     return Value{ValueType::Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
   }
 
-  static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
+  static Value array_value(const ValueType type, const std::shared_ptr<std::vector<Value> > &elements)
   {
-    return Value{ValueType::Object, 0, "", false, {properties},};
+    return Value{ValueType::Array, 0, "", false, {}, false, {nullptr, nullptr, false}, {0, 0, 0}, {type, elements}};
   }
 
   static std::string type_name(const ValueType type)
@@ -218,6 +244,8 @@ struct Value
         return "Range";
       case ValueType::Object:
         return "Object";
+      case ValueType::Array:
+        return "Array";
       default:
         return "Unknown";
     }
@@ -257,6 +285,10 @@ struct Value
     if (*value == "Object")
     {
       return ValueType::Object;
+    }
+    if (*value == "Array")
+    {
+      return ValueType::Array;
     }
 
     ErrorService::runtime_error("Unknown type", *value);
