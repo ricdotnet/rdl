@@ -2,6 +2,7 @@
 #include "./environment.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
+#include "./utils.hpp"
 #include "environment_guard.hpp"
 
 class Interpreter : public ExprVisitor
@@ -121,10 +122,11 @@ public:
     env->define(expr.iterator, Value::nil_value());
 
     // we have to normalize a mutable identifier
-    const auto iterator = expr.iterator.substr(1);
+    const auto iterator = Utils::normalise_identifier(expr.iterator);
     const auto body = expr.body.get();
+    const auto iterable = evaluate(expr.iterable.get());
 
-    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range() && !body->statements.empty())
+    if (iterable.is_range() && !body->statements.empty())
     {
       const auto &[start, end, step] = iterable.range;
 
@@ -136,9 +138,23 @@ public:
           evaluate(body);
         }
       } catch (ReturnSignal &)
+      {}
+    }
+
+    if (iterable.is_array() && !body->statements.empty())
+    {
+      const auto &arr = iterable.array.elements;
+      const auto size = static_cast<int>(arr->size());
+
+      try
       {
-        // ignore since there is no actual return value
-      }
+        for (int i = 0; i < size; ++i)
+        {
+          env->assign(iterator, arr->at(i));
+          evaluate(body);
+        }
+      } catch (ReturnSignal &)
+      {}
     }
 
     result = Value::nil_value();
@@ -187,6 +203,25 @@ public:
       const auto receiver = evaluate(left->receiver.get());
       auto &prop_map = *receiver.object.properties;
       prop_map[left->field_name] = value;
+      result = value;
+      return;
+    }
+
+    if (const auto *left = dynamic_cast<IndexExpr *>(expr.left.get()))
+    {
+      const auto receiver = evaluate(left->receiver_array.get());
+      const auto indexVal = evaluate(left->index.get());
+
+      if (receiver.array.type != value.type)
+      {
+        ErrorService::runtime_error(
+          "Type mismatch in array element: expected " + Value::type_name(receiver.array.type) + ", got " +
+          Value::type_name(value.type), "Array elements must match the declared type");
+      }
+
+      const auto &arr = receiver.array.elements;
+
+      receiver.array.elements->insert(arr->begin() + indexVal.number, value);
       result = value;
       return;
     }

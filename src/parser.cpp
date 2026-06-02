@@ -135,12 +135,13 @@ std::unique_ptr<Expr> Parser::for_loop()
   auto identifier_token = consume(TokenType::Identifier);
   consume(TokenType::In);
 
-  Expr *expr = nullptr;
+  std::unique_ptr<Expr> expr = nullptr;
 
   // TODO: for handling ArrayExpr in the future
   if (peek().type != TokenType::Number)
   {
-    return nullptr;
+    std::cout << "For loop with iterable" << std::endl;
+    expr = expression();
   } else
   {
     const auto init = consume(TokenType::Number).value;
@@ -154,13 +155,13 @@ std::unique_ptr<Expr> Parser::for_loop()
       step = consume(TokenType::Number).value;
     }
 
-    expr = new RangeExpr(std::stoi(init), std::stoi(end), std::stoi(step));
+    expr = std::make_unique<RangeExpr>(std::stoi(init), std::stoi(end), std::stoi(step));
   }
 
   consume(TokenType::LeftBrace);
   auto body = block();
 
-  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::unique_ptr<Expr>(expr), std::move(body));
+  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(expr), std::move(body));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()
