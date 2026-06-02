@@ -56,7 +56,7 @@ void Runtime::init_builtins(Environment &env)
 
 void Runtime::init_type_methods()
 {
-  this->define_type_method(Value::String, "length", [](const Value &receiver, const std::vector<Value> &args) -> Value {
+  this->define_type_method(ValueType::String, "length", [](const Value &receiver, const std::vector<Value> &args) -> Value {
     if (!args.empty())
     {
       ErrorService::runtime_error("Expected 0 arguments for string length method.",
@@ -66,7 +66,7 @@ void Runtime::init_type_methods()
     return Value::number_value(static_cast<int>(receiver.string.length()));
   });
 
-  this->define_type_method(Value::String, "upper", [](const Value &receiver, const std::vector<Value> &args) -> Value {
+  this->define_type_method(ValueType::String, "upper", [](const Value &receiver, const std::vector<Value> &args) -> Value {
     if (!args.empty())
     {
       ErrorService::runtime_error("Expected 0 arguments for string upper method.",
@@ -77,7 +77,7 @@ void Runtime::init_type_methods()
     return Value::string_value(upper);
   });
 
-  this->define_type_method(Value::String, "lower", [](const Value &receiver, const std::vector<Value> &args) -> Value {
+  this->define_type_method(ValueType::String, "lower", [](const Value &receiver, const std::vector<Value> &args) -> Value {
     if (!args.empty())
     {
       ErrorService::runtime_error("Expected 0 arguments for string lower method.",
@@ -88,7 +88,7 @@ void Runtime::init_type_methods()
     return Value::string_value(lower);
   });
 
-  this->define_type_method(Value::Number, "to_string",
+  this->define_type_method(ValueType::Number, "to_string",
                            [](const Value &receiver, const std::vector<Value> &args) -> Value {
                              if (!args.empty())
                              {
@@ -98,7 +98,7 @@ void Runtime::init_type_methods()
                              return Value::string_value("\"" + std::to_string(receiver.number) + "\"");
                            });
 
-  this->define_type_method(Value::Boolean, "to_string",
+  this->define_type_method(ValueType::Boolean, "to_string",
                            [](const Value &receiver, const std::vector<Value> &args) -> Value {
                              if (!args.empty())
                              {
@@ -109,7 +109,7 @@ void Runtime::init_type_methods()
                            });
 }
 
-void Runtime::define_type_method(const Value::Type type, const std::string &method_name, const type_method &method)
+void Runtime::define_type_method(const ValueType type, const std::string &method_name, const type_method &method)
 {
   if (type_methods[type].contains(method_name))
   {
@@ -119,7 +119,7 @@ void Runtime::define_type_method(const Value::Type type, const std::string &meth
   type_methods[type][method_name] = method;
 }
 
-void Runtime::define_user_method(const Value::Type type, const std::string &method_name, const Value &value)
+void Runtime::define_user_method(const ValueType type, const std::string &method_name, const Value &value)
 {
   if (user_methods[type].contains(method_name))
   {

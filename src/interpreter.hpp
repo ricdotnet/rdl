@@ -11,6 +11,18 @@ struct Value;
 
 class Environment;
 
+enum class ValueType
+{
+  Number,
+  String,
+  Boolean,
+  Object,
+  Nil,
+  Undefined,
+  Function,
+  Range,
+};
+
 struct FunctionValue
 {
   FunctionExpr *declaration = nullptr;
@@ -36,17 +48,7 @@ struct ObjectValue
 
 struct Value
 {
-  enum Type
-  {
-    Number,
-    String,
-    Boolean,
-    Object,
-    Nil,
-    Undefined,
-    Function,
-    Range,
-  } type;
+  ValueType type;
 
   int number{};
 
@@ -64,35 +66,35 @@ struct Value
 
   [[nodiscard]] std::string to_string() const
   {
-    if (type == Number)
+    if (type == ValueType::Number)
     {
       return std::to_string(number);
     }
-    if (type == String)
+    if (type == ValueType::String)
     {
       return string;
     }
-    if (type == Boolean)
+    if (type == ValueType::Boolean)
     {
       return boolean ? "true" : "false";
     }
-    if (type == Object)
+    if (type == ValueType::Object)
     {
       return "<object>";
     }
-    if (type == Nil)
+    if (type == ValueType::Nil)
     {
       return "nil";
     }
-    if (type == Undefined)
+    if (type == ValueType::Undefined)
     {
       return "undefined";
     }
-    if (type == Function)
+    if (type == ValueType::Function)
     {
       return "<function>";
     }
-    if (type == Range)
+    if (type == ValueType::Range)
     {
       return std::format("range({},{},{})", range.start, range.end, range.step);
     }
@@ -101,19 +103,19 @@ struct Value
     return "";
   }
 
-  [[nodiscard]] bool is_number() const { return type == Number; }
+  [[nodiscard]] bool is_number() const { return type == ValueType::Number; }
 
-  [[nodiscard]] bool is_string() const { return type == String; }
+  [[nodiscard]] bool is_string() const { return type == ValueType::String; }
 
-  [[nodiscard]] bool is_boolean() const { return type == Boolean; }
+  [[nodiscard]] bool is_boolean() const { return type == ValueType::Boolean; }
 
-  [[nodiscard]] bool is_nil() const { return type == Nil; }
+  [[nodiscard]] bool is_nil() const { return type == ValueType::Nil; }
 
-  [[nodiscard]] bool is_function() const { return type == Function; }
+  [[nodiscard]] bool is_function() const { return type == ValueType::Function; }
 
-  [[nodiscard]] bool is_range() const { return type == Range; }
+  [[nodiscard]] bool is_range() const { return type == ValueType::Range; }
 
-  [[nodiscard]] bool is_object() const { return type == Object; }
+  [[nodiscard]] bool is_object() const { return type == ValueType::Object; }
 
   [[nodiscard]] bool equals(const Value &other) const
   {
@@ -124,21 +126,21 @@ struct Value
 
     switch (type)
     {
-      case Number:
+      case ValueType::Number:
         return number == other.number;
-      case String:
+      case ValueType::String:
         return string == other.string;
-      case Boolean:
+      case ValueType::Boolean:
         return boolean == other.boolean;
-      case Nil:
+      case ValueType::Nil:
         return true;
       // an object can never be equal to another one
       // but because we will share references for the same object then they will be equal
       // TODO: implement object equality check
-      case Object:
-      case Undefined:
-      case Function:
-      case Range:
+      case ValueType::Object:
+      case ValueType::Undefined:
+      case ValueType::Function:
+      case ValueType::Range:
         break;
     }
 
@@ -166,99 +168,99 @@ struct Value
     return true;
   }
 
-  static Value number_value(const int n) { return Value{Number, n}; }
+  static Value number_value(const int n) { return Value{ValueType::Number, n}; }
 
-  static Value string_value(std::string s) { return Value{String, 0, std::move(s)}; }
+  static Value string_value(std::string s) { return Value{ValueType::String, 0, std::move(s)}; }
 
-  static Value boolean_value(const bool b) { return Value{Boolean, 0, "", b}; }
+  static Value boolean_value(const bool b) { return Value{ValueType::Boolean, 0, "", b}; }
 
-  static Value nil_value() { return Value{Nil, 0, ""}; }
+  static Value nil_value() { return Value{ValueType::Nil, 0, ""}; }
 
-  static Value undefined_value() { return Value{Undefined, 0, "", false, {}, true}; }
+  static Value undefined_value() { return Value{ValueType::Undefined, 0, "", false, {}, true}; }
 
   static Value builtin_function_value(std::function<Value(std::vector<Value> &)> body)
   {
-    return Value{Function, 0, "", false, {}, false, {nullptr, body, true}};
+    return Value{ValueType::Function, 0, "", false, {}, false, {nullptr, body, true}};
   }
 
   static Value user_function_value(FunctionExpr *declaration)
   {
-    return Value{Function, 0, "", false, {}, false, {declaration, nullptr, false}};
+    return Value{ValueType::Function, 0, "", false, {}, false, {declaration, nullptr, false}};
   }
 
   static Value range_value(const int start, const int end, const int step)
   {
-    return Value{Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
+    return Value{ValueType::Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
   }
 
   static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
   {
-    return Value{Object, 0, "", false, {properties},};
+    return Value{ValueType::Object, 0, "", false, {properties},};
   }
 
-  static std::string type_name(const Type type)
+  static std::string type_name(const ValueType type)
   {
     switch (type)
     {
-      case Number:
+      case ValueType::Number:
         return "Number";
-      case String:
+      case ValueType::String:
         return "String";
-      case Boolean:
+      case ValueType::Boolean:
         return "Boolean";
-      case Nil:
+      case ValueType::Nil:
         return "Nil";
-      case Undefined:
+      case ValueType::Undefined:
         return "Undefined";
-      case Function:
+      case ValueType::Function:
         return "Function";
-      case Range:
+      case ValueType::Range:
         return "Range";
-      case Object:
+      case ValueType::Object:
         return "Object";
       default:
         return "Unknown";
     }
   }
 
-  static Type type_of(const std::optional<std::string> &value)
+  static ValueType type_of(const std::optional<std::string> &value)
   {
-    if (!value.has_value()) return Nil;
+    if (!value.has_value()) return ValueType::Nil;
     if (*value == "Number")
     {
-      return Number;
+      return ValueType::Number;
     }
     if (*value == "String")
     {
-      return String;
+      return ValueType::String;
     }
     if (*value == "Boolean")
     {
-      return Boolean;
+      return ValueType::Boolean;
     }
     if (*value == "Nil")
     {
-      return Nil;
+      return ValueType::Nil;
     }
     if (*value == "Undefined")
     {
-      return Undefined;
+      return ValueType::Undefined;
     }
     if (*value == "Function")
     {
-      return Function;
+      return ValueType::Function;
     }
     if (*value == "Range")
     {
-      return Range;
+      return ValueType::Range;
     }
     if (*value == "Object")
     {
-      return Object;
+      return ValueType::Object;
     }
 
     ErrorService::runtime_error("Unknown type", *value);
-    return Nil;
+    return ValueType::Nil;
   }
 };
 
