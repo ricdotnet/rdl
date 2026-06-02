@@ -1,4 +1,3 @@
-#include <iostream>
 #include "./ast.hpp"
 #include "./environment.hpp"
 #include "./error_service.hpp"
@@ -421,5 +420,53 @@ public:
     }
 
     ErrorService::runtime_error("Undefined field for type " + Value::type_name(receiver.type), field_name);
+  }
+
+  void visit(ArrayExpr &expr) override
+  {
+    std::vector<Value> values;
+
+    for (const auto &element_expr: expr.elements)
+    {
+      auto value = evaluate(element_expr.get());
+
+      if (value.type != expr.declared_type)
+      {
+        ErrorService::runtime_error(
+          "Type mismatch in array element: expected " + Value::type_name(expr.declared_type) + ", got " +
+          Value::type_name(value.type), "Array elements must match the declared type");
+      }
+
+      values.push_back(value);
+    }
+
+    result = Value::array_value(expr.declared_type, std::make_shared<std::vector<Value> >(std::move(values)));
+  }
+
+  void visit(IndexExpr &expr) override
+  {
+    const Value receiver = evaluate(expr.receiver_array.get());
+    const Value indexVal = evaluate(expr.index.get());
+
+    if (!indexVal.is_number())
+    {
+      ErrorService::runtime_error("Array index must be a number", "");
+    }
+
+    if (!receiver.is_array())
+    {
+      ErrorService::runtime_error("Cannot index non-array", "");
+    }
+
+    const auto &arr = receiver.array.elements;
+    const int size = static_cast<int>(arr->size());
+    const int i = indexVal.number;
+
+    if (i < 0 || i >= size)
+    {
+      ErrorService::runtime_error("Index out of bounds", "");
+    }
+
+    result = (*arr)[i];
   }
 };

@@ -220,4 +220,30 @@ public:
     print_indent();
     std::cout << "DotExpr(" << expr.field_name << ")\n";
   }
+
+  void visit(ArrayExpr &expr) override
+  {
+    print_indent();
+    std::cout << "Array(\n";
+    indent++;
+    for (const auto &exp: expr.elements)
+    {
+      exp->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(IndexExpr &expr) override
+  {
+    print_indent();
+    std::cout << "IndexExpr(\n";
+    indent++;
+    expr.receiver_array->accept(*this);
+    expr.index->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
 };

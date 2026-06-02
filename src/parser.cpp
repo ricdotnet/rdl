@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -393,6 +394,16 @@ std::unique_ptr<Expr> Parser::postfix()
       continue;
     }
 
+    if (match(TokenType::LeftBracket))
+    {
+      auto index = expression();
+      consume(TokenType::RightBracket);
+
+      expr = std::make_unique<IndexExpr>(std::move(expr), std::move(index));
+
+      continue;
+    }
+
     break;
   }
 
@@ -434,6 +445,30 @@ std::unique_ptr<Expr> Parser::primary()
     auto expr = expression();
     consume(TokenType::RightParen);
     return expr;
+  }
+
+  if (match(TokenType::LeftBracket))
+  {
+    std::vector<std::unique_ptr<Expr> > elements;
+
+    while (!check(TokenType::RightBracket) && !is_at_end())
+    {
+      elements.push_back(expression());
+      try_consume(TokenType::Comma);
+    }
+
+    consume(TokenType::RightBracket);
+
+    const auto type_token = consume(TokenType::Identifier);
+    std::optional<ValueType> declared_type = Value::type_of(type_token.value);
+
+    if (!declared_type)
+    {
+      ErrorService::syntax_error("Expected type for array", type_token);
+      return nullptr;
+    }
+
+    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
   }
 
   ErrorService::syntax_error("Expected expression", tokens[current]);

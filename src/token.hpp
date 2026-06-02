@@ -29,6 +29,8 @@ enum class TokenType
   RightParen,
   LeftBrace,
   RightBrace,
+  LeftBracket,
+  RightBracket,
   Comma,
   Semicolon,
   DoubleQuote,

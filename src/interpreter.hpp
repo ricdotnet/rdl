@@ -2,27 +2,17 @@
 
 #include <format>
 #include <functional>
+#include <memory>
 #include <string>
-#include "./ast.hpp"
 #include "./error_service.hpp"
+#include "./value_type.hpp"
 
-// Forward declaration
+// Forward declarations
 struct Value;
 
 class Environment;
 
-enum class ValueType
-{
-  Number,
-  String,
-  Boolean,
-  Object,
-  Nil,
-  Undefined,
-  Function,
-  Range,
-  Array,
-};
+class FunctionExpr;
 
 struct FunctionValue
 {
