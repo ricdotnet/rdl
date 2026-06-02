@@ -335,6 +335,7 @@ public:
       ErrorService::runtime_error("Not callable", "");
     }
 
+    arguments.reserve(expr.arguments.size());
     for (auto &arg: expr.arguments)
     {
       arguments.push_back(evaluate(arg.get()));
@@ -379,6 +380,14 @@ public:
     Environment local(env);
     EnvironmentGuard guard(env, &local);
 
+    std::vector<Value> arguments;
+
+    arguments.reserve(expr.arguments.size());
+    for (auto &arg: expr.arguments)
+    {
+      arguments.push_back(evaluate(arg.get()));
+    }
+
     try
     {
       if (user_type_method.is_function())
@@ -387,7 +396,7 @@ public:
         result = evaluate(user_type_method.function.declaration->body.get());
       } else
       {
-        result = type_method(receiver, std::vector<Value>());
+        result = type_method(receiver, arguments);
       }
     } catch (ReturnSignal &r)
     {

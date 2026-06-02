@@ -107,6 +107,19 @@ void Runtime::init_type_methods()
                              }
                              return Value::string_value(receiver.boolean ? "\"true\"" : "\"false\"");
                            });
+
+  this->define_type_method(ValueType::Array, "push",
+                           [](const Value &receiver, const std::vector<Value> &args) -> Value {
+                             if (args.empty() || args.size() > 1)
+                             {
+                               ErrorService::runtime_error("Expected 1 argument for boolean to_string method.",
+                                                           "Found " + std::to_string(args.size()));
+                             }
+
+                             receiver.array.elements->push_back(args[0]);
+
+                             return receiver;
+                           });
 }
 
 void Runtime::define_type_method(const ValueType type, const std::string &method_name, const type_method &method)

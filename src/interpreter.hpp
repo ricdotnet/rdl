@@ -100,7 +100,7 @@ struct Value
     }
     if (type == ValueType::Array)
     {
-      return "<array>";
+      return std::format("<array:{}>", array.elements->size());
     }
 
     ErrorService::runtime_error("Cannot convert value of type to string", std::to_string(static_cast<int>(type)));

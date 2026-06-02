@@ -380,11 +380,19 @@ std::unique_ptr<Expr> Parser::postfix()
 
       if (match(TokenType::LeftParen))
       {
-        // We don't need any argument support for now, so just consume left and right parents
+        std::vector<std::unique_ptr<Expr> > args;
+
+        if (!check(TokenType::RightParen))
+        {
+          do
+          {
+            args.push_back(expression());
+          } while (match(TokenType::Comma));
+        }
+
         consume(TokenType::RightParen);
 
-        expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value,
-                                                std::vector<std::unique_ptr<Expr> >());
+        expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value, std::move(args));
         continue;
       }
 
