@@ -8,9 +8,11 @@ At the moment only a few types are supported:
 
 - Number
 - String
-  - Use `""` to start and end a string
-- Bolean
-  - Use `true` or `false` to create boolean variables.
+    - Use `""` to start and end a string
+- Boolean
+    - Use `true` or `false` to create boolean variables.
+- Objects
+- Arrays
 
 Other internal types:
 
@@ -32,7 +34,7 @@ func hello() {
 
 ## Variables
 
-Variables are declared using the `let` keyword. By default, variables are immutable. 
+Variables are declared using the `let` keyword. By default, variables are immutable.
 To make a variable mutable, use the `$` prefix in its declaration.
 
 ```
@@ -40,6 +42,34 @@ let x = 10;      // Immutable variable
 let $y = 0;      // Mutable variable
 
 y = y + 1;       // Allowed for mutable variables
+```
+
+## Objects
+
+Objects are defined using the `{}` format with key-value pairs separated by a comma.
+The key is always a string, and the value can be any type.
+Keys can be accessed using the `.` operator (dot notation).
+
+```
+let user = {
+  name: "User",
+  age: 25,
+}
+
+print(user.name);
+```
+
+## Arrays
+
+Arrays are defined using the `[...]` format, followed by the type of the elements.
+The application will exit if the type of the elements is not supported.
+
+(Only String and Number are supported currently).
+
+```
+let numbers = [1, 2, 3, 4, 5]Number;
+
+print(numbers[0]); // Accessing the first element
 ```
 
 ## Functions
@@ -56,9 +86,23 @@ greet();
 
 You can also use global variables inside functions.
 
+```
+let name = "User";
+let $x = 10;
+
+func add(a, b) {
+  print(name);
+  return a + b;
+}
+
+let result = add(x, 5);
+print(result);
+```
+
 ## Type methods
 
-You can define methods on existing types using the `::` syntax. The receiver's value is accessible via the `self` keyword.
+You can define methods on existing types using the `::` syntax. The receiver's value is accessible via the `self`
+keyword.
 
 ```
 func String::greet() {
@@ -86,14 +130,14 @@ if (x < 10) {
 ## While loops
 
 While loops are also supported using the `while` keyword loops for iteration.
-For mutable counter variables, make use of the `$` so that they can be properly reassigned a new counter value.
+For mutable iterator variables, make use of the `$` so that they can be properly reassigned a new iterator value.
 
 ```
-let $counter = 0;
+let $i = 0;
 
-while (counter < 5) {
-  print(counter);
-  counter = counter + 1;
+while (i < 5) {
+  print(i);
+  i = i + 1;
 }
 ```
 
@@ -115,6 +159,20 @@ for $i in 0..10, 2 {
 }
 ```
 
+For loops can also be used with arrays, just by replacing the range with an array or a variable that contains an array.
+
+```
+for $i in [1, 2, 3, 4, 5]Number {
+  print(i);
+}
+```
+
+```
+let arr = ["Hello", "World"];
+for $i in arr {
+  print(i);
+}
+```
 
 ## Return statements
 
@@ -158,10 +216,26 @@ Use `!` to invert the truthyness of a value.
 print(!false); // true
 ```
 
-Use `-` to flip a numbers sign.
+Use `-` to flip a number sign.
 
 ```
 let a = 1;
 print(-a); // -1
 print(-(-a)) // 1
 ```
+
+## Built-in functions
+
+1. `print()`
+2. `println()`
+3. `sleep()`
+4. `now()`
+5. `input()`
+
+6. `String::length()`
+7. `String::upper()`
+8. `String::lower()`
+9. `Number::to_string()`
+10. `Boolean::to_string()`
+11. `Array::push()`
+12. `Array::pop()`
