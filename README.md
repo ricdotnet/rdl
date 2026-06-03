@@ -4,7 +4,7 @@ Ricdotlang is a simple programming language.
 
 ## Types
 
-At the moment only a few types are supported:
+At the moment only a few data types are supported:
 
 - Number
 - String
@@ -14,7 +14,7 @@ At the moment only a few types are supported:
 - Objects
 - Arrays
 
-Other internal types:
+Other internal data types:
 
 - Function
 - Nil
@@ -148,14 +148,14 @@ For loops must use the `$` operator so that the variable is mutable.
 
 ```
 for $i in 0..5 {
-  print(i);
+  println(i);
 }
 ```
 
 ```
 // For loop with a step value
 for $i in 0..10, 2 {
-  print(i);
+  println(i);
 }
 ```
 
@@ -163,14 +163,23 @@ For loops can also be used with arrays, just by replacing the range with an arra
 
 ```
 for $i in [1, 2, 3, 4, 5]Number {
-  print(i);
+  println(i);
 }
 ```
 
 ```
 let arr = ["Hello", "World"];
 for $i in arr {
-  print(i);
+  println(i);
+}
+```
+
+Iterating over an array with an index is also supported.
+
+```
+let arr = ["Hello", "World"];
+for $item, $i in arr {
+  println(i + 1 .. ": " .. item);
 }
 ```
 

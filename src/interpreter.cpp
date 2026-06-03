@@ -111,7 +111,7 @@ public:
 
   void visit(RangeExpr &expr) override
   {
-    result = Value::range_value(expr.start, expr.end, expr.step);
+    result = Value::range_value(expr.start, expr.end, expr.step, expr.inclusive);
   }
 
   void visit(ForStmt &expr) override
@@ -120,6 +120,10 @@ public:
     EnvironmentGuard guard(env, &local);
 
     env->define(expr.iterator, Value::nil_value());
+    if (expr.index_name)
+    {
+      env->define(*expr.index_name, Value::number_value(0));
+    }
 
     // we have to normalize a mutable identifier
     const auto iterator = Utils::normalise_identifier(expr.iterator);
@@ -128,11 +132,18 @@ public:
 
     if (iterable.is_range() && !body->statements.empty())
     {
-      const auto &[start, end, step] = iterable.range;
+      const auto &[start, end, step, inclusive] = iterable.range;
+
+      if (step <= 0)
+      {
+        ErrorService::runtime_error("Range step must be a positive number", "");
+      }
+
+      const int end_value = inclusive ? end + 1 : end;
 
       try
       {
-        for (int i = start; i < end; i += step)
+        for (int i = start; i < end_value; i += step)
         {
           env->assign(iterator, Value::number_value(i));
           evaluate(body);
@@ -151,6 +162,10 @@ public:
         for (int i = 0; i < size; ++i)
         {
           env->assign(iterator, arr->at(i));
+          if (expr.index_name.has_value())
+          {
+            env->assign(Utils::normalise_identifier(*expr.index_name), Value::number_value(i));
+          }
           evaluate(body);
         }
       } catch (ReturnSignal &)

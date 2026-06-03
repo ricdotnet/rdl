@@ -40,9 +40,11 @@ private:
 
   std::unique_ptr<Expr> equality();
 
+  std::unique_ptr<Expr> concat();
+
   std::unique_ptr<Expr> comparison();
 
-  std::unique_ptr<Expr> concat();
+  std::unique_ptr<Expr> range();
 
   std::unique_ptr<Expr> term();
 

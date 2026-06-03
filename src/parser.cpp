@@ -133,35 +133,23 @@ std::unique_ptr<Expr> Parser::if_statement()
 std::unique_ptr<Expr> Parser::for_loop()
 {
   auto identifier_token = consume(TokenType::Identifier);
+
+  std::optional<std::string> index_name = std::nullopt;
+
+  if (match(TokenType::Comma))
+  {
+    index_name = consume(TokenType::Identifier).value;
+  }
+
   consume(TokenType::In);
 
-  std::unique_ptr<Expr> expr = nullptr;
-
-  // TODO: for handling ArrayExpr in the future
-  if (peek().type != TokenType::Number)
-  {
-    std::cout << "For loop with iterable" << std::endl;
-    expr = expression();
-  } else
-  {
-    const auto init = consume(TokenType::Number).value;
-    consume(TokenType::Range);
-    const auto end = consume(TokenType::Number).value;
-    std::string step = "1";
-
-    if (peek().type == TokenType::Comma)
-    {
-      consume(TokenType::Comma);
-      step = consume(TokenType::Number).value;
-    }
-
-    expr = std::make_unique<RangeExpr>(std::stoi(init), std::stoi(end), std::stoi(step));
-  }
+  std::unique_ptr<Expr> expr = expression();
 
   consume(TokenType::LeftBrace);
   auto body = block();
 
-  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(expr), std::move(body));
+  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(index_name), std::move(expr),
+                                   std::move(body));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()
@@ -293,15 +281,41 @@ std::unique_ptr<Expr> Parser::concat()
 
 std::unique_ptr<Expr> Parser::comparison()
 {
-  auto expr = term();
+  auto expr = range();
 
   while (match(TokenType::Less) || match(TokenType::LessEqual) || match(TokenType::Greater) || match(
            TokenType::GreaterEqual))
   {
     Token op = previous();
-    auto right = term();
+    auto right = range();
 
     expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::range()
+{
+  auto expr = term();
+
+  if (match(TokenType::Range))
+  {
+    const auto inclusive = match(TokenType::Equal);
+
+    const auto right = term();
+    std::string step = "1";
+
+    const auto *init = dynamic_cast<NumberExpr *>(expr.get());
+    const auto *end = dynamic_cast<NumberExpr *>(right.get());
+
+    if (peek().type == TokenType::Comma)
+    {
+      consume(TokenType::Comma);
+      step = consume(TokenType::Number).value;
+    }
+
+    return std::make_unique<RangeExpr>(init->value, end->value, std::stoi(step), inclusive);
   }
 
   return expr;

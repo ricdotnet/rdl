@@ -30,6 +30,8 @@ struct RangeValue
   int end;
 
   int step;
+
+  bool inclusive;
 };
 
 struct ObjectValue
@@ -204,14 +206,16 @@ struct Value
     return Value{ValueType::Function, 0, "", false, {}, false, {declaration, nullptr, false}};
   }
 
-  static Value range_value(const int start, const int end, const int step)
+  static Value range_value(const int start, const int end, const int step, const bool inclusive)
   {
-    return Value{ValueType::Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step}};
+    return Value{ValueType::Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step, inclusive}};
   }
 
   static Value array_value(const ValueType type, const std::shared_ptr<std::vector<Value> > &elements)
   {
-    return Value{ValueType::Array, 0, "", false, {}, false, {nullptr, nullptr, false}, {0, 0, 0}, {type, elements}};
+    return Value{
+      ValueType::Array, 0, "", false, {}, false, {nullptr, nullptr, false}, {0, 0, 0, false}, {type, elements}
+    };
   }
 
   static std::string type_name(const ValueType type)
