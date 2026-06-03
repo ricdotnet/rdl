@@ -1,8 +1,8 @@
-#include <iostream>
 #include "./ast.hpp"
 #include "./environment.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
+#include "./utils.hpp"
 #include "environment_guard.hpp"
 
 class Interpreter : public ExprVisitor
@@ -111,7 +111,7 @@ public:
 
   void visit(RangeExpr &expr) override
   {
-    result = Value::range_value(expr.start, expr.end, expr.step);
+    result = Value::range_value(expr.start, expr.end, expr.step, expr.inclusive);
   }
 
   void visit(ForStmt &expr) override
@@ -120,26 +120,56 @@ public:
     EnvironmentGuard guard(env, &local);
 
     env->define(expr.iterator, Value::nil_value());
+    if (expr.index_name)
+    {
+      env->define(*expr.index_name, Value::number_value(0));
+    }
 
     // we have to normalize a mutable identifier
-    const auto iterator = expr.iterator.substr(1);
+    const auto iterator = Utils::normalise_identifier(expr.iterator);
     const auto body = expr.body.get();
+    const auto iterable = evaluate(expr.iterable.get());
 
-    if (const auto iterable = evaluate(expr.iterable.get()); iterable.is_range() && !body->statements.empty())
+    if (iterable.is_range() && !body->statements.empty())
     {
-      const auto &[start, end, step] = iterable.range;
+      const auto &[start, end, step, inclusive] = iterable.range;
+
+      if (step <= 0)
+      {
+        ErrorService::runtime_error("Range step must be a positive number", "");
+      }
+
+      const int end_value = inclusive ? end + 1 : end;
 
       try
       {
-        for (int i = start; i < end; i += step)
+        for (int i = start; i < end_value; i += step)
         {
           env->assign(iterator, Value::number_value(i));
           evaluate(body);
         }
       } catch (ReturnSignal &)
+      {}
+    }
+
+    if (iterable.is_array() && !body->statements.empty())
+    {
+      const auto &arr = iterable.array.elements;
+      const auto size = static_cast<int>(arr->size());
+
+      try
       {
-        // ignore since there is no actual return value
-      }
+        for (int i = 0; i < size; ++i)
+        {
+          env->assign(iterator, arr->at(i));
+          if (expr.index_name.has_value())
+          {
+            env->assign(Utils::normalise_identifier(*expr.index_name), Value::number_value(i));
+          }
+          evaluate(body);
+        }
+      } catch (ReturnSignal &)
+      {}
     }
 
     result = Value::nil_value();
@@ -188,6 +218,25 @@ public:
       const auto receiver = evaluate(left->receiver.get());
       auto &prop_map = *receiver.object.properties;
       prop_map[left->field_name] = value;
+      result = value;
+      return;
+    }
+
+    if (const auto *left = dynamic_cast<IndexExpr *>(expr.left.get()))
+    {
+      const auto receiver = evaluate(left->receiver_array.get());
+      const auto indexVal = evaluate(left->index.get());
+
+      if (receiver.array.type != value.type)
+      {
+        ErrorService::runtime_error(
+          "Type mismatch in array element: expected " + Value::type_name(receiver.array.type) + ", got " +
+          Value::type_name(value.type), "Array elements must match the declared type");
+      }
+
+      const auto &arr = receiver.array.elements;
+
+      receiver.array.elements->insert(arr->begin() + indexVal.number, value);
       result = value;
       return;
     }
@@ -336,6 +385,7 @@ public:
       ErrorService::runtime_error("Not callable", "");
     }
 
+    arguments.reserve(expr.arguments.size());
     for (auto &arg: expr.arguments)
     {
       arguments.push_back(evaluate(arg.get()));
@@ -380,6 +430,14 @@ public:
     Environment local(env);
     EnvironmentGuard guard(env, &local);
 
+    std::vector<Value> arguments;
+
+    arguments.reserve(expr.arguments.size());
+    for (auto &arg: expr.arguments)
+    {
+      arguments.push_back(evaluate(arg.get()));
+    }
+
     try
     {
       if (user_type_method.is_function())
@@ -388,7 +446,7 @@ public:
         result = evaluate(user_type_method.function.declaration->body.get());
       } else
       {
-        result = type_method(receiver, std::vector<Value>());
+        result = type_method(receiver, arguments);
       }
     } catch (ReturnSignal &r)
     {
@@ -421,5 +479,53 @@ public:
     }
 
     ErrorService::runtime_error("Undefined field for type " + Value::type_name(receiver.type), field_name);
+  }
+
+  void visit(ArrayExpr &expr) override
+  {
+    std::vector<Value> values;
+
+    for (const auto &element_expr: expr.elements)
+    {
+      auto value = evaluate(element_expr.get());
+
+      if (value.type != expr.declared_type)
+      {
+        ErrorService::runtime_error(
+          "Type mismatch in array element: expected " + Value::type_name(expr.declared_type) + ", got " +
+          Value::type_name(value.type), "Array elements must match the declared type");
+      }
+
+      values.push_back(value);
+    }
+
+    result = Value::array_value(expr.declared_type, std::make_shared<std::vector<Value> >(std::move(values)));
+  }
+
+  void visit(IndexExpr &expr) override
+  {
+    const Value receiver = evaluate(expr.receiver_array.get());
+    const Value indexVal = evaluate(expr.index.get());
+
+    if (!indexVal.is_number())
+    {
+      ErrorService::runtime_error("Array index must be a number", "");
+    }
+
+    if (!receiver.is_array())
+    {
+      ErrorService::runtime_error("Cannot index non-array", "");
+    }
+
+    const auto &arr = receiver.array.elements;
+    const int size = static_cast<int>(arr->size());
+    const int i = indexVal.number;
+
+    if (i < 0 || i >= size)
+    {
+      ErrorService::runtime_error("Index out of bounds", "");
+    }
+
+    result = (*arr)[i];
   }
 };

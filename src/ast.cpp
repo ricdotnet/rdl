@@ -24,13 +24,15 @@ void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
   : condition(std::move(cond)), body(std::move(body)) {}
 
-ForStmt::ForStmt(std::string i, std::unique_ptr<Expr> iter, std::unique_ptr<BlockStmt> body) : iterator(std::move(i)),
-  iterable(std::move(iter)), body(std::move(body))
+ForStmt::ForStmt(std::string i, std::optional<std::string> index_name, std::unique_ptr<Expr> iter,
+                 std::unique_ptr<BlockStmt> body) : iterator(std::move(i)), index_name(std::move(index_name)),
+                                                    iterable(std::move(iter)), body(std::move(body))
 {}
 
 void ForStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-RangeExpr::RangeExpr(const int start, const int end, const int step) : start(start), end(end), step(step)
+RangeExpr::RangeExpr(const int start, const int end, const int step, const bool inclusive) : start(start), end(end),
+  step(step), inclusive(inclusive)
 {}
 
 void RangeExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
@@ -97,3 +99,13 @@ DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
   : field_name(std::move(field_name)), receiver(std::move(recv)) {}
 
 void DotExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+ArrayExpr::ArrayExpr(const ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements)
+  : declared_type(declared_type), elements(std::move(elements)) {}
+
+void ArrayExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+IndexExpr::IndexExpr(std::unique_ptr<Expr> receiver_array, std::unique_ptr<Expr> index)
+  : receiver_array(std::move(receiver_array)), index(std::move(index)) {}
+
+void IndexExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

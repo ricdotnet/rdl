@@ -1,7 +1,5 @@
 #pragma once
 
-#include "./environment.hpp"
-
 class EnvironmentGuard
 {
   Environment *&current;

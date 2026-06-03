@@ -5,9 +5,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "./interpreter.hpp"
 #include "./token.hpp"
 #include "./visitor.hpp"
-#include "interpreter.hpp"
 
 class Expr
 {
@@ -86,12 +86,15 @@ class ForStmt : public Expr
 public:
   std::string iterator;
 
+  std::optional<std::string> index_name;
+
   // Can be RangeExpr or ArrayExpr in the future
   std::unique_ptr<Expr> iterable;
 
   std::unique_ptr<BlockStmt> body;
 
-  explicit ForStmt(std::string i, std::unique_ptr<Expr> iter, std::unique_ptr<BlockStmt> body);
+  explicit ForStmt(std::string i, std::optional<std::string> index_name, std::unique_ptr<Expr> iter,
+                   std::unique_ptr<BlockStmt> body);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -105,7 +108,9 @@ public:
 
   int step;
 
-  explicit RangeExpr(int start, int end, int step);
+  bool inclusive;
+
+  explicit RangeExpr(int start, int end, int step, bool inclusive);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -256,6 +261,30 @@ public:
   std::unique_ptr<Expr> receiver;
 
   explicit DotExpr(std::string field_name, std::unique_ptr<Expr> recv);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class ArrayExpr : public Expr
+{
+public:
+  ValueType declared_type;
+
+  std::vector<std::unique_ptr<Expr> > elements;
+
+  explicit ArrayExpr(ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class IndexExpr : public Expr
+{
+public:
+  std::unique_ptr<Expr> receiver_array;
+
+  std::unique_ptr<Expr> index;
+
+  explicit IndexExpr(std::unique_ptr<Expr> receiver_array, std::unique_ptr<Expr> index);
 
   void accept(ExprVisitor &visitor) override;
 };

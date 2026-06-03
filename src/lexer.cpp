@@ -219,6 +219,12 @@ std::vector<Token> Lexer::tokenize()
       case '}':
         tokens.push_back({TokenType::RightBrace, "}", line, column});
         break;
+      case '[':
+        tokens.push_back({TokenType::LeftBracket, "[", line, column});
+        break;
+      case ']':
+        tokens.push_back({TokenType::RightBracket, "]", line, column});
+        break;
       case '=':
         if (peek(source, current + 1) == '=')
         {

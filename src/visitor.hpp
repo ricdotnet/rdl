@@ -40,6 +40,10 @@ class ObjectExpr;
 
 class DotExpr;
 
+class ArrayExpr;
+
+class IndexExpr;
+
 class ExprVisitor
 {
 public:
@@ -84,4 +88,8 @@ public:
   virtual void visit(ObjectExpr &expr) = 0;
 
   virtual void visit(DotExpr &expr) = 0;
+
+  virtual void visit(ArrayExpr &expr) = 0;
+
+  virtual void visit(IndexExpr &expr) = 0;
 };

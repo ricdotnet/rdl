@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -132,34 +133,23 @@ std::unique_ptr<Expr> Parser::if_statement()
 std::unique_ptr<Expr> Parser::for_loop()
 {
   auto identifier_token = consume(TokenType::Identifier);
+
+  std::optional<std::string> index_name = std::nullopt;
+
+  if (match(TokenType::Comma))
+  {
+    index_name = consume(TokenType::Identifier).value;
+  }
+
   consume(TokenType::In);
 
-  Expr *expr = nullptr;
-
-  // TODO: for handling ArrayExpr in the future
-  if (peek().type != TokenType::Number)
-  {
-    return nullptr;
-  } else
-  {
-    const auto init = consume(TokenType::Number).value;
-    consume(TokenType::Range);
-    const auto end = consume(TokenType::Number).value;
-    std::string step = "1";
-
-    if (peek().type == TokenType::Comma)
-    {
-      consume(TokenType::Comma);
-      step = consume(TokenType::Number).value;
-    }
-
-    expr = new RangeExpr(std::stoi(init), std::stoi(end), std::stoi(step));
-  }
+  std::unique_ptr<Expr> expr = expression();
 
   consume(TokenType::LeftBrace);
   auto body = block();
 
-  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::unique_ptr<Expr>(expr), std::move(body));
+  return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(index_name), std::move(expr),
+                                   std::move(body));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()
@@ -291,15 +281,41 @@ std::unique_ptr<Expr> Parser::concat()
 
 std::unique_ptr<Expr> Parser::comparison()
 {
-  auto expr = term();
+  auto expr = range();
 
   while (match(TokenType::Less) || match(TokenType::LessEqual) || match(TokenType::Greater) || match(
            TokenType::GreaterEqual))
   {
     Token op = previous();
-    auto right = term();
+    auto right = range();
 
     expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::range()
+{
+  auto expr = term();
+
+  if (match(TokenType::Range))
+  {
+    const auto inclusive = match(TokenType::Equal);
+
+    const auto right = term();
+    std::string step = "1";
+
+    const auto *init = dynamic_cast<NumberExpr *>(expr.get());
+    const auto *end = dynamic_cast<NumberExpr *>(right.get());
+
+    if (peek().type == TokenType::Comma)
+    {
+      consume(TokenType::Comma);
+      step = consume(TokenType::Number).value;
+    }
+
+    return std::make_unique<RangeExpr>(init->value, end->value, std::stoi(step), inclusive);
   }
 
   return expr;
@@ -379,16 +395,34 @@ std::unique_ptr<Expr> Parser::postfix()
 
       if (match(TokenType::LeftParen))
       {
-        // We don't need any argument support for now, so just consume left and right parents
+        std::vector<std::unique_ptr<Expr> > args;
+
+        if (!check(TokenType::RightParen))
+        {
+          do
+          {
+            args.push_back(expression());
+          } while (match(TokenType::Comma));
+        }
+
         consume(TokenType::RightParen);
 
-        expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value,
-                                                std::vector<std::unique_ptr<Expr> >());
+        expr = std::make_unique<MethodCallExpr>(std::move(expr), dot_identifier.value, std::move(args));
         continue;
       }
 
       // We can assume object access here
       expr = std::make_unique<DotExpr>(dot_identifier.value, std::move(expr));
+
+      continue;
+    }
+
+    if (match(TokenType::LeftBracket))
+    {
+      auto index = expression();
+      consume(TokenType::RightBracket);
+
+      expr = std::make_unique<IndexExpr>(std::move(expr), std::move(index));
 
       continue;
     }
@@ -434,6 +468,30 @@ std::unique_ptr<Expr> Parser::primary()
     auto expr = expression();
     consume(TokenType::RightParen);
     return expr;
+  }
+
+  if (match(TokenType::LeftBracket))
+  {
+    std::vector<std::unique_ptr<Expr> > elements;
+
+    while (!check(TokenType::RightBracket) && !is_at_end())
+    {
+      elements.push_back(expression());
+      try_consume(TokenType::Comma);
+    }
+
+    consume(TokenType::RightBracket);
+
+    const auto type_token = consume(TokenType::Identifier);
+    std::optional<ValueType> declared_type = Value::type_of(type_token.value);
+
+    if (!declared_type)
+    {
+      ErrorService::syntax_error("Expected type for array", type_token);
+      return nullptr;
+    }
+
+    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
   }
 
   ErrorService::syntax_error("Expected expression", tokens[current]);

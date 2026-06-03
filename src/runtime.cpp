@@ -16,6 +16,14 @@ void Runtime::init_builtins(Environment &env)
   env.define("print", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
     for (const auto &arg: args)
     {
+      std::cout << arg.to_string();
+    }
+    return Value::nil_value();
+  }));
+
+  env.define("println", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+    for (const auto &arg: args)
+    {
       std::cout << arg.to_string() << " ";
     }
     std::cout << std::endl;
@@ -52,41 +60,56 @@ void Runtime::init_builtins(Environment &env)
       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).
       count());
   }));
+
+  env.define("input", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+    if (!args.empty())
+    {
+      ErrorService::runtime_error("Expected 0 arguments for input, found ", std::to_string(args.size()));
+    }
+
+    std::string input;
+    std::getline(std::cin, input);
+
+    return Value::string_value(input);
+  }));
 }
 
 void Runtime::init_type_methods()
 {
-  this->define_type_method(ValueType::String, "length", [](const Value &receiver, const std::vector<Value> &args) -> Value {
-    if (!args.empty())
-    {
-      ErrorService::runtime_error("Expected 0 arguments for string length method.",
-                                  "Found " + std::to_string(args.size()));
-    }
+  this->define_type_method(ValueType::String, "length",
+                           [](const Value &receiver, const std::vector<Value> &args) -> Value {
+                             if (!args.empty())
+                             {
+                               ErrorService::runtime_error("Expected 0 arguments for string length method.",
+                                                           "Found " + std::to_string(args.size()));
+                             }
 
-    return Value::number_value(static_cast<int>(receiver.string.length()));
-  });
+                             return Value::number_value(static_cast<int>(receiver.string.length()));
+                           });
 
-  this->define_type_method(ValueType::String, "upper", [](const Value &receiver, const std::vector<Value> &args) -> Value {
-    if (!args.empty())
-    {
-      ErrorService::runtime_error("Expected 0 arguments for string upper method.",
-                                  "Found " + std::to_string(args.size()));
-    }
-    std::string upper = receiver.string;
-    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
-    return Value::string_value(upper);
-  });
+  this->define_type_method(ValueType::String, "upper",
+                           [](const Value &receiver, const std::vector<Value> &args) -> Value {
+                             if (!args.empty())
+                             {
+                               ErrorService::runtime_error("Expected 0 arguments for string upper method.",
+                                                           "Found " + std::to_string(args.size()));
+                             }
+                             std::string upper = receiver.string;
+                             std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+                             return Value::string_value(upper);
+                           });
 
-  this->define_type_method(ValueType::String, "lower", [](const Value &receiver, const std::vector<Value> &args) -> Value {
-    if (!args.empty())
-    {
-      ErrorService::runtime_error("Expected 0 arguments for string lower method.",
-                                  "Found " + std::to_string(args.size()));
-    }
-    std::string lower = receiver.string;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    return Value::string_value(lower);
-  });
+  this->define_type_method(ValueType::String, "lower",
+                           [](const Value &receiver, const std::vector<Value> &args) -> Value {
+                             if (!args.empty())
+                             {
+                               ErrorService::runtime_error("Expected 0 arguments for string lower method.",
+                                                           "Found " + std::to_string(args.size()));
+                             }
+                             std::string lower = receiver.string;
+                             std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+                             return Value::string_value(lower);
+                           });
 
   this->define_type_method(ValueType::Number, "to_string",
                            [](const Value &receiver, const std::vector<Value> &args) -> Value {
@@ -107,6 +130,36 @@ void Runtime::init_type_methods()
                              }
                              return Value::string_value(receiver.boolean ? "\"true\"" : "\"false\"");
                            });
+
+  this->define_type_method(ValueType::Array, "push",
+                           [](const Value &receiver, const std::vector<Value> &args) -> Value {
+                             if (args.empty() || args.size() > 1)
+                             {
+                               ErrorService::runtime_error("Expected 1 argument for array poush method.",
+                                                           "Found " + std::to_string(args.size()));
+                             }
+
+                             receiver.array.elements->push_back(args[0]);
+
+                             return receiver;
+                           });
+
+  this->define_type_method(ValueType::Array, "pop", [](const Value &receiver, const std::vector<Value> &args) -> Value {
+    if (!args.empty())
+    {
+      ErrorService::runtime_error("Expected 0 arguments for array pop method.", "Found " + std::to_string(args.size()));
+    }
+
+    if (receiver.array.elements->empty())
+    {
+      ErrorService::runtime_error("Cannot pop from empty array", "");
+    }
+
+    const auto last_element = receiver.array.elements->back();
+    receiver.array.elements->pop_back();
+
+    return last_element;
+  });
 }
 
 void Runtime::define_type_method(const ValueType type, const std::string &method_name, const type_method &method)
