@@ -34,7 +34,7 @@ func hello() {
 
 ## Variables
 
-Variables are declared using the `let` keyword. By default, variables are immutable.
+Variables are declared using the `let` keyword. By default, variables are immutable.<br>
 To make a variable mutable, use the `$` prefix in its declaration.
 
 ```
@@ -46,8 +46,8 @@ y = y + 1;       // Allowed for mutable variables
 
 ## Objects
 
-Objects are defined using the `{}` format with key-value pairs separated by a comma.
-The key is always a string, and the value can be any type.
+Objects are defined using the `{}` format with key-value pairs separated by a comma.<br>
+The key is always a string, and the value can be any type.<br>
 Keys can be accessed using the `.` operator (dot notation).
 
 ```
@@ -61,7 +61,7 @@ print(user.name);
 
 ## Arrays
 
-Arrays are defined using the `[...]` format, followed by the type of the elements.
+Arrays are defined using the `[...]Type` format, followed by the type of the elements.<br>
 The application will exit if the type of the elements is not supported.
 
 (Only String and Number are supported currently).
@@ -129,7 +129,7 @@ if (x < 10) {
 
 ## While loops
 
-While loops are also supported using the `while` keyword loops for iteration.
+While loops are also supported using the `while` keyword loops for iteration.<br>
 For mutable iterator variables, make use of the `$` so that they can be properly reassigned a new iterator value.
 
 ```
@@ -143,7 +143,7 @@ while (i < 5) {
 
 ## For loops
 
-Implementing for loops is easy with using the `for` keyword and defining a range with `{start}..{end}`.
+Implementing for loops is easy with using the `for` keyword and defining a range with `{start}..{end}`.<br>
 For loops must use the `$` operator so that the variable is mutable.
 
 ```
@@ -174,7 +174,8 @@ for $i in arr {
 }
 ```
 
-Iterating over an array with an index is also supported.
+Iterating over an array with an index is also supported.<br>
+This index can also be added to range for loops but will be ignored and trying to use it will result in a runtime error.
 
 ```
 let arr = ["Hello", "World"];
@@ -235,16 +236,14 @@ print(-(-a)) // 1
 
 ## Built-in functions
 
-1. `print()`
-2. `println()`
-3. `sleep()`
-4. `now()`
-5. `input()`
-
-6. `String::length()`
-7. `String::upper()`
-8. `String::lower()`
-9. `Number::to_string()`
-10. `Boolean::to_string()`
-11. `Array::push()`
-12. `Array::pop()`
+1. `print()` or `println()` for printing to the console
+2. `sleep(time in ms)` for pausing the program
+3. `now()` for getting the current time in milliseconds
+4. `input()` for getting user input
+5. `String::length()` for getting the length of a string
+6. `String::upper()` for converting a string to uppercase
+7. `String::lower()` for converting a string to lowercase
+8. `Number::to_string()` for converting a number to a string
+9. `Boolean::to_string()` for converting a boolean to a string
+10. `Array::push()` for adding an element to the end of an array
+11. `Array::pop()` for removing the last element from an array
