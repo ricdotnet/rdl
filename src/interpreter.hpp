@@ -50,7 +50,7 @@ struct Value
 {
   ValueType type;
 
-  int number{};
+  size_t number{};
 
   std::string string{};
 
@@ -183,7 +183,7 @@ struct Value
 
   static Value nil_value() { return Value{ValueType::Nil}; }
 
-  static Value number_value(const int n) { return Value{ValueType::Number, n}; }
+  static Value number_value(const size_t n) { return Value{ValueType::Number, n}; }
 
   static Value string_value(std::string s) { return Value{ValueType::String, 0, std::move(s)}; }
 
