@@ -2,9 +2,8 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
-
+#include "./environment.hpp"
 #include "./error_service.hpp"
-#include "environment.hpp"
 
 Runtime::Runtime()
 {
@@ -57,7 +56,7 @@ void Runtime::init_builtins(Environment &env)
     }
 
     return Value::number_value(
-      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).
+      std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).
       count());
   }));
 
@@ -135,8 +134,15 @@ void Runtime::init_type_methods()
                            [](const Value &receiver, const std::vector<Value> &args) -> Value {
                              if (args.empty() || args.size() > 1)
                              {
-                               ErrorService::runtime_error("Expected 1 argument for array poush method.",
+                               ErrorService::runtime_error("Expected 1 argument for array push method.",
                                                            "Found " + std::to_string(args.size()));
+                             }
+
+                             if (receiver.array.type != args[0].type)
+                             {
+                               ErrorService::runtime_error("Type mismatch in array push method.",
+                                                           "Expected " + Value::type_name(receiver.array.type) +
+                                                           ", got " + Value::type_name(args[0].type));
                              }
 
                              receiver.array.elements->push_back(args[0]);

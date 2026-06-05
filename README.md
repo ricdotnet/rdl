@@ -1,6 +1,6 @@
-# Ricdotlang
+# rdl
 
-Ricdotlang is a simple programming language.
+rdl is a simple programming language.
 
 ## Types
 
@@ -61,13 +61,13 @@ print(user.name);
 
 ## Arrays
 
-Arrays are defined using the `[...]Type` format, followed by the type of the elements.<br>
+Arrays are defined using the `[]Type{...}` format, followed by the type of the elements.<br>
 The application will exit if the type of the elements is not supported.
 
 (Only String and Number are supported currently).
 
 ```
-let numbers = [1, 2, 3, 4, 5]Number;
+let numbers = []Number{1, 2, 3, 4, 5};
 
 print(numbers[0]); // Accessing the first element
 ```
@@ -162,13 +162,13 @@ for $i in 0..10, 2 {
 For loops can also be used with arrays, just by replacing the range with an array or a variable that contains an array.
 
 ```
-for $i in [1, 2, 3, 4, 5]Number {
+for $i in []Number{1, 2, 3, 4, 5} {
   println(i);
 }
 ```
 
 ```
-let arr = ["Hello", "World"];
+let arr = []String{"Hello", "World"};
 for $i in arr {
   println(i);
 }
@@ -178,7 +178,7 @@ Iterating over an array with an index is also supported.<br>
 This index can also be added to range for loops but will be ignored and trying to use it will result in a runtime error.
 
 ```
-let arr = ["Hello", "World"];
+let arr = []String{"Hello", "World"};
 for $item, $i in arr {
   println(i + 1 .. ": " .. item);
 }
