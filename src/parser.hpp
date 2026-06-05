@@ -28,8 +28,6 @@ private:
 
   std::unique_ptr<BlockStmt> block();
 
-  std::unique_ptr<Expr> object();
-
   std::unique_ptr<Expr> expression();
 
   std::unique_ptr<Expr> assignment();

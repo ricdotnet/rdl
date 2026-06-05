@@ -3,7 +3,6 @@
 #include <sstream>
 #include "./error_service.hpp"
 
-
 std::string read_file(const std::string &path)
 {
   std::ifstream file(path);

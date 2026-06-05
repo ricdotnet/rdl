@@ -1,6 +1,4 @@
 #include "./parser.hpp"
-
-#include <iostream>
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -66,12 +64,6 @@ std::unique_ptr<Expr> Parser::statement()
   {
     auto token = consume(TokenType::Identifier);
     consume(TokenType::Equal);
-
-    if (match(TokenType::LeftBrace))
-    {
-      auto value = object();
-      return std::make_unique<LetExpr>(token.value, std::move(value));
-    }
 
     auto initialiser = expression();
     return std::make_unique<LetExpr>(token.value, std::move(initialiser));
@@ -166,34 +158,6 @@ std::unique_ptr<BlockStmt> Parser::block()
   consume(TokenType::RightBrace);
 
   return std::make_unique<BlockStmt>(std::move(statements));
-}
-
-std::unique_ptr<Expr> Parser::object()
-{
-  std::unordered_map<std::string, std::unique_ptr<Expr> > properties;
-
-  while (!check(TokenType::RightBrace) && !is_at_end())
-  {
-    auto key = consume(TokenType::Identifier);
-    consume(TokenType::Colon);
-
-    if (check(TokenType::LeftBrace))
-    {
-      consume(TokenType::LeftBrace);
-      auto value = object();
-      properties.emplace(key.value, std::move(value));
-      try_consume(TokenType::Comma);
-      continue;
-    }
-
-    auto value = expression();
-    properties.emplace(key.value, std::move(value));
-    try_consume(TokenType::Comma);
-  }
-
-  consume(TokenType::RightBrace);
-
-  return std::make_unique<ObjectExpr>(std::move(properties));
 }
 
 std::unique_ptr<Expr> Parser::expression()
@@ -472,7 +436,6 @@ std::unique_ptr<Expr> Parser::primary()
 
   if (match(TokenType::LeftBracket))
   {
-
     // TODO: here is where we can implement size check if we need
     consume(TokenType::RightBracket);
 
@@ -496,6 +459,33 @@ std::unique_ptr<Expr> Parser::primary()
     consume(TokenType::RightBrace);
 
     return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
+  }
+
+  if (match(TokenType::LeftBrace))
+  {
+    std::unordered_map<std::string, std::unique_ptr<Expr> > properties;
+
+    while (!check(TokenType::RightBrace) && !is_at_end())
+    {
+      auto key = consume(TokenType::Identifier);
+      consume(TokenType::Colon);
+
+      if (check(TokenType::LeftBrace))
+      {
+        auto value = expression();
+        properties.emplace(key.value, std::move(value));
+        try_consume(TokenType::Comma);
+        continue;
+      }
+
+      auto value = expression();
+      properties.emplace(key.value, std::move(value));
+      try_consume(TokenType::Comma);
+    }
+
+    consume(TokenType::RightBrace);
+
+    return std::make_unique<ObjectExpr>(std::move(properties));
   }
 
   ErrorService::syntax_error("Expected expression", tokens[current]);
