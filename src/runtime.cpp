@@ -135,7 +135,7 @@ void Runtime::init_type_methods()
                            [](const Value &receiver, const std::vector<Value> &args) -> Value {
                              if (args.empty() || args.size() > 1)
                              {
-                               ErrorService::runtime_error("Expected 1 argument for array poush method.",
+                               ErrorService::runtime_error("Expected 1 argument for array push method.",
                                                            "Found " + std::to_string(args.size()));
                              }
 

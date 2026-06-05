@@ -472,14 +472,8 @@ std::unique_ptr<Expr> Parser::primary()
 
   if (match(TokenType::LeftBracket))
   {
-    std::vector<std::unique_ptr<Expr> > elements;
 
-    while (!check(TokenType::RightBracket) && !is_at_end())
-    {
-      elements.push_back(expression());
-      try_consume(TokenType::Comma);
-    }
-
+    // TODO: here is where we can implement size check if we need
     consume(TokenType::RightBracket);
 
     const auto type_token = consume(TokenType::Identifier);
@@ -490,6 +484,16 @@ std::unique_ptr<Expr> Parser::primary()
       ErrorService::syntax_error("Expected type for array", type_token);
       return nullptr;
     }
+
+    consume(TokenType::LeftBrace);
+
+    std::vector<std::unique_ptr<Expr> > elements;
+    while (!check(TokenType::RightBrace) && !is_at_end())
+    {
+      elements.push_back(expression());
+      try_consume(TokenType::Comma);
+    }
+    consume(TokenType::RightBrace);
 
     return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
   }
