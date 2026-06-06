@@ -89,6 +89,17 @@ public:
     result = Value::nil_value();
   }
 
+  void visit(StructStmt &stmt) override
+  {
+    const auto type_name = stmt.name;
+    std::unordered_map<std::string, ValueType> fields;
+    for (const auto &[field_name, field_type]: stmt.fields)
+    {
+      fields[field_name] = field_type;
+    }
+    result = Value::struct_value(type_name, fields);
+  }
+
   void visit(WhileExpr &expr) override
   {
     while (evaluate(expr.condition.get()).is_truthy())
@@ -236,7 +247,7 @@ public:
 
       const auto &arr = receiver.array.elements;
 
-      receiver.array.elements->insert(arr->begin() + indexVal.number, value);
+      receiver.array.elements->insert(arr->begin() + static_cast<int>(indexVal.number), value);
       result = value;
       return;
     }
@@ -274,8 +285,8 @@ public:
                                       "Found " + left.to_string() + " and " + right.to_string() + "");
         }
 
-        const int left_value = left.number;
-        const int right_value = right.number;
+        const int left_value = static_cast<int>(left.number);
+        const int right_value = static_cast<int>(right.number);
 
         switch (expr.operation.type)
         {

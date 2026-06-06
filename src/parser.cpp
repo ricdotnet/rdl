@@ -95,6 +95,11 @@ std::unique_ptr<Expr> Parser::statement()
     return for_loop();
   }
 
+  if (match(TokenType::Struct))
+  {
+    return struct_definition();
+  }
+
   return expression();
 }
 
@@ -142,6 +147,26 @@ std::unique_ptr<Expr> Parser::for_loop()
 
   return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(index_name), std::move(expr),
                                    std::move(body));
+}
+
+std::unique_ptr<Expr> Parser::struct_definition()
+{
+  const auto struct_name = consume(TokenType::Identifier);
+  consume(TokenType::LeftBrace);
+
+  std::unordered_map<std::string, ValueType> fields;
+
+  while (!check(TokenType::RightBrace) && !is_at_end())
+  {
+    auto field_name = consume(TokenType::Identifier);
+    auto field_type = consume(TokenType::Identifier);
+    fields.emplace(field_name.value, Value::type_of(field_type.value));
+    try_consume(TokenType::Comma);
+  }
+
+  consume(TokenType::RightBrace);
+
+  return std::make_unique<StructStmt>(struct_name.value, std::move(fields));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()

@@ -26,6 +26,8 @@ private:
 
   std::unique_ptr<Expr> for_loop();
 
+  std::unique_ptr<Expr> struct_definition();
+
   std::unique_ptr<BlockStmt> block();
 
   std::unique_ptr<Expr> expression();

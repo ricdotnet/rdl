@@ -8,6 +8,8 @@ std::string token_type_to_string(TokenType type)
       return "Func";
     case TokenType::Let:
       return "Let";
+    case TokenType::Struct:
+      return "Struct";
     case TokenType::If:
       return "If";
     case TokenType::Else:
@@ -62,8 +64,12 @@ std::string token_type_to_string(TokenType type)
       return "Comma";
     case TokenType::Semicolon:
       return "Semicolon";
+    case TokenType::SingleQuote:
+      return "SingleQuote";
     case TokenType::DoubleQuote:
       return "DoubleQuote";
+    case TokenType::Backtick:
+      return "Backtick";
     case TokenType::Concat:
       return "Concat";
     case TokenType::Greater:

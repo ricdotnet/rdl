@@ -69,6 +69,18 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class StructStmt : public Expr
+{
+public:
+  std::string name;
+
+  std::unordered_map<std::string, ValueType> fields;
+
+  explicit StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class WhileExpr : public Expr
 {
 public:

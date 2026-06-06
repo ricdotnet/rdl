@@ -8,6 +8,8 @@ class IfStmt;
 
 class BlockStmt;
 
+class StructStmt;
+
 class WhileExpr;
 
 class ForStmt;
@@ -56,6 +58,8 @@ public:
   virtual void visit(IfStmt &expr) = 0;
 
   virtual void visit(BlockStmt &expr) = 0;
+
+  virtual void visit(StructStmt &expr) = 0;
 
   virtual void visit(WhileExpr &expr) = 0;
 

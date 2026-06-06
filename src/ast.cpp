@@ -21,6 +21,11 @@ BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std
 
 void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
+StructStmt::StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields)
+  : name(std::move(name)), fields(std::move(fields)) {}
+
+void StructStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
   : condition(std::move(cond)), body(std::move(body)) {}
 

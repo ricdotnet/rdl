@@ -56,6 +56,22 @@ public:
     std::cout << ")\n";
   }
 
+  void visit(StructStmt &expr) override
+  {
+    print_indent();
+    std::cout << "StructStmt(\n";
+    indent++;
+    for (const auto &[field_name, field_type]: expr.fields)
+    {
+      print_indent();
+      std::cout << field_name << ": ";
+      std::cout << Value::type_name(field_type) << "\n";
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
   void visit(WhileExpr &expr) override
   {
     print_indent();

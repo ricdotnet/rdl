@@ -46,6 +46,13 @@ struct ArrayValue
   std::shared_ptr<std::vector<Value> > elements;
 };
 
+struct StructDefinition
+{
+  std::string name;
+
+  std::unordered_map<std::string, ValueType> fields;
+};
+
 struct Value
 {
   ValueType type;
@@ -65,6 +72,8 @@ struct Value
   RangeValue range{};
 
   ArrayValue array{};
+
+  StructDefinition struct_definition{};
 
   [[nodiscard]] std::string to_string() const
   {
@@ -150,6 +159,7 @@ struct Value
       case ValueType::Function:
       case ValueType::Range:
       case ValueType::Array:
+      case ValueType::Struct:
         break;
     }
 
@@ -218,6 +228,14 @@ struct Value
     };
   }
 
+  static Value struct_value(const std::string name, const std::unordered_map<std::string, ValueType> &fields)
+  {
+    return Value{
+      ValueType::Struct, 0, "", false, {}, false, {nullptr, nullptr, false}, {0, 0, 0, false},
+      {ValueType::Nil, nullptr}, {name, fields}
+    };
+  }
+
   static std::string type_name(const ValueType type)
   {
     switch (type)
@@ -240,6 +258,8 @@ struct Value
         return "Object";
       case ValueType::Array:
         return "Array";
+      case ValueType::Struct:
+        return "Struct";
       default:
         return "Unknown";
     }
@@ -283,6 +303,10 @@ struct Value
     if (*value == "Array")
     {
       return ValueType::Array;
+    }
+    if (*value == "Struct")
+    {
+      return ValueType::Struct;
     }
 
     ErrorService::runtime_error("Unknown type", *value);

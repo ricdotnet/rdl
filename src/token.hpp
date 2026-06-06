@@ -6,6 +6,7 @@ enum class TokenType
 {
   Func,
   Let,
+  Struct,
   If,
   Else,
   ElseIf,
@@ -33,7 +34,9 @@ enum class TokenType
   RightBracket,
   Comma,
   Semicolon,
+  SingleQuote,
   DoubleQuote,
+  Backtick,
   Concat,
   Greater,
   GreaterEqual,
