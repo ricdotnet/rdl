@@ -28,7 +28,8 @@ void run(std::string source, const bool debug)
   Environment env;
   Runtime runtime;
 
-  Runtime::init_builtins(env);
+  runtime.out = &std::cout;
+  runtime.init_builtins(env);
 
   ASTPrinter printer;
   Interpreter interpreter(&env, &runtime);
