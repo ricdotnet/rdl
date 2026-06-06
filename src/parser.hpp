@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <vector>
 #include "./ast.hpp"
 #include "./token.hpp"
@@ -9,6 +10,8 @@ class Parser
 {
 private:
   std::vector<Token> tokens;
+
+  std::set<std::string> seen_types;
 
   size_t current = 0;
 
