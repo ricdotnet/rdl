@@ -234,6 +234,28 @@ print(-a); // -1
 print(-(-a)) // 1
 ```
 
+## Structs
+
+You can define custom data structures using the `struct` keyword and instantiate them.<br>
+Structs are also type safe and will not allow you to assign a value of a different type to a struct variable.
+
+```
+struct User {
+  name String
+  surname String
+  age Number
+}
+
+let user = User {
+  name: "First",
+  surname: "Last",
+  age: 24,
+}
+
+println(user.name); // First
+println(user.surname); // Last
+```
+
 ## Built-in functions
 
 1. `print()` or `println()` for printing to the console
