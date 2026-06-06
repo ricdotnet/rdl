@@ -114,3 +114,8 @@ IndexExpr::IndexExpr(std::unique_ptr<Expr> receiver_array, std::unique_ptr<Expr>
   : receiver_array(std::move(receiver_array)), index(std::move(index)) {}
 
 void IndexExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+StructInitExpr::StructInitExpr(std::string type_name, std::unordered_map<std::string, std::unique_ptr<Expr> > fields)
+  : type_name(std::move(type_name)), fields(std::move(fields)) {}
+
+void StructInitExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

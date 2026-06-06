@@ -431,11 +431,40 @@ std::unique_ptr<Expr> Parser::primary()
     return std::make_unique<NumberExpr>(std::stoi(token.value));
   }
 
+  if (check(TokenType::Identifier) && peek_next().type == TokenType::LeftBrace)
+  {
+    const auto type_token = consume(TokenType::Identifier);
+    const auto type_name = type_token.value;
+
+    consume(TokenType::LeftBrace);
+    std::unordered_map<std::string, std::unique_ptr<Expr> > properties;
+
+    while (!check(TokenType::RightBrace) && !is_at_end())
+    {
+      auto key = consume(TokenType::Identifier);
+      consume(TokenType::Colon);
+
+      if (check(TokenType::LeftBrace))
+      {
+        auto value = expression();
+        properties.emplace(key.value, std::move(value));
+        try_consume(TokenType::Comma);
+      } else
+      {
+        auto value = expression();
+        properties.emplace(key.value, std::move(value));
+        try_consume(TokenType::Comma);
+      }
+    }
+
+    consume(TokenType::RightBrace);
+    return std::make_unique<StructInitExpr>(type_name, std::move(properties));
+  }
+
   if (match(TokenType::Identifier))
   {
-    const auto token = previous();
-
-    return std::make_unique<VariableExpr>(token.value);
+    const auto identifier = previous();
+    return std::make_unique<VariableExpr>(identifier.value);
   }
 
   if (match(TokenType::String))

@@ -300,3 +300,15 @@ public:
 
   void accept(ExprVisitor &visitor) override;
 };
+
+class StructInitExpr : public Expr
+{
+public:
+  std::string type_name;
+
+  std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
+
+  explicit StructInitExpr(std::string type_name, std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
+
+  void accept(ExprVisitor &visitor) override;
+};

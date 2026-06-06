@@ -1,6 +1,3 @@
-#include <chrono>
-#include <thread>
-#include <utility>
 #include "src/ast_printer.cpp"
 #include "src/environment.hpp"
 #include "src/interpreter.cpp"
@@ -61,7 +58,14 @@ int main(const int argc, char **argv)
 
   const bool debug = argc > 2 && std::string(argv[2]) == "--debug";
 
-  run(source, debug);
+  try
+  {
+    run(source, debug);
+  } catch (std::exception &e)
+  {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return 1;
+  }
 
   return 0;
 }

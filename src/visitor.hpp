@@ -46,6 +46,8 @@ class ArrayExpr;
 
 class IndexExpr;
 
+class StructInitExpr;
+
 class ExprVisitor
 {
 public:
@@ -96,4 +98,6 @@ public:
   virtual void visit(ArrayExpr &expr) = 0;
 
   virtual void visit(IndexExpr &expr) = 0;
+
+  virtual void visit(StructInitExpr &expr) = 0;
 };
