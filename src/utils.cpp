@@ -1,6 +1,5 @@
 #include  "./utils.hpp"
 
-
 std::string Utils::normalise_identifier(std::string identifier)
 {
   if (identifier.front() == '$')
