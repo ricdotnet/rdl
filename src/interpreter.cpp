@@ -46,7 +46,7 @@ public:
 
     if (expr.receiver_type)
     {
-      runtime->define_user_method(Value::type_of(expr.receiver_type), expr.name, result);
+      runtime->define_user_method(Value::type_of(expr.receiver_type, nullptr), expr.name, result);
       return;
     }
 

@@ -160,7 +160,7 @@ std::unique_ptr<Expr> Parser::struct_definition()
   {
     auto field_name = consume(TokenType::Identifier);
     auto field_type = consume(TokenType::Identifier);
-    fields.emplace(field_name.value, Value::type_of(field_type.value));
+    fields.emplace(field_name.value, Value::type_of(field_type.value, &seen_types));
     try_consume(TokenType::Comma);
   }
 
@@ -495,7 +495,9 @@ std::unique_ptr<Expr> Parser::primary()
     consume(TokenType::RightBracket);
 
     const auto type_token = consume(TokenType::Identifier);
-    std::optional<ValueType> declared_type = Value::type_of(type_token.value);
+    std::string type_name = type_token.value;
+
+    std::optional<ValueType> declared_type = Value::type_of(type_token.value, &seen_types);
 
     if (!declared_type)
     {
@@ -513,7 +515,7 @@ std::unique_ptr<Expr> Parser::primary()
     }
     consume(TokenType::RightBrace);
 
-    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
+    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements), type_name);
   }
 
   if (match(TokenType::LeftBrace))

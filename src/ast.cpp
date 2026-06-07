@@ -105,8 +105,8 @@ DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
 
 void DotExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-ArrayExpr::ArrayExpr(const ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements)
-  : declared_type(declared_type), elements(std::move(elements)) {}
+ArrayExpr::ArrayExpr(const ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements, std::string type_name)
+  : declared_type(declared_type), elements(std::move(elements)), type_name(std::move(type_name)) {}
 
 void ArrayExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 

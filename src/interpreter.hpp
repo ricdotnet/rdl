@@ -3,6 +3,7 @@
 #include <format>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 #include "./error_service.hpp"
 #include "./value_type.hpp"
@@ -356,7 +357,7 @@ struct Value
     }
   }
 
-  static ValueType type_of(const std::optional<std::string> &value)
+  static ValueType type_of(const std::optional<std::string> &value, std::set<std::string> *seen_types)
   {
     if (!value.has_value()) return ValueType::Nil;
     if (*value == "Number")
@@ -396,6 +397,11 @@ struct Value
       return ValueType::Array;
     }
     if (*value == "Struct")
+    {
+      return ValueType::Struct;
+    }
+
+    if (seen_types && seen_types->contains(value.value()))
     {
       return ValueType::Struct;
     }

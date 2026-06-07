@@ -284,7 +284,10 @@ public:
 
   std::vector<std::unique_ptr<Expr> > elements;
 
-  explicit ArrayExpr(ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements);
+  // For storing the custom type in case of using structs
+  std::string type_name;
+
+  explicit ArrayExpr(ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements, std::string type_name);
 
   void accept(ExprVisitor &visitor) override;
 };
