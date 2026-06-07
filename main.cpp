@@ -1,10 +1,10 @@
-#include "src/ast_printer.cpp"
-#include "src/environment.hpp"
-#include "src/interpreter.cpp"
-#include "src/io.hpp"
-#include "src/lexer.hpp"
-#include "src/parser.hpp"
-#include "src/runtime.hpp"
+#include "./src/ast_printer.cpp"
+#include "./src/environment.hpp"
+#include "./src/interpreter.cpp"
+#include "./src/io.hpp"
+#include "./src/lexer.hpp"
+#include "./src/parser.hpp"
+#include "./src/runtime.hpp"
 
 void run(std::string source, const bool debug)
 {
@@ -25,14 +25,16 @@ void run(std::string source, const bool debug)
 
   const auto program = parser.parse();
 
-  Environment env;
   Runtime runtime;
+  Environment env;
 
+  env.set_runtime(runtime);
   runtime.out = &std::cout;
-  runtime.init_builtins(env);
+
+  runtime.init_type_methods();
 
   ASTPrinter printer;
-  Interpreter interpreter(&env, &runtime);
+  Interpreter interpreter(&env);
 
   for (auto &statement: program)
   {

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "./interpreter.hpp"
+#include "./runtime.hpp"
 
 struct Binding
 {
@@ -13,6 +14,9 @@ struct Binding
 
 class Environment
 {
+private:
+  Runtime *runtime{};
+
 public:
   Environment *parent{};
 
@@ -29,4 +33,8 @@ public:
   Value get(const std::string &name);
 
   void assign(const std::string &name, const Value &value);
+
+  void set_runtime(Runtime &runtime);
+
+  Runtime *get_runtime() const;
 };

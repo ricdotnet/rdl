@@ -4,6 +4,8 @@ std::string token_type_to_string(TokenType type)
 {
   switch (type)
   {
+    case TokenType::Import:
+      return "Import";
     case TokenType::Func:
       return "Func";
     case TokenType::Let:

@@ -17,7 +17,12 @@ public:
   void visit(FunctionExpr &expr) override
   {
     print_indent();
-    std::cout << "Function(" << expr.name << ")\n";
+    std::cout << "Function(\n";
+    indent++;
+    expr.body->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(ReturnStmt &stmt) override
@@ -204,8 +209,8 @@ public:
   {
     print_indent();
     std::cout << "MethodCall(\n";
-    expr.receiver->accept(*this);
     indent++;
+    expr.receiver->accept(*this);
     for (const auto &arg: expr.arguments)
     {
       arg->accept(*this);
@@ -284,5 +289,11 @@ public:
     indent--;
     print_indent();
     std::cout << ")\n";
+  }
+
+  void visit(ImportExpr &expr) override
+  {
+    print_indent();
+    std::cout << "Import(" << expr.module_name << ")\n";
   }
 };

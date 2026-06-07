@@ -119,3 +119,8 @@ StructInitExpr::StructInitExpr(std::string type_name, std::unordered_map<std::st
   : type_name(std::move(type_name)), fields(std::move(fields)) {}
 
 void StructInitExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+ImportExpr::ImportExpr(std::string module_name)
+  : module_name(std::move(module_name)) {}
+
+void ImportExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

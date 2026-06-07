@@ -19,7 +19,7 @@ struct FunctionValue
 {
   FunctionExpr *declaration = nullptr;
 
-  std::function<Value(std::vector<Value> &)> builtin;
+  std::function<Value(const Value &, std::vector<Value> &)> builtin;
 
   bool is_builtin = false;
 };
@@ -259,7 +259,7 @@ struct Value
     return v;
   }
 
-  static Value builtin_function_value(const std::function<Value(std::vector<Value> &)> &body)
+  static Value builtin_function_value(const std::function<Value(const Value &receiver, std::vector<Value> &)> &body)
   {
     Value v;
 

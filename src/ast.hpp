@@ -315,3 +315,13 @@ public:
 
   void accept(ExprVisitor &visitor) override;
 };
+
+class ImportExpr : public Expr
+{
+public:
+  std::string module_name;
+
+  explicit ImportExpr(std::string module_name);
+
+  void accept(ExprVisitor &visitor) override;
+};

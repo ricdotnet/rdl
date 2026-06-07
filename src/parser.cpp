@@ -1,4 +1,5 @@
 #include "./parser.hpp"
+
 #include <memory>
 #include <utility>
 #include "./ast.hpp"
@@ -543,6 +544,12 @@ std::unique_ptr<Expr> Parser::primary()
     consume(TokenType::RightBrace);
 
     return std::make_unique<ObjectExpr>(std::move(properties));
+  }
+
+  if (match(TokenType::Import))
+  {
+    auto module_name = consume(TokenType::String);
+    return std::make_unique<ImportExpr>(module_name.value);
   }
 
   ErrorService::syntax_error("Expected expression", tokens[current]);
