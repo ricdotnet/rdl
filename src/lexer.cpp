@@ -133,6 +133,12 @@ std::vector<Token> Lexer::tokenize()
         continue;
       }
 
+      if (value == "struct")
+      {
+        tokens.push_back({TokenType::Struct, value, line, column});
+        continue;
+      }
+
       tokens.push_back({TokenType::Identifier, value, line, column});
 
       continue;

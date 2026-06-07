@@ -8,6 +8,8 @@ class IfStmt;
 
 class BlockStmt;
 
+class StructStmt;
+
 class WhileExpr;
 
 class ForStmt;
@@ -44,6 +46,8 @@ class ArrayExpr;
 
 class IndexExpr;
 
+class StructInitExpr;
+
 class ExprVisitor
 {
 public:
@@ -56,6 +60,8 @@ public:
   virtual void visit(IfStmt &expr) = 0;
 
   virtual void visit(BlockStmt &expr) = 0;
+
+  virtual void visit(StructStmt &expr) = 0;
 
   virtual void visit(WhileExpr &expr) = 0;
 
@@ -92,4 +98,6 @@ public:
   virtual void visit(ArrayExpr &expr) = 0;
 
   virtual void visit(IndexExpr &expr) = 0;
+
+  virtual void visit(StructInitExpr &expr) = 0;
 };

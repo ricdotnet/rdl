@@ -1,6 +1,3 @@
-#include <chrono>
-#include <thread>
-#include <utility>
 #include "src/ast_printer.cpp"
 #include "src/environment.hpp"
 #include "src/interpreter.cpp"
@@ -31,7 +28,8 @@ void run(std::string source, const bool debug)
   Environment env;
   Runtime runtime;
 
-  Runtime::init_builtins(env);
+  runtime.out = &std::cout;
+  runtime.init_builtins(env);
 
   ASTPrinter printer;
   Interpreter interpreter(&env, &runtime);
@@ -61,7 +59,14 @@ int main(const int argc, char **argv)
 
   const bool debug = argc > 2 && std::string(argv[2]) == "--debug";
 
-  run(source, debug);
+  try
+  {
+    run(source, debug);
+  } catch (std::exception &e)
+  {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return 1;
+  }
 
   return 0;
 }

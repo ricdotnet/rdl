@@ -3,6 +3,7 @@
 #include <format>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 #include "./error_service.hpp"
 #include "./value_type.hpp"
@@ -46,6 +47,20 @@ struct ArrayValue
   std::shared_ptr<std::vector<Value> > elements;
 };
 
+struct StructDefinition
+{
+  std::string name;
+
+  std::unordered_map<std::string, ValueType> fields;
+};
+
+struct StructInstance
+{
+  std::shared_ptr<StructDefinition> definition;
+
+  std::shared_ptr<std::unordered_map<std::string, Value> > fields;
+};
+
 struct Value
 {
   ValueType type;
@@ -65,6 +80,10 @@ struct Value
   RangeValue range{};
 
   ArrayValue array{};
+
+  StructDefinition struct_definition{};
+
+  StructInstance struct_instance{};
 
   [[nodiscard]] std::string to_string() const
   {
@@ -150,6 +169,7 @@ struct Value
       case ValueType::Function:
       case ValueType::Range:
       case ValueType::Array:
+      case ValueType::Struct:
         break;
     }
 
@@ -181,41 +201,131 @@ struct Value
     return true;
   }
 
-  static Value nil_value() { return Value{ValueType::Nil}; }
+  static Value nil_value()
+  {
+    Value v;
 
-  static Value number_value(const size_t n) { return Value{ValueType::Number, n}; }
+    v.type = ValueType::Nil;
 
-  static Value string_value(std::string s) { return Value{ValueType::String, 0, std::move(s)}; }
+    return v;
+  }
 
-  static Value boolean_value(const bool b) { return Value{ValueType::Boolean, 0, "", b}; }
+  static Value undefined_value()
+  {
+    Value v;
+
+    v.type = ValueType::Undefined;
+
+    return v;
+  }
+
+  static Value number_value(const size_t n)
+  {
+    Value v;
+
+    v.type = ValueType::Number;
+    v.number = n;
+
+    return v;
+  }
+
+  static Value string_value(const std::string &s)
+  {
+    Value v;
+
+    v.type = ValueType::String;
+    v.string = s;
+
+    return v;
+  }
+
+  static Value boolean_value(const bool b)
+  {
+    Value v;
+
+    v.type = ValueType::Boolean;
+    v.boolean = b;
+
+    return v;
+  }
 
   static Value object_value(const std::shared_ptr<std::unordered_map<std::string, Value> > &properties)
   {
-    return Value{ValueType::Object, 0, "", false, {properties},};
+    Value v;
+
+    v.type = ValueType::Object;
+    v.object.properties = properties;
+
+    return v;
   }
 
-  static Value undefined_value() { return Value{ValueType::Undefined, 0, "", false, {}, true}; }
-
-  static Value builtin_function_value(std::function<Value(std::vector<Value> &)> body)
+  static Value builtin_function_value(const std::function<Value(std::vector<Value> &)> &body)
   {
-    return Value{ValueType::Function, 0, "", false, {}, false, {nullptr, body, true}};
+    Value v;
+
+    v.type = ValueType::Function;
+    v.function.builtin = body;
+    v.function.is_builtin = true;
+
+    return v;
   }
 
   static Value user_function_value(FunctionExpr *declaration)
   {
-    return Value{ValueType::Function, 0, "", false, {}, false, {declaration, nullptr, false}};
+    Value v;
+
+    v.type = ValueType::Function;
+    v.function.declaration = declaration;
+    v.function.is_builtin = false;
+
+    return v;
   }
 
   static Value range_value(const int start, const int end, const int step, const bool inclusive)
   {
-    return Value{ValueType::Range, 0, "", false, {}, false, {nullptr, nullptr, false}, {start, end, step, inclusive}};
+    Value v;
+
+    v.type = ValueType::Range;
+    v.range.start = start;
+    v.range.end = end;
+    v.range.step = step;
+    v.range.inclusive = inclusive;
+
+    return v;
   }
 
   static Value array_value(const ValueType type, const std::shared_ptr<std::vector<Value> > &elements)
   {
-    return Value{
-      ValueType::Array, 0, "", false, {}, false, {nullptr, nullptr, false}, {0, 0, 0, false}, {type, elements}
-    };
+    Value v;
+
+    v.type = ValueType::Array;
+    v.array.type = type;
+    v.array.elements = elements;
+
+    return v;
+  }
+
+  static Value struct_value(const std::string &name, const std::unordered_map<std::string, ValueType> &fields)
+  {
+    Value v;
+
+    v.type = ValueType::Struct;
+    v.struct_definition.name = name;
+    v.struct_definition.fields = fields;
+
+    return v;
+  }
+
+  static Value struct_instance_value(const std::shared_ptr<StructDefinition> &def,
+                                     const std::shared_ptr<std::unordered_map<std::string, Value> > &fields)
+  {
+    Value v;
+
+    v.type = ValueType::Struct;
+    v.struct_instance.definition = def;
+    v.struct_instance.fields = fields;
+
+    return v;
   }
 
   static std::string type_name(const ValueType type)
@@ -240,12 +350,14 @@ struct Value
         return "Object";
       case ValueType::Array:
         return "Array";
+      case ValueType::Struct:
+        return "Struct";
       default:
         return "Unknown";
     }
   }
 
-  static ValueType type_of(const std::optional<std::string> &value)
+  static ValueType type_of(const std::optional<std::string> &value, std::set<std::string> *seen_types)
   {
     if (!value.has_value()) return ValueType::Nil;
     if (*value == "Number")
@@ -283,6 +395,15 @@ struct Value
     if (*value == "Array")
     {
       return ValueType::Array;
+    }
+    if (*value == "Struct")
+    {
+      return ValueType::Struct;
+    }
+
+    if (seen_types && seen_types->contains(value.value()))
+    {
+      return ValueType::Struct;
     }
 
     ErrorService::runtime_error("Unknown type", *value);

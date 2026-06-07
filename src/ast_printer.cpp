@@ -56,6 +56,22 @@ public:
     std::cout << ")\n";
   }
 
+  void visit(StructStmt &expr) override
+  {
+    print_indent();
+    std::cout << "StructStmt(" + expr.name + " \n";
+    indent++;
+    for (const auto &[field_name, field_type]: expr.fields)
+    {
+      print_indent();
+      std::cout << field_name << ": ";
+      std::cout << Value::type_name(field_type) << "\n";
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
   void visit(WhileExpr &expr) override
   {
     print_indent();
@@ -173,8 +189,8 @@ public:
   {
     print_indent();
     std::cout << "Call(\n";
-    expr.callee->accept(*this);
     indent++;
+    expr.callee->accept(*this);
     for (const auto &arg: expr.arguments)
     {
       arg->accept(*this);
@@ -218,7 +234,14 @@ public:
   void visit(DotExpr &expr) override
   {
     print_indent();
-    std::cout << "DotExpr(" << expr.field_name << ")\n";
+    std::cout << "DotExpr(\n";
+    indent++;
+    expr.receiver->accept(*this);
+    print_indent();
+    std::cout << "Identifier(" << expr.field_name << ")\n";
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(ArrayExpr &expr) override
@@ -242,6 +265,22 @@ public:
     indent++;
     expr.receiver_array->accept(*this);
     expr.index->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(StructInitExpr &expr) override
+  {
+    print_indent();
+    std::cout << "StructInitExpr(" + expr.type_name + "\n";
+    indent++;
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      print_indent();
+      std::cout << "Identifier(" << field_name << "):";
+      field_expr->accept(*this);
+    }
     indent--;
     print_indent();
     std::cout << ")\n";

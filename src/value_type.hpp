@@ -11,4 +11,5 @@ enum class ValueType
   Function,
   Range,
   Array,
+  Struct,
 };

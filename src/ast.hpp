@@ -69,6 +69,18 @@ public:
   void accept(ExprVisitor &visitor) override;
 };
 
+class StructStmt : public Expr
+{
+public:
+  std::string name;
+
+  std::unordered_map<std::string, ValueType> fields;
+
+  explicit StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
 class WhileExpr : public Expr
 {
 public:
@@ -272,7 +284,10 @@ public:
 
   std::vector<std::unique_ptr<Expr> > elements;
 
-  explicit ArrayExpr(ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements);
+  // For storing the custom type in case of using structs
+  std::string type_name;
+
+  explicit ArrayExpr(ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements, std::string type_name);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -285,6 +300,18 @@ public:
   std::unique_ptr<Expr> index;
 
   explicit IndexExpr(std::unique_ptr<Expr> receiver_array, std::unique_ptr<Expr> index);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class StructInitExpr : public Expr
+{
+public:
+  std::string type_name;
+
+  std::unordered_map<std::string, std::unique_ptr<Expr> > fields;
+
+  explicit StructInitExpr(std::string type_name, std::unordered_map<std::string, std::unique_ptr<Expr> > fields);
 
   void accept(ExprVisitor &visitor) override;
 };

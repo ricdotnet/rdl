@@ -95,6 +95,11 @@ std::unique_ptr<Expr> Parser::statement()
     return for_loop();
   }
 
+  if (match(TokenType::Struct))
+  {
+    return struct_definition();
+  }
+
   return expression();
 }
 
@@ -142,6 +147,27 @@ std::unique_ptr<Expr> Parser::for_loop()
 
   return std::make_unique<ForStmt>(std::move(identifier_token.value), std::move(index_name), std::move(expr),
                                    std::move(body));
+}
+
+std::unique_ptr<Expr> Parser::struct_definition()
+{
+  const auto struct_name = consume(TokenType::Identifier);
+  consume(TokenType::LeftBrace);
+
+  std::unordered_map<std::string, ValueType> fields;
+
+  while (!check(TokenType::RightBrace) && !is_at_end())
+  {
+    auto field_name = consume(TokenType::Identifier);
+    auto field_type = consume(TokenType::Identifier);
+    fields.emplace(field_name.value, Value::type_of(field_type.value, &seen_types));
+    try_consume(TokenType::Comma);
+  }
+
+  consume(TokenType::RightBrace);
+  seen_types.insert(struct_name.value);
+
+  return std::make_unique<StructStmt>(struct_name.value, std::move(fields));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()
@@ -408,9 +434,38 @@ std::unique_ptr<Expr> Parser::primary()
 
   if (match(TokenType::Identifier))
   {
-    const auto token = previous();
+    const auto identifier = previous();
 
-    return std::make_unique<VariableExpr>(token.value);
+    if (seen_types.contains(identifier.value))
+    {
+      const auto type_name = identifier.value;
+
+      consume(TokenType::LeftBrace);
+      std::unordered_map<std::string, std::unique_ptr<Expr> > properties;
+
+      while (!check(TokenType::RightBrace) && !is_at_end())
+      {
+        auto key = consume(TokenType::Identifier);
+        consume(TokenType::Colon);
+
+        if (check(TokenType::LeftBrace))
+        {
+          auto value = expression();
+          properties.emplace(key.value, std::move(value));
+          try_consume(TokenType::Comma);
+        } else
+        {
+          auto value = expression();
+          properties.emplace(key.value, std::move(value));
+          try_consume(TokenType::Comma);
+        }
+      }
+
+      consume(TokenType::RightBrace);
+      return std::make_unique<StructInitExpr>(type_name, std::move(properties));
+    }
+
+    return std::make_unique<VariableExpr>(identifier.value);
   }
 
   if (match(TokenType::String))
@@ -440,7 +495,9 @@ std::unique_ptr<Expr> Parser::primary()
     consume(TokenType::RightBracket);
 
     const auto type_token = consume(TokenType::Identifier);
-    std::optional<ValueType> declared_type = Value::type_of(type_token.value);
+    std::string type_name = type_token.value;
+
+    std::optional<ValueType> declared_type = Value::type_of(type_token.value, &seen_types);
 
     if (!declared_type)
     {
@@ -458,7 +515,7 @@ std::unique_ptr<Expr> Parser::primary()
     }
     consume(TokenType::RightBrace);
 
-    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements));
+    return std::make_unique<ArrayExpr>(declared_type.value(), std::move(elements), type_name);
   }
 
   if (match(TokenType::LeftBrace))

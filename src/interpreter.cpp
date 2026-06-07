@@ -46,7 +46,7 @@ public:
 
     if (expr.receiver_type)
     {
-      runtime->define_user_method(Value::type_of(expr.receiver_type), expr.name, result);
+      runtime->define_user_method(Value::type_of(expr.receiver_type, nullptr), expr.name, result);
       return;
     }
 
@@ -85,6 +85,20 @@ public:
     {
       evaluate(expr.get());
     }
+
+    result = Value::nil_value();
+  }
+
+  void visit(StructStmt &stmt) override
+  {
+    const auto type_name = stmt.name;
+    std::unordered_map<std::string, ValueType> fields;
+    for (const auto &[field_name, field_type]: stmt.fields)
+    {
+      fields[field_name] = field_type;
+    }
+
+    env->define(type_name, Value::struct_value(type_name, fields));
 
     result = Value::nil_value();
   }
@@ -216,6 +230,30 @@ public:
     if (const auto *left = dynamic_cast<DotExpr *>(expr.left.get()))
     {
       const auto receiver = evaluate(left->receiver.get());
+
+      if (receiver.type == ValueType::Struct)
+      {
+        auto &definition = receiver.struct_instance.definition;
+        auto &fields = *receiver.struct_instance.fields;
+
+        if (!definition->fields.contains(left->field_name))
+        {
+          ErrorService::runtime_error("Undefined field for struct " + definition->name, left->field_name);
+        }
+
+        if (definition->fields.at(left->field_name) != value.type)
+        {
+          ErrorService::runtime_error(
+            "Type mismatch for struct field assignment: expected " +
+            Value::type_name(definition->fields.at(left->field_name)) + ", got " + Value::type_name(value.type),
+            left->field_name);
+        }
+
+        fields[left->field_name] = value;
+        result = value;
+        return;
+      }
+
       auto &prop_map = *receiver.object.properties;
       prop_map[left->field_name] = value;
       result = value;
@@ -236,7 +274,7 @@ public:
 
       const auto &arr = receiver.array.elements;
 
-      receiver.array.elements->insert(arr->begin() + indexVal.number, value);
+      receiver.array.elements->insert(arr->begin() + static_cast<int>(indexVal.number), value);
       result = value;
       return;
     }
@@ -274,8 +312,8 @@ public:
                                       "Found " + left.to_string() + " and " + right.to_string() + "");
         }
 
-        const int left_value = left.number;
-        const int right_value = right.number;
+        const int left_value = static_cast<int>(left.number);
+        const int right_value = static_cast<int>(right.number);
 
         switch (expr.operation.type)
         {
@@ -346,7 +384,7 @@ public:
           ErrorService::runtime_error("Expected number", operand.to_string());
         }
 
-        const int value = operand.number;
+        const int value = static_cast<int>(operand.number);
         result = Value::number_value(-value);
         return;
       }
@@ -470,6 +508,22 @@ public:
   {
     const auto field_name = expr.field_name;
     const auto receiver = evaluate(expr.receiver.get());
+
+    if (receiver.type == ValueType::Struct)
+    {
+      const auto fields = *receiver.struct_instance.fields;
+      const auto definition = receiver.struct_instance.definition;
+      const auto struct_type = definition->name;
+
+      if (fields.contains(field_name))
+      {
+        result = fields.at(field_name);
+        return;
+      }
+
+      ErrorService::runtime_error("Undefined field for struct " + struct_type, field_name);
+    }
+
     const auto prop_map = receiver.object.properties;
 
     if (prop_map->contains(field_name))
@@ -519,7 +573,7 @@ public:
 
     const auto &arr = receiver.array.elements;
     const int size = static_cast<int>(arr->size());
-    const int i = indexVal.number;
+    const int i = static_cast<int>(indexVal.number);
 
     if (i < 0 || i >= size)
     {
@@ -527,5 +581,36 @@ public:
     }
 
     result = (*arr)[i];
+  }
+
+  void visit(StructInitExpr &expr) override
+  {
+    auto struct_definition = env->get(expr.type_name).struct_definition;
+    const auto &struct_fields = struct_definition.fields;
+
+    const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
+    fields->reserve(expr.fields.size());
+
+    for (const auto &[field_name, field_expr]: expr.fields)
+    {
+      if (!struct_fields.contains(field_name))
+      {
+        ErrorService::runtime_error("Struct field '" + field_name + "' does not exist", "");
+      }
+
+      const auto &struct_field = struct_fields.at(field_name);
+      const auto value = evaluate(field_expr.get());
+
+      if (value.type != struct_field)
+      {
+        ErrorService::runtime_error(
+          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field) + ", got " +
+          Value::type_name(value.type), "");
+      }
+
+      fields->insert({field_name, value});
+    }
+
+    result = Value::struct_instance_value(std::make_shared<StructDefinition>(struct_definition), fields);
   }
 };

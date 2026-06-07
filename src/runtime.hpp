@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <unordered_map>
 #include <vector>
 #include "./interpreter.hpp"
@@ -11,7 +12,12 @@ private:
   void init_type_methods();
 
 public:
-  Runtime();
+  Runtime() : out(&std::cout)
+  {
+    init_type_methods();
+  }
+
+  std::ostream *out;
 
   std::unordered_map<std::string, Value> globals;
 
@@ -21,7 +27,7 @@ public:
 
   std::unordered_map<ValueType, std::unordered_map<std::string, Value> > user_methods;
 
-  static void init_builtins(Environment &);
+  void init_builtins(Environment &) const;
 
   void define_type_method(ValueType type, const std::string &method_name, const type_method &method);
 

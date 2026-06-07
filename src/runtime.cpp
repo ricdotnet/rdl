@@ -1,31 +1,25 @@
 #include "./runtime.hpp"
 #include <iostream>
-#include <sstream>
 #include <thread>
 #include "./environment.hpp"
 #include "./error_service.hpp"
 
-Runtime::Runtime()
+void Runtime::init_builtins(Environment &env) const
 {
-  init_type_methods();
-}
-
-void Runtime::init_builtins(Environment &env)
-{
-  env.define("print", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+  env.define("print", Value::builtin_function_value([this](const std::vector<Value> &args) -> Value {
     for (const auto &arg: args)
     {
-      std::cout << arg.to_string();
+      *out << arg.to_string();
     }
     return Value::nil_value();
   }));
 
-  env.define("println", Value::builtin_function_value([](const std::vector<Value> &args) -> Value {
+  env.define("println", Value::builtin_function_value([this](const std::vector<Value> &args) -> Value {
     for (const auto &arg: args)
     {
-      std::cout << arg.to_string() << " ";
+      *out << arg.to_string();
     }
-    std::cout << std::endl;
+    *out << std::endl;
     return Value::nil_value();
   }));
 

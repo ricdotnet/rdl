@@ -21,6 +21,11 @@ BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std
 
 void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
+StructStmt::StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields)
+  : name(std::move(name)), fields(std::move(fields)) {}
+
+void StructStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
 WhileExpr::WhileExpr(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> body)
   : condition(std::move(cond)), body(std::move(body)) {}
 
@@ -100,8 +105,8 @@ DotExpr::DotExpr(std::string field_name, std::unique_ptr<Expr> recv)
 
 void DotExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-ArrayExpr::ArrayExpr(const ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements)
-  : declared_type(declared_type), elements(std::move(elements)) {}
+ArrayExpr::ArrayExpr(const ValueType declared_type, std::vector<std::unique_ptr<Expr> > elements, std::string type_name)
+  : declared_type(declared_type), elements(std::move(elements)), type_name(std::move(type_name)) {}
 
 void ArrayExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
@@ -109,3 +114,8 @@ IndexExpr::IndexExpr(std::unique_ptr<Expr> receiver_array, std::unique_ptr<Expr>
   : receiver_array(std::move(receiver_array)), index(std::move(index)) {}
 
 void IndexExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+StructInitExpr::StructInitExpr(std::string type_name, std::unordered_map<std::string, std::unique_ptr<Expr> > fields)
+  : type_name(std::move(type_name)), fields(std::move(fields)) {}
+
+void StructInitExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }

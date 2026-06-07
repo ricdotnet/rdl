@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <vector>
 #include "./ast.hpp"
 #include "./token.hpp"
@@ -9,6 +10,8 @@ class Parser
 {
 private:
   std::vector<Token> tokens;
+
+  std::set<std::string> seen_types;
 
   size_t current = 0;
 
@@ -25,6 +28,8 @@ private:
   std::unique_ptr<Expr> if_statement();
 
   std::unique_ptr<Expr> for_loop();
+
+  std::unique_ptr<Expr> struct_definition();
 
   std::unique_ptr<BlockStmt> block();
 
