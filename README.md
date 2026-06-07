@@ -59,6 +59,29 @@ let user = {
 print(user.name);
 ```
 
+## Structs
+
+Structs work just like objects but with the difference that they have to be typed.<br>
+You can define custom data structures using the `struct` keyword and instantiate them.<br>
+Structs are also type safe and will not allow you to assign a value of a different type to a struct variable.
+
+```
+struct User {
+  name String
+  surname String
+  age Number
+}
+
+let user = User {
+  name: "First",
+  surname: "Last",
+  age: 24,
+}
+
+println(user.name); // First
+println(user.surname); // Last
+```
+
 ## Arrays
 
 Arrays are defined using the `[]Type{...}` format, followed by the type of the elements.<br>
@@ -70,6 +93,17 @@ The application will exit if the type of the elements is not supported.
 let numbers = []Number{1, 2, 3, 4, 5};
 
 print(numbers[0]); // Accessing the first element
+```
+
+Arrays also support `structs` and `arrays`.
+Arrays and structs must be defined first.
+
+```
+let data = []String{"Hello"};
+let arr = []Array{data};
+
+let user = User{ name: "User", surname: "Last", age: 24 };
+let users = []User{user};
 ```
 
 ## Functions
@@ -232,28 +266,6 @@ Use `-` to flip a number sign.
 let a = 1;
 print(-a); // -1
 print(-(-a)) // 1
-```
-
-## Structs
-
-You can define custom data structures using the `struct` keyword and instantiate them.<br>
-Structs are also type safe and will not allow you to assign a value of a different type to a struct variable.
-
-```
-struct User {
-  name String
-  surname String
-  age Number
-}
-
-let user = User {
-  name: "First",
-  surname: "Last",
-  age: 24,
-}
-
-println(user.name); // First
-println(user.surname); // Last
 ```
 
 ## Built-in functions
