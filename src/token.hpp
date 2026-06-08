@@ -4,6 +4,7 @@
 
 enum class TokenType
 {
+  Import,
   Func,
   Let,
   Struct,

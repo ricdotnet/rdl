@@ -19,7 +19,7 @@ struct FunctionValue
 {
   FunctionExpr *declaration = nullptr;
 
-  std::function<Value(std::vector<Value> &)> builtin;
+  std::function<Value(const Value &, std::vector<Value> &)> builtin;
 
   bool is_builtin = false;
 };
@@ -259,7 +259,7 @@ struct Value
     return v;
   }
 
-  static Value builtin_function_value(const std::function<Value(std::vector<Value> &)> &body)
+  static Value builtin_function_value(const std::function<Value(const Value &receiver, std::vector<Value> &)> &body)
   {
     Value v;
 
@@ -357,7 +357,7 @@ struct Value
     }
   }
 
-  static ValueType type_of(const std::optional<std::string> &value, std::set<std::string> *seen_types)
+  static ValueType type_of(const std::optional<std::string> &value, const std::set<std::string> *seen_types)
   {
     if (!value.has_value()) return ValueType::Nil;
     if (*value == "Number")

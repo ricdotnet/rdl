@@ -17,7 +17,12 @@ public:
   void visit(FunctionExpr &expr) override
   {
     print_indent();
-    std::cout << "Function(" << expr.name << ")\n";
+    std::cout << "Function(\n";
+    indent++;
+    expr.body->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(ReturnStmt &stmt) override
@@ -98,12 +103,7 @@ public:
   void visit(RangeExpr &expr) override
   {
     print_indent();
-    std::cout << "RangeExpr(\n";
-    indent++;
-    expr.accept(*this);
-    indent--;
-    print_indent();
-    std::cout << ")\n";
+    std::cout << "RangeExpr(" << expr.start << " to " << expr.end << " by " << expr.step << ")\n";
   }
 
   void visit(NumberExpr &expr) override
@@ -127,12 +127,15 @@ public:
   void visit(BinaryExpr &expr) override
   {
     print_indent();
-    std::cout << "Binary(" << expr.operation.value << ")\n";
-
+    std::cout << "Binary(\n";
     indent++;
     expr.left->accept(*this);
+    print_indent();
+    std::cout << token_type_to_string(expr.operation.type) << "(" << expr.operation.value << ")" << "\n";
     expr.right->accept(*this);
     indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(UnaryExpr &expr) override
@@ -144,8 +147,7 @@ public:
   void visit(ConcatExpr &expr) override
   {
     print_indent();
-    std::cout << "Concat(";
-
+    std::cout << "Concat(\n";
     indent++;
     expr.left->accept(*this);
     expr.right->accept(*this);
@@ -204,8 +206,8 @@ public:
   {
     print_indent();
     std::cout << "MethodCall(\n";
-    expr.receiver->accept(*this);
     indent++;
+    expr.receiver->accept(*this);
     for (const auto &arg: expr.arguments)
     {
       arg->accept(*this);
@@ -223,8 +225,12 @@ public:
     for (const auto &[field_name, field_expr]: expr.fields)
     {
       print_indent();
-      std::cout << "Identifier(" << field_name << "):";
+      std::cout << "Identifier(" << field_name << "\n";
+      indent++;
       field_expr->accept(*this);
+      indent--;
+      print_indent();
+      std::cout << ")\n";
     }
     indent--;
     print_indent();
@@ -284,5 +290,11 @@ public:
     indent--;
     print_indent();
     std::cout << ")\n";
+  }
+
+  void visit(ImportExpr &expr) override
+  {
+    print_indent();
+    std::cout << "Import(" << expr.module_name << ")\n";
   }
 };

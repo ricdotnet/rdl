@@ -51,6 +51,12 @@ Value Environment::get(const std::string &name)
     return parent->get(name);
   }
 
+  // It should throw before being called
+  if (get_runtime()->globals.contains(name))
+  {
+    return get_runtime()->globals.at(name);
+  }
+
   return Value::undefined_value();
 }
 
@@ -74,4 +80,23 @@ void Environment::assign(const std::string &name, const Value &value)
   }
 
   ErrorService::runtime_error("Undefined variable", name);
+}
+
+void Environment::set_runtime(Runtime &runtime)
+{
+  this->runtime = &runtime;
+}
+
+Runtime *Environment::get_runtime() const
+{
+  if (runtime)
+  {
+    return runtime;
+  }
+  if (parent)
+  {
+    return parent->get_runtime();
+  }
+  ErrorService::runtime_error("No runtime found", "");
+  return nullptr;
 }

@@ -139,6 +139,12 @@ std::vector<Token> Lexer::tokenize()
         continue;
       }
 
+      if (value == "import")
+      {
+        tokens.push_back({TokenType::Import, value, line, column});
+        continue;
+      }
+
       tokens.push_back({TokenType::Identifier, value, line, column});
 
       continue;

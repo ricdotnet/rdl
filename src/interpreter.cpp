@@ -4,12 +4,12 @@
 #include "./error_service.hpp"
 #include "./runtime.hpp"
 #include "./utils.hpp"
+#include "./native_modules/io_module.cpp"
+#include "./native_modules/time_module.cpp"
 
 class Interpreter : public ExprVisitor
 {
   Environment *env;
-
-  Runtime *runtime;
 
   static std::string concat_expr(const std::string &left, const std::string &right)
   {
@@ -32,7 +32,7 @@ class Interpreter : public ExprVisitor
 public:
   Value result;
 
-  explicit Interpreter(Environment *env, Runtime *runtime) : env(env), runtime(runtime), result() {}
+  explicit Interpreter(Environment *env) : env(env), result() {}
 
   Value evaluate(Expr *expr)
   {
@@ -44,9 +44,10 @@ public:
   {
     result = Value::user_function_value(&expr);
 
-    if (expr.receiver_type)
+    if (expr.receiver_type.has_value())
     {
-      runtime->define_user_method(Value::type_of(expr.receiver_type, nullptr), expr.name, result);
+      const auto &receiver_type = env->get_runtime()->globals.at(expr.receiver_type.value());
+      receiver_type.object.properties->insert({expr.name, result});
       return;
     }
 
@@ -420,7 +421,7 @@ public:
 
     if (!callee.is_function())
     {
-      ErrorService::runtime_error("Not callable", "");
+      ErrorService::runtime_error("Not callable", callee.to_string());
     }
 
     arguments.reserve(expr.arguments.size());
@@ -431,7 +432,7 @@ public:
 
     if (callee.function.is_builtin)
     {
-      result = callee.function.builtin(arguments);
+      result = callee.function.builtin(callee, arguments);
       return;
     }
 
@@ -446,50 +447,60 @@ public:
     } catch (ReturnSignal &r)
     {
       result = r.value;
-      return;
     }
   }
 
   void visit(MethodCallExpr &expr) override
   {
-    result = Value::nil_value();
-
-    // The initial implementations for type methods do not need arguments
     const auto receiver = evaluate(expr.receiver.get());
-    const auto &type_method = runtime->type_methods[receiver.type][expr.method_name];
-    const auto &user_type_method = runtime->user_methods[receiver.type][expr.method_name];
+    std::unordered_map<std::string, Value> fields;
 
-    if (!type_method && !user_type_method.is_function())
+    if (receiver.type != ValueType::Object)
     {
-      ErrorService::runtime_error("Undefined method for type " + Value::type_name(receiver.type), expr.method_name);
-      return;
+      fields = *env->get_runtime()->globals.at(Value::type_name(receiver.type)).object.properties;
+    } else
+    {
+      fields = *receiver.object.properties;
+      if (!fields.contains(expr.method_name))
+      {
+        ErrorService::runtime_error("Undefined property: " + expr.method_name, "");
+        return;
+      }
     }
 
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    if (!fields.contains(expr.method_name))
+    {
+      ErrorService::runtime_error("Undefined method: " + expr.method_name, "");
+      return;
+    }
+    const auto &method = fields.at(expr.method_name);
 
-    std::vector<Value> arguments;
+    if (!method.is_function())
+    {
+      ErrorService::runtime_error("Attempted to call non-function", "");
+    }
 
-    arguments.reserve(expr.arguments.size());
+    std::vector<Value> args;
+    args.reserve(expr.arguments.size());
+
     for (auto &arg: expr.arguments)
     {
-      arguments.push_back(evaluate(arg.get()));
+      args.push_back(evaluate(arg.get()));
     }
 
-    try
+    if (method.function.is_builtin)
     {
-      if (user_type_method.is_function())
-      {
-        env->define("self", receiver);
-        result = evaluate(user_type_method.function.declaration->body.get());
-      } else
-      {
-        result = type_method(receiver, arguments);
-      }
-    } catch (ReturnSignal &r)
+      result = method.function.builtin(receiver, args);
+    } else
     {
-      result = r.value;
-      return;
+      Environment local(env);
+      EnvironmentGuard guard(env, &local);
+
+      env->define("self", receiver);
+
+      bind_local_params(local, *method.function.declaration, args);
+
+      result = evaluate(method.function.declaration->body.get());
     }
   }
 
@@ -612,5 +623,24 @@ public:
     }
 
     result = Value::struct_instance_value(std::make_shared<StructDefinition>(struct_definition), fields);
+  }
+
+  void visit(ImportExpr &expr) override
+  {
+    const auto module_name = expr.module_name;
+    Value module;
+
+    if (module_name == "time")
+    {
+      module = std::make_shared<TimeModule>().get()->init();
+    }
+    if (module_name == "io")
+    {
+      module = std::make_shared<IoModule>().get()->init();
+    }
+
+    env->get_runtime()->add_global(module_name, module);
+
+    result = Value::nil_value();
   }
 };

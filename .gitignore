@@ -2,3 +2,4 @@
 language
 *.rdl
 language*
+cmake-build-debug
