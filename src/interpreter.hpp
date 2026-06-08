@@ -357,7 +357,7 @@ struct Value
     }
   }
 
-  static ValueType type_of(const std::optional<std::string> &value, std::set<std::string> *seen_types)
+  static ValueType type_of(const std::optional<std::string> &value, const std::set<std::string> *seen_types)
   {
     if (!value.has_value()) return ValueType::Nil;
     if (*value == "Number")

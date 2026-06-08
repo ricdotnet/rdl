@@ -16,17 +16,15 @@ public:
   {
     const auto functions = std::make_shared<std::unordered_map<std::string, Value> >();
 
-    (*functions)["print"] = Value::builtin_function_value(
-      [this](const Value &receiver, const std::vector<Value> &args) {
-        return print(args);
-      });
+    (*functions)["print"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
+      return print(args);
+    });
 
-    (*functions)["println"] = Value::builtin_function_value(
-      [this](const Value &receiver, const std::vector<Value> &args) {
-        return println(args);
-      });
+    (*functions)["println"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
+      return println(args);
+    });
 
-    (*functions)["input"] = Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &args) {
+    (*functions)["input"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &) {
       return input();
     });
 
@@ -34,7 +32,7 @@ public:
   }
 
 private:
-  Value print(const std::vector<Value> &args) const
+  static Value print(const std::vector<Value> &args)
   {
     for (const auto &arg: args)
     {
@@ -43,7 +41,7 @@ private:
     return Value::nil_value();
   }
 
-  Value println(const std::vector<Value> &args) const
+  static Value println(const std::vector<Value> &args)
   {
     for (const auto &arg: args)
     {

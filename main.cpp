@@ -43,9 +43,10 @@ void run(std::string source, const bool debug)
     if (debug)
     {
       stmt->accept(printer);
+    } else
+    {
+      interpreter.evaluate(stmt);
     }
-
-    interpreter.evaluate(stmt);
   }
 }
 
