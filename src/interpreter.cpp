@@ -475,19 +475,19 @@ public:
     }
     const auto &method = fields.at(expr.method_name);
 
-    // 2. evaluate arguments
-    std::vector<Value> args;
-    args.reserve(expr.arguments.size());
-
-    for (auto &arg: expr.arguments) args.push_back(evaluate(arg.get()));
-
-    // 3. call if function
     if (!method.is_function())
     {
       ErrorService::runtime_error("Attempted to call non-function", "");
     }
 
-    // 4. call unified function type
+    std::vector<Value> args;
+    args.reserve(expr.arguments.size());
+
+    for (auto &arg: expr.arguments)
+    {
+      args.push_back(evaluate(arg.get()));
+    }
+
     if (method.function.is_builtin)
     {
       result = method.function.builtin(receiver, args);
