@@ -1,5 +1,4 @@
 #include  "./utils.hpp"
-#include <sstream>
 #include <vector>
 
 std::string Utils::normalise_identifier(std::string identifier)

@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
-#include "native_module.hpp"
+#include "./native_module.hpp"
+#include "../utils.hpp"
 
 class FileSystemModule : NativeModule
 {
@@ -71,7 +72,7 @@ private:
 
     properties.get()->insert({
       "read_line", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
-        const auto file = std::static_pointer_cast<FileHandler>(receiver.object.native_object);
+        const auto file = native<FileHandler>(receiver);
 
         if (!file)
         {
@@ -96,7 +97,7 @@ private:
 
     properties.get()->insert({
       "read_all", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
-        const auto file = std::static_pointer_cast<FileHandler>(receiver.object.native_object);
+        const auto file = native<FileHandler>(receiver);
 
         std::stringstream buffer;
         buffer << file->stream.rdbuf();
@@ -107,7 +108,7 @@ private:
 
     properties.get()->insert({
       "close", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
-        const auto file = std::static_pointer_cast<FileHandler>(receiver.object.native_object);
+        const auto file = native<FileHandler>(receiver);
 
         file->stream.close();
 
@@ -117,7 +118,7 @@ private:
 
     properties.get()->insert({
       "has_next", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
-        const auto file = std::static_pointer_cast<FileHandler>(receiver.object.native_object);
+        const auto file = native<FileHandler>(receiver);
 
         return Value::boolean_value(file->stream.good());
       })
