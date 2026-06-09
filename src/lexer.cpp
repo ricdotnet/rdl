@@ -17,6 +17,12 @@ Token Lexer::previous_token(const std::vector<Token> &tokens, const size_t index
   return tokens[tokens.size() - index_back];
 }
 
+bool Lexer::is_http_verb(const std::string &verb)
+{
+  return verb == "INFO" || verb == "OPTIONS" || verb == "GET" || verb == "POST" || verb == "PUT" || verb == "DELETE" ||
+         verb == "PATCH";
+}
+
 Lexer::Lexer(std::string src) : source(std::move(src)) {};
 
 void Lexer::advance(const int step)
@@ -145,6 +151,24 @@ std::vector<Token> Lexer::tokenize()
       if (value == "import")
       {
         tokens.push_back({TokenType::Import, value, line, column});
+        continue;
+      }
+
+      if (value == "group")
+      {
+        tokens.push_back({TokenType::Group, value, line, column});
+        continue;
+      }
+
+      if (value == "route")
+      {
+        tokens.push_back({TokenType::Route, value, line, column});
+        continue;
+      }
+
+      if (is_http_verb(value))
+      {
+        tokens.push_back({TokenType::HttpVerb, value, line, column});
         continue;
       }
 

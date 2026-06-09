@@ -22,6 +22,8 @@ std::string token_type_to_string(TokenType type)
       return "True";
     case TokenType::False:
       return "False";
+    case TokenType::HttpVerb:
+      return "HttpVerb";
 
     // OPERATORS
     case TokenType::And:
@@ -110,6 +112,10 @@ std::string token_type_to_string(TokenType type)
       return "While";
     case TokenType::Return:
       return "Return";
+    case TokenType::Group:
+      return "Group";
+    case TokenType::Route:
+      return "Route";
 
     default:
       return "Invalid TokenType";

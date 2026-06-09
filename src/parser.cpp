@@ -101,6 +101,36 @@ std::unique_ptr<Expr> Parser::statement()
     return struct_definition();
   }
 
+  if (match(TokenType::Route))
+  {
+    auto method = consume(TokenType::HttpVerb);
+    auto path = consume(TokenType::String);
+
+    consume(TokenType::LeftBrace);
+
+    auto body = block();
+
+    return std::make_unique<RouteStmt>(method.value, path.value, std::move(body));
+  }
+
+  if (match(TokenType::Group))
+  {
+    const auto base_path = consume(TokenType::String);
+    consume(TokenType::LeftBrace);
+
+    std::vector<std::unique_ptr<Expr> > statements;
+
+    while (!check(TokenType::RightBrace))
+    {
+      statements.push_back(statement());
+      try_consume(TokenType::Semicolon);
+    }
+
+    consume(TokenType::RightBrace);
+
+    return std::make_unique<GroupStmt>(base_path.value, std::move(statements));
+  }
+
   return expression();
 }
 

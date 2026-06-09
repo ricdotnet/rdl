@@ -50,6 +50,10 @@ class StructInitExpr;
 
 class ImportExpr;
 
+class GroupStmt;
+
+class RouteStmt;
+
 class ExprVisitor
 {
 public:
@@ -104,4 +108,8 @@ public:
   virtual void visit(StructInitExpr &expr) = 0;
 
   virtual void visit(ImportExpr &expr) = 0;
+
+  virtual void visit(GroupStmt &expr) = 0;
+
+  virtual void visit(RouteStmt &expr) = 0;
 };

@@ -297,4 +297,41 @@ public:
     print_indent();
     std::cout << "Import(" << expr.module_name << ")\n";
   }
+
+  void visit(GroupStmt &expr) override
+  {
+    print_indent();
+    std::cout << "GroupStmt(\n";
+    indent++;
+    print_indent();
+    std::cout << "Prefix(" << expr.path << ")\n";
+    for (const auto &route: expr.routes)
+    {
+      route->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(RouteStmt &expr) override
+  {
+    print_indent();
+    std::cout << "RouteStmt(\n";
+    indent++;
+    print_indent();
+    std::cout << "Method(" << expr.method << ")\n";
+    print_indent();
+    std::cout << "Path(" << expr.path << ")\n";
+    print_indent();
+    std::cout << "Body(\n";
+    indent++;
+    expr.body->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
 };

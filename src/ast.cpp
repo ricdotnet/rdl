@@ -124,3 +124,13 @@ ImportExpr::ImportExpr(std::string module_name)
   : module_name(std::move(module_name)) {}
 
 void ImportExpr::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+GroupStmt::GroupStmt(std::string path, std::vector<std::unique_ptr<Expr> > routes)
+  : path(std::move(path)), routes(std::move(routes)) {}
+
+void GroupStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
+
+RouteStmt::RouteStmt(std::string method, std::string path, std::unique_ptr<Expr> body)
+  : method(std::move(method)), path(std::move(path)), body(std::move(body)) {}
+
+void RouteStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }

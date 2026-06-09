@@ -648,4 +648,17 @@ public:
 
     result = Value::nil_value();
   }
+
+  void visit(GroupStmt &stmt) override
+  {
+    for (const auto &route: stmt.routes)
+    {
+      route->accept(*this);
+    }
+  }
+
+  void visit(RouteStmt &) override
+  {
+    result = Value::nil_value();
+  }
 };

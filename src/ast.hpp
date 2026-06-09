@@ -325,3 +325,29 @@ public:
 
   void accept(ExprVisitor &visitor) override;
 };
+
+class GroupStmt : public Expr
+{
+public:
+  std::string path;
+
+  std::vector<std::unique_ptr<Expr> > routes;
+
+  explicit GroupStmt(std::string path, std::vector<std::unique_ptr<Expr> > routes);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class RouteStmt : public Expr
+{
+public:
+  std::string method;
+
+  std::string path;
+
+  std::unique_ptr<Expr> body;
+
+  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<Expr> body);
+
+  void accept(ExprVisitor &visitor) override;
+};
