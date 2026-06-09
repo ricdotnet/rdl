@@ -2,6 +2,7 @@
 #include <iostream>
 #include "./environment.hpp"
 #include "./error_service.hpp"
+#include "utils.hpp"
 #include "./native_modules/time_module.cpp"
 
 void Runtime::add_global(const std::string &name, const Value &value)
@@ -56,6 +57,26 @@ void Runtime::init_type_methods()
       std::string lower = receiver.string;
       std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
       return Value::string_value(lower);
+    })
+  });
+
+  string_methods.object.properties->insert({
+    "split", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &args) -> Value {
+      if (args.size() > 1)
+      {
+        ErrorService::runtime_error("Expected no more than 1 argument for string split method.",
+                                    "Found " + std::to_string(args.size()));
+      }
+
+      std::string delimiter;
+      if (!args.empty())
+      {
+        delimiter = args[0].string;
+      }
+
+      const auto split_strings = Utils::split(receiver.string, delimiter);
+      return Value::array_value(ValueType::String,
+                                std::make_shared<std::vector<Value> >(split_strings.begin(), split_strings.end()));
     })
   });
 

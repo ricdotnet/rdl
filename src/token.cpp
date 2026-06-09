@@ -4,28 +4,14 @@ std::string token_type_to_string(TokenType type)
 {
   switch (type)
   {
-    case TokenType::Import:
-      return "Import";
-    case TokenType::Func:
-      return "Func";
-    case TokenType::Let:
-      return "Let";
-    case TokenType::Struct:
-      return "Struct";
-    case TokenType::If:
-      return "If";
-    case TokenType::Else:
-      return "Else";
-    case TokenType::ElseIf:
-      return "ElseIf";
-    case TokenType::For:
-      return "For";
-    case TokenType::In:
-      return "In";
-    case TokenType::Range:
-      return "Range";
-    case TokenType::While:
-      return "While";
+    case TokenType::Unknown:
+      return "Unknown";
+    case TokenType::EndOfFile:
+      return "EndOfFile";
+    case TokenType::Comment:
+      return "Comment";
+
+    // IDENTIFIER LITERALS
     case TokenType::Identifier:
       return "Identifier";
     case TokenType::Number:
@@ -36,6 +22,8 @@ std::string token_type_to_string(TokenType type)
       return "True";
     case TokenType::False:
       return "False";
+
+    // OPERATORS
     case TokenType::And:
       return "And";
     case TokenType::Or:
@@ -50,6 +38,22 @@ std::string token_type_to_string(TokenType type)
       return "Slash";
     case TokenType::Equal:
       return "Equal";
+    case TokenType::Greater:
+      return "Greater";
+    case TokenType::GreaterEqual:
+      return "GreaterEqual";
+    case TokenType::Less:
+      return "Less";
+    case TokenType::LessEqual:
+      return "LessEqual";
+    case TokenType::EqualEqual:
+      return "EqualEqual";
+    case TokenType::Bang:
+      return "Bang";
+    case TokenType::BangEqual:
+      return "BangEqual";
+
+    // DELIMITERS
     case TokenType::LeftParen:
       return "LeftParen";
     case TokenType::RightParen:
@@ -74,34 +78,39 @@ std::string token_type_to_string(TokenType type)
       return "Backtick";
     case TokenType::Concat:
       return "Concat";
-    case TokenType::Greater:
-      return "Greater";
-    case TokenType::GreaterEqual:
-      return "GreaterEqual";
-    case TokenType::Less:
-      return "Less";
-    case TokenType::LessEqual:
-      return "LessEqual";
-    case TokenType::EqualEqual:
-      return "EqualEqual";
-    case TokenType::Bang:
-      return "Bang";
-    case TokenType::BangEqual:
-      return "BangEqual";
-    case TokenType::Return:
-      return "Return";
-    case TokenType::Comment:
-      return "Comment";
     case TokenType::Dot:
       return "Dot";
     case TokenType::Colon:
       return "Colon";
     case TokenType::ColonColon:
       return "ColonColon";
-    case TokenType::EndOfFile:
-      return "EndOfFile";
-    case TokenType::Unknown:
-      return "Unknown";
+
+    // KEYWORDS
+    case TokenType::Import:
+      return "Import";
+    case TokenType::Func:
+      return "Func";
+    case TokenType::Let:
+      return "Let";
+    case TokenType::Struct:
+      return "Struct";
+    case TokenType::If:
+      return "If";
+    case TokenType::Else:
+      return "Else";
+    case TokenType::ElseIf:
+      return "ElseIf";
+    case TokenType::For:
+      return "For";
+    case TokenType::In:
+      return "In";
+    case TokenType::Range:
+      return "Range";
+    case TokenType::While:
+      return "While";
+    case TokenType::Return:
+      return "Return";
+
     default:
       return "Invalid TokenType";
   }

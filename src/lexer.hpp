@@ -25,4 +25,6 @@ public:
   explicit Lexer(std::string src);
 
   std::vector<Token> tokenize();
+
+  void advance(int step);
 };

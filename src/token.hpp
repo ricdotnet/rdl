@@ -4,22 +4,18 @@
 
 enum class TokenType
 {
-  Import,
-  Func,
-  Let,
-  Struct,
-  If,
-  Else,
-  ElseIf,
-  For,
-  In,
-  Range,
-  While,
+  Unknown,
+  Comment,
+  EndOfFile,
+
+  // IDENTIFIER LITERALS
   Identifier,
   Number,
   String,
   True,
   False,
+
+  // OPERATORS
   And,
   Or,
   Plus,
@@ -27,6 +23,15 @@ enum class TokenType
   Star,
   Slash,
   Equal,
+  Greater,
+  GreaterEqual,
+  Less,
+  LessEqual,
+  EqualEqual,
+  Bang,
+  BangEqual,
+
+  // DELIMITERS
   LeftParen,
   RightParen,
   LeftBrace,
@@ -39,20 +44,23 @@ enum class TokenType
   DoubleQuote,
   Backtick,
   Concat,
-  Greater,
-  GreaterEqual,
-  Less,
-  LessEqual,
-  EqualEqual,
-  Bang,
-  BangEqual,
-  Return,
-  Comment,
   Dot,
   Colon,
   ColonColon,
-  EndOfFile,
-  Unknown,
+
+  // KEYWORDS
+  Import,
+  Func,
+  Let,
+  Struct,
+  If,
+  Else,
+  ElseIf,
+  For,
+  In,
+  Range,
+  While,
+  Return,
 };
 
 struct Token

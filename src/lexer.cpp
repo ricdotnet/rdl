@@ -19,6 +19,12 @@ Token Lexer::previous_token(const std::vector<Token> &tokens, const size_t index
 
 Lexer::Lexer(std::string src) : source(std::move(src)) {};
 
+void Lexer::advance(const int step)
+{
+  current += step;
+  column += step;
+}
+
 std::vector<Token> Lexer::tokenize()
 {
   std::vector<Token> tokens;
@@ -35,8 +41,7 @@ std::vector<Token> Lexer::tokenize()
 
     if (std::isspace(c))
     {
-      current++;
-      column++;
+      advance(1);
       continue;
     }
 
@@ -47,8 +52,7 @@ std::vector<Token> Lexer::tokenize()
       {
         while (current < source.size() && peek(source, current) != '\n')
         {
-          current++;
-          column++;
+          advance(1);
         }
         continue;
       }
@@ -63,8 +67,7 @@ std::vector<Token> Lexer::tokenize()
                                          peek(source, current) == '_' || peek(source, current) == '$'))
       {
         value += peek(source, current);
-        current++;
-        column++;
+        advance(1);
       }
 
       if (value == "if")
@@ -157,8 +160,7 @@ std::vector<Token> Lexer::tokenize()
       while (current < source.size() && is_digit(peek(source, current)))
       {
         number += peek(source, current);
-        current++;
-        column++;
+        advance(1);
       }
 
       tokens.push_back({TokenType::Number, number, line, column});
@@ -169,14 +171,38 @@ std::vector<Token> Lexer::tokenize()
     if (c == '"')
     {
       std::string value;
-      current++;
-      column++;
+      advance(1);
 
       while (current < source.size() && source[current] != '"')
       {
+        if (source[current] == '\\')
+        {
+          switch (source[current + 1])
+          {
+            case '"':
+              value += '"';
+              break;
+            case 'n':
+              value += '\n';
+              break;
+            case 'r':
+              value += '\r';
+              break;
+            case 't':
+              value += '\t';
+              break;
+            case '\\':
+              value += '\\';
+              break;
+            default: ;
+          }
+
+          advance(2);
+          continue;
+        }
+
         value += source[current];
-        current++;
-        column++;
+        advance(1);
       }
 
       if (current >= source.size())
@@ -185,9 +211,7 @@ std::vector<Token> Lexer::tokenize()
       }
 
       tokens.push_back({TokenType::String, value, line, column});
-      current++;
-      column++;
-
+      advance(1);
       continue;
     }
 
@@ -200,8 +224,7 @@ std::vector<Token> Lexer::tokenize()
       {
         tokens.push_back({TokenType::Concat, "..", line, column});
       }
-      current += 2;
-      column += 2;
+      advance(2);
       continue;
     }
 
@@ -241,8 +264,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '=')
         {
           tokens.push_back({TokenType::EqualEqual, "==", line, column});
-          current++;
-          column++;
+          advance(1);
           break;
         }
         tokens.push_back({TokenType::Equal, "=", line, column});
@@ -257,8 +279,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '=')
         {
           tokens.push_back({TokenType::GreaterEqual, ">=", line, column});
-          current++;
-          column++;
+          advance(1);
           break;
         }
         tokens.push_back({TokenType::Greater, ">", line, column});
@@ -267,8 +288,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '=')
         {
           tokens.push_back({TokenType::LessEqual, "<=", line, column});
-          current++;
-          column++;
+          advance(1);
           break;
         }
         tokens.push_back({TokenType::Less, "<", line, column});
@@ -277,8 +297,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '=')
         {
           tokens.push_back({TokenType::BangEqual, "!=", line, column});
-          current++;
-          column++;
+          advance(2);
           break;
         }
         tokens.push_back({TokenType::Bang, "!", line, column});
@@ -290,8 +309,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == ':')
         {
           tokens.push_back({TokenType::ColonColon, "::", line, column});
-          current++;
-          column++;
+          advance(1);
           break;
         }
         tokens.push_back({TokenType::Colon, ":", line, column});
@@ -300,8 +318,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '&')
         {
           tokens.push_back({TokenType::And, "&&", line, column});
-          current++;
-          column++;
+          advance(2);
           break;
         }
         break;
@@ -309,8 +326,7 @@ std::vector<Token> Lexer::tokenize()
         if (peek(source, current + 1) == '|')
         {
           tokens.push_back({TokenType::Or, "||", line, column});
-          current++;
-          column++;
+          advance(2);
           break;
         }
         break;
@@ -319,8 +335,7 @@ std::vector<Token> Lexer::tokenize()
                                    {TokenType::Unknown, std::string(1, c), line, column});
     }
 
-    current++;
-    column++;
+    advance(1);
   }
 
   tokens.push_back({TokenType::EndOfFile, "", line, column});
