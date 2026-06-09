@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <set>
@@ -14,6 +15,11 @@ struct Value;
 class Environment;
 
 class FunctionExpr;
+
+struct NativeObject
+{
+  virtual ~NativeObject() = default;
+};
 
 struct FunctionValue
 {
@@ -38,6 +44,8 @@ struct RangeValue
 struct ObjectValue
 {
   std::shared_ptr<std::unordered_map<std::string, Value> > properties;
+
+  std::shared_ptr<NativeObject> native_object;
 };
 
 struct ArrayValue
@@ -59,6 +67,11 @@ struct StructInstance
   std::shared_ptr<StructDefinition> definition;
 
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
+};
+
+struct FileHandler : NativeObject
+{
+  std::ifstream stream;
 };
 
 struct Value
