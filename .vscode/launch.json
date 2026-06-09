@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "type": "extensionHost",
+      "request": "launch",
+      "name": "Launch Client",
+      "cwd": "${workspaceFolder}/extensions/vscode",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
+      ],
+      "outFiles": ["${workspaceFolder}/extensions/vscode/dist/**/*.js"],
+      "autoAttachChildProcesses": true,
+      "preLaunchTask": "npm: watch (extensions/vscode)"
+    }
+  ]
+}

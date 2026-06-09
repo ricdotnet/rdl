@@ -3,3 +3,5 @@ language
 *.rdl
 language*
 cmake-build-debug
+**/node_modules
+**/dist
