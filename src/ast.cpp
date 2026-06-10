@@ -130,7 +130,7 @@ GroupStmt::GroupStmt(std::string path, std::vector<std::unique_ptr<Expr> > route
 
 void GroupStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-RouteStmt::RouteStmt(std::string method, std::string path, std::unique_ptr<Expr> body)
+RouteStmt::RouteStmt(std::string method, std::string path, std::unique_ptr<BlockStmt> body)
   : method(std::move(method)), path(std::move(path)), body(std::move(body)) {}
 
 void RouteStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }

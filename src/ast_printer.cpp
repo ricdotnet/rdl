@@ -28,7 +28,12 @@ public:
   void visit(ReturnStmt &stmt) override
   {
     print_indent();
-    std::cout << "Return(" << stmt.value << ")\n";
+    std::cout << "Return\n";
+    indent++;
+    stmt.value->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(IfStmt &stmt) override

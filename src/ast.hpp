@@ -345,9 +345,9 @@ public:
 
   std::string path;
 
-  std::unique_ptr<Expr> body;
+  std::unique_ptr<BlockStmt> body;
 
-  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<Expr> body);
+  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<BlockStmt> body);
 
   void accept(ExprVisitor &visitor) override;
 };

@@ -148,3 +148,21 @@ void Runtime::init_type_methods()
   globals["Boolean"] = boolean_methods;
   globals["Array"] = array_methods;
 }
+
+void Runtime::register_route(const std::string &method, const std::string &path, BlockStmt *body)
+{
+  routes.push_back({method, path, body});
+}
+
+BlockStmt *Runtime::find_route(const std::string &method, const std::string &path) const
+{
+  for (const auto &route: routes)
+  {
+    if (route.method == method && route.path == path)
+    {
+      return route.body;
+    }
+  }
+
+  return nullptr;
+}

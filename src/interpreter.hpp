@@ -15,6 +15,11 @@ class Environment;
 
 class FunctionExpr;
 
+struct NativeObject
+{
+  virtual ~NativeObject() = default;
+};
+
 struct FunctionValue
 {
   FunctionExpr *declaration = nullptr;
@@ -38,6 +43,8 @@ struct RangeValue
 struct ObjectValue
 {
   std::shared_ptr<std::unordered_map<std::string, Value> > properties;
+
+  std::shared_ptr<NativeObject> native_object;
 };
 
 struct ArrayValue
@@ -61,11 +68,16 @@ struct StructInstance
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
 };
 
+struct ResponseHandle : NativeObject
+{
+  int client_fd;
+};
+
 struct Value
 {
   ValueType type;
 
-  size_t number{};
+  ssize_t number{};
 
   std::string string{};
 
@@ -219,7 +231,7 @@ struct Value
     return v;
   }
 
-  static Value number_value(const size_t n)
+  static Value number_value(const ssize_t n)
   {
     Value v;
 

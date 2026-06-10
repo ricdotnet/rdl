@@ -5,6 +5,7 @@
 #include "./runtime.hpp"
 #include "./utils.hpp"
 #include "./native_modules/fs_module.cpp"
+#include "./native_modules/http_module.cpp"
 #include "./native_modules/io_module.cpp"
 #include "./native_modules/time_module.cpp"
 
@@ -39,6 +40,19 @@ public:
   {
     expr->accept(*this);
     return result;
+  }
+
+  void execute_route(const BlockStmt &route, const Value& handle)
+  {
+    Environment local(env);
+    EnvironmentGuard guard(env, &local);
+
+    env->define("response", handle);
+
+    for (auto &expr: route.statements)
+    {
+      evaluate(expr.get());
+    }
   }
 
   void visit(FunctionExpr &expr) override
@@ -643,6 +657,10 @@ public:
     {
       module = std::make_shared<FileSystemModule>().get()->init();
     }
+    if (module_name == "http")
+    {
+      module = std::make_shared<HttpModule>(env).get()->init();
+    }
 
     env->get_runtime()->add_global(module_name, module);
 
@@ -657,8 +675,10 @@ public:
     }
   }
 
-  void visit(RouteStmt &) override
+  void visit(RouteStmt &stmt) override
   {
+    env->get_runtime()->register_route(stmt.method, stmt.path, stmt.body.get());
+
     result = Value::nil_value();
   }
 };

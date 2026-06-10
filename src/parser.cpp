@@ -122,7 +122,14 @@ std::unique_ptr<Expr> Parser::statement()
 
     while (!check(TokenType::RightBrace))
     {
-      statements.push_back(statement());
+      std::unique_ptr<Expr> stmt = declaration();
+
+      if (const auto &route = dynamic_cast<RouteStmt *>(stmt.get()))
+      {
+        route->path = base_path.value + route->path;
+      }
+
+      statements.push_back(std::move(stmt));
       try_consume(TokenType::Semicolon);
     }
 
@@ -201,13 +208,25 @@ std::unique_ptr<Expr> Parser::struct_definition()
   return std::make_unique<StructStmt>(struct_name.value, std::move(fields));
 }
 
+std::unique_ptr<RouteStmt> Parser::route_definition()
+{
+  auto method = consume(TokenType::HttpVerb);
+  auto path = consume(TokenType::String);
+
+  consume(TokenType::LeftBrace);
+
+  auto body = block();
+
+  return std::make_unique<RouteStmt>(method.value, path.value, std::move(body));
+}
+
 std::unique_ptr<BlockStmt> Parser::block()
 {
   std::vector<std::unique_ptr<Expr> > statements;
 
   while (!check(TokenType::RightBrace) && !is_at_end())
   {
-    statements.push_back(statement());
+    statements.push_back(declaration());
 
     try_consume(TokenType::Semicolon);
   }
