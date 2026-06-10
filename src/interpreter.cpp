@@ -42,12 +42,13 @@ public:
     return result;
   }
 
-  void execute_route(const BlockStmt &route, const Value& handle)
+  void execute_route(const BlockStmt &route, const Value &request, const Value &response)
   {
     Environment local(env);
     EnvironmentGuard guard(env, &local);
 
-    env->define("response", handle);
+    env->define("request", request);
+    env->define("response", response);
 
     for (auto &expr: route.statements)
     {

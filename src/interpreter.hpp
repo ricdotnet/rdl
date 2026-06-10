@@ -68,6 +68,11 @@ struct StructInstance
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
 };
 
+struct RequestHandle : NativeObject
+{
+  int client_fd;
+};
+
 struct ResponseHandle : NativeObject
 {
   int client_fd;

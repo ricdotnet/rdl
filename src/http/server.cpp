@@ -57,6 +57,54 @@ void HttpServer::handle_client(const int client, Environment *environment)
 
   request >> method >> path >> version;
 
+  auto request_handle = std::make_shared<RequestHandle>();
+  request_handle->client_fd = client;
+
+  // TODO: implement a simple dictionary of key value strings
+  auto request_headers = std::make_shared<std::unordered_map<std::string, Value> >();
+  auto request_props = std::make_shared<std::unordered_map<std::string, Value> >();
+
+  // TODO: refactor info helper
+  std::string line;
+  std::getline(request, line);
+  while (std::getline(request, line))
+  {
+    if (line == "\r" || line.empty())
+    {
+      break;
+    }
+
+    auto pos = line.find(':');
+
+    if (pos == std::string::npos)
+    {
+      continue;
+    }
+
+    auto key = line.substr(0, pos);
+
+    auto value = line.substr(pos + 1);
+
+    if (!value.empty() && value.front() == ' ')
+    {
+      value.erase(0, 1);
+    }
+
+    if (!value.empty() && value.back() == '\r')
+    {
+      value.pop_back();
+    }
+
+    (*request_headers)[key] = Value::string_value(value);
+  }
+
+  request_props->insert({"headers", Value::object_value(request_headers)});
+  request_props->insert({"method", Value::string_value(method)});
+  request_props->insert({"path", Value::string_value(path)});
+
+  auto request_object = Value::object_value(request_props);
+  request_object.object.native_object = request_handle;
+
   const auto route = environment->get_runtime()->find_route(method, path);
 
   if (!route)
@@ -68,20 +116,50 @@ void HttpServer::handle_client(const int client, Environment *environment)
     return;
   }
 
-  auto handle = std::make_shared<ResponseHandle>();
-  handle->client_fd = client;
+  auto response_handle = std::make_shared<ResponseHandle>();
+  response_handle->client_fd = client;
 
-  auto props = std::make_shared<std::unordered_map<std::string, Value> >();
-  auto response = Value::object_value(props);
+  auto response_props = std::make_shared<std::unordered_map<std::string, Value> >();
+  auto response_object = Value::object_value(response_props);
 
-  response.object.native_object = handle;
+  response_object.object.native_object = response_handle;
 
-  register_response_methods(props.get());
+  register_request_methods(request_props.get());
+  register_response_methods(response_props.get());
 
   Interpreter interpreter(environment);
-  interpreter.execute_route(*route, response);
+  interpreter.execute_route(*route, request_object, response_object);
 
   close(client);
+}
+
+void HttpServer::register_request_methods(std::unordered_map<std::string, Value> *properties)
+{
+  (*properties)["get_header"] = Value::builtin_function_value(
+    [](const Value &receiver, const std::vector<Value> &args) -> Value {
+      if (args.empty() || args.size() > 1)
+      {
+        ErrorService::runtime_error("Expected 1 argument for get_header method.",
+                                    "Found " + std::to_string(args.size()));
+      }
+
+      if (args[0].type != ValueType::String)
+      {
+        ErrorService::runtime_error("Expected string argument for get_header method.",
+                                    "Found " + Value::type_name(args[0].type));
+      }
+
+      const auto header = args[0].string;
+      const auto request_props = receiver.object.properties;
+      auto &headers = request_props->at("headers").object;
+
+      if (headers.properties->contains(header))
+      {
+        return headers.properties->at(header);
+      }
+
+      return Value::undefined_value();
+    });
 }
 
 void HttpServer::register_response_methods(std::unordered_map<std::string, Value> *properties)

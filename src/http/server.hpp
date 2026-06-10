@@ -9,6 +9,8 @@ private:
 
   std::unordered_map<std::string, std::string> headers;
 
+  static void register_request_methods(std::unordered_map<std::string, Value> *properties);
+
   void register_response_methods(std::unordered_map<std::string, Value> *properties);
 
 public:
