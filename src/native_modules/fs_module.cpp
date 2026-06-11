@@ -47,6 +47,8 @@ private:
     std::stringstream buffer;
     buffer << file.rdbuf();
 
+    file.close();
+
     return Value::string_value(buffer.str());
   }
 
@@ -70,7 +72,7 @@ private:
 
     const auto properties = std::make_shared<std::unordered_map<std::string, Value> >();
 
-    properties.get()->insert({
+    properties->insert({
       "read_line", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
         const auto file = native<FileHandler>(receiver);
 
@@ -95,7 +97,7 @@ private:
       })
     });
 
-    properties.get()->insert({
+    properties->insert({
       "read_all", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
         const auto file = native<FileHandler>(receiver);
 
@@ -106,7 +108,7 @@ private:
       })
     });
 
-    properties.get()->insert({
+    properties->insert({
       "close", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
         const auto file = native<FileHandler>(receiver);
 
@@ -116,7 +118,7 @@ private:
       })
     });
 
-    properties.get()->insert({
+    properties->insert({
       "has_next", Value::builtin_function_value([](const Value &receiver, const std::vector<Value> &) {
         const auto file = native<FileHandler>(receiver);
 
