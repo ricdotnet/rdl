@@ -16,6 +16,8 @@ class Environment;
 
 class FunctionExpr;
 
+using NativeFn = std::function<Value(const Value &receiver, std::vector<Value> &args)>;
+
 struct NativeObject
 {
   virtual ~NativeObject() = default;
@@ -23,11 +25,17 @@ struct NativeObject
 
 struct FunctionValue
 {
+  enum class Kind
+  {
+    Builtin,
+    UserDefined,
+  };
+
+  Kind kind;
+
   FunctionExpr *declaration = nullptr;
 
-  std::function<Value(const Value &, std::vector<Value> &)> builtin;
-
-  bool is_builtin = false;
+  NativeFn builtin;
 };
 
 struct RangeValue
@@ -282,13 +290,13 @@ struct Value
     return v;
   }
 
-  static Value builtin_function_value(const std::function<Value(const Value &receiver, std::vector<Value> &)> &body)
+  static Value builtin_function_value(NativeFn body)
   {
     Value v;
 
     v.type = ValueType::Function;
-    v.function.builtin = body;
-    v.function.is_builtin = true;
+    v.function.builtin = std::move(body);
+    v.function.kind = FunctionValue::Kind::Builtin;
 
     return v;
   }
@@ -299,7 +307,7 @@ struct Value
 
     v.type = ValueType::Function;
     v.function.declaration = declaration;
-    v.function.is_builtin = false;
+    v.function.kind = FunctionValue::Kind::UserDefined;
 
     return v;
   }

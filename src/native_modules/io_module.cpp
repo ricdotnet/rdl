@@ -1,3 +1,4 @@
+#include <iostream>
 #include "./native_module.hpp"
 
 class IoModule : public NativeModule

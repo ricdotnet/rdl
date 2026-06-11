@@ -14,7 +14,6 @@ struct Binding
 
 class Environment
 {
-private:
   Runtime *runtime{};
 
 public:
@@ -22,7 +21,7 @@ public:
 
   Environment() = default;
 
-  explicit Environment(Environment *parent) : parent(parent) {}
+  explicit Environment(Environment *parent, Runtime *runtime) : runtime(runtime), parent(parent) {}
 
   std::unordered_map<std::string, Binding> values;
 
@@ -33,8 +32,4 @@ public:
   Value get(const std::string &name);
 
   void assign(const std::string &name, const Value &value);
-
-  void set_runtime(Runtime &run);
-
-  Runtime *get_runtime() const;
 };

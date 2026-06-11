@@ -19,6 +19,6 @@ file(GLOB_RECURSE SRC_FILES
 add_executable(language ${SRC_FILES})
 
 # Match your Makefile warning flags (-Wall -Wextra)
-if(NOT MSVC)
+if (NOT MSVC)
     target_compile_options(language PRIVATE -Wall -Wextra)
-endif()
+endif ()

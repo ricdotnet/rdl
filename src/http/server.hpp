@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../environment.hpp"
+#include "../runtime_context.hpp"
 
 class HttpServer
 {
@@ -18,7 +18,7 @@ private:
   static void process_body(std::istream &request, std::string &body);
 
 public:
-  [[noreturn]] void start_server(int port, Environment *environment);
+  [[noreturn]] void start_server(int port, RuntimeContext context);
 
-  void handle_client(int client, Environment *environment);
+  void handle_client(int client, RuntimeContext context);
 };

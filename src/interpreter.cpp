@@ -3,15 +3,15 @@
 #include "./environment_guard.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
-#include "./utils/string.hpp"
 #include "./native_modules/fs_module.cpp"
 #include "./native_modules/http_module.cpp"
 #include "./native_modules/io_module.cpp"
 #include "./native_modules/time_module.cpp"
+#include "./utils/string.hpp"
 
 class Interpreter : public ExprVisitor
 {
-  Environment *env;
+  RuntimeContext context;
 
   static std::string concat_expr(const std::string &left, const std::string &right)
   {
@@ -34,7 +34,7 @@ class Interpreter : public ExprVisitor
 public:
   Value result;
 
-  explicit Interpreter(Environment *env) : env(env), result() {}
+  explicit Interpreter(const RuntimeContext context) : context(context), result() {}
 
   Value evaluate(Expr *expr)
   {
@@ -44,11 +44,11 @@ public:
 
   void execute_route(const BlockStmt &route, const Value &request, const Value &response)
   {
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
 
-    env->define("request", request);
-    env->define("response", response);
+    context.environment->define("request", request);
+    context.environment->define("response", response);
 
     for (auto &expr: route.statements)
     {
@@ -62,12 +62,12 @@ public:
 
     if (expr.receiver_type.has_value())
     {
-      const auto &receiver_type = env->get_runtime()->globals.at(expr.receiver_type.value());
+      const auto &receiver_type = context.runtime->globals.at(expr.receiver_type.value());
       receiver_type.object.properties->insert({expr.name, result});
       return;
     }
 
-    env->define(expr.name, result);
+    context.environment->define(expr.name, result);
   }
 
   void visit(ReturnStmt &stmt) override
@@ -115,7 +115,7 @@ public:
       fields[field_name] = field_type;
     }
 
-    env->define(type_name, Value::struct_value(type_name, fields));
+    context.environment->define(type_name, Value::struct_value(type_name, fields));
 
     result = Value::nil_value();
   }
@@ -124,8 +124,8 @@ public:
   {
     while (evaluate(expr.condition.get()).is_truthy())
     {
-      Environment local(env);
-      EnvironmentGuard guard(env, &local);
+      Environment local(context.environment, context.runtime);
+      EnvironmentGuard guard(context.environment, &local);
 
       try
       {
@@ -147,13 +147,13 @@ public:
 
   void visit(ForStmt &expr) override
   {
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
 
-    env->define(expr.iterator, Value::nil_value());
+    context.environment->define(expr.iterator, Value::nil_value());
     if (expr.index_name)
     {
-      env->define(*expr.index_name, Value::number_value(0));
+      context.environment->define(*expr.index_name, Value::number_value(0));
     }
 
     // we have to normalize a mutable identifier
@@ -176,7 +176,7 @@ public:
       {
         for (int i = start; i < end_value; i += step)
         {
-          env->assign(iterator, Value::number_value(i));
+          context.environment->assign(iterator, Value::number_value(i));
           evaluate(body);
         }
       } catch (ReturnSignal &)
@@ -192,10 +192,10 @@ public:
       {
         for (int i = 0; i < size; ++i)
         {
-          env->assign(iterator, arr->at(i));
+          context.environment->assign(iterator, arr->at(i));
           if (expr.index_name.has_value())
           {
-            env->assign(normalise_identifier(*expr.index_name), Value::number_value(i));
+            context.environment->assign(normalise_identifier(*expr.index_name), Value::number_value(i));
           }
           evaluate(body);
         }
@@ -223,7 +223,7 @@ public:
 
   void visit(VariableExpr &expr) override
   {
-    const auto value = env->get(expr.name);
+    const auto value = context.environment->get(expr.name);
 
     if (value.is_undefined)
     {
@@ -239,7 +239,7 @@ public:
 
     if (const auto *left = dynamic_cast<VariableExpr *>(expr.left.get()))
     {
-      env->assign(left->name, value);
+      context.environment->assign(left->name, value);
       result = value;
       return;
     }
@@ -303,7 +303,7 @@ public:
   {
     const auto value = evaluate(expr.initialiser.get());
 
-    env->define(expr.name, value);
+    context.environment->define(expr.name, value);
 
     result = Value::nil_value();
   }
@@ -446,14 +446,14 @@ public:
       arguments.push_back(evaluate(arg.get()));
     }
 
-    if (callee.function.is_builtin)
+    if (callee.function.kind == FunctionValue::Kind::Builtin)
     {
       result = callee.function.builtin(callee, arguments);
       return;
     }
 
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
 
     bind_local_params(local, *callee.function.declaration, arguments);
 
@@ -473,7 +473,7 @@ public:
 
     if (receiver.type != ValueType::Object)
     {
-      fields = *env->get_runtime()->globals.at(Value::type_name(receiver.type)).object.properties;
+      fields = *context.runtime->globals.at(Value::type_name(receiver.type)).object.properties;
     } else
     {
       fields = *receiver.object.properties;
@@ -504,15 +504,15 @@ public:
       args.push_back(evaluate(arg.get()));
     }
 
-    if (method.function.is_builtin)
+    if (method.function.kind == FunctionValue::Kind::Builtin)
     {
       result = method.function.builtin(receiver, args);
     } else
     {
-      Environment local(env);
-      EnvironmentGuard guard(env, &local);
+      Environment local(context.environment, context.runtime);
+      EnvironmentGuard guard(context.environment, &local);
 
-      env->define("self", receiver);
+      local.define("self", receiver);
 
       bind_local_params(local, *method.function.declaration, args);
 
@@ -612,7 +612,7 @@ public:
 
   void visit(StructInitExpr &expr) override
   {
-    auto struct_definition = env->get(expr.type_name).struct_definition;
+    auto struct_definition = context.environment->get(expr.type_name).struct_definition;
     const auto &struct_fields = struct_definition.fields;
 
     const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
@@ -660,10 +660,10 @@ public:
     }
     if (module_name == "http")
     {
-      module = std::make_shared<HttpModule>(env).get()->init();
+      module = std::make_shared<HttpModule>(context).get()->init();
     }
 
-    env->get_runtime()->add_global(module_name, module);
+    context.runtime->add_global(module_name, module);
 
     result = Value::nil_value();
   }
@@ -678,7 +678,7 @@ public:
 
   void visit(RouteStmt &stmt) override
   {
-    env->get_runtime()->register_route(stmt.method, stmt.path, stmt.body.get());
+    context.runtime->register_route(stmt.method, stmt.path, stmt.body.get());
 
     result = Value::nil_value();
   }

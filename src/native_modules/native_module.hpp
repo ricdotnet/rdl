@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interpreter.hpp"
-#include "../runtime.hpp"
 
 class NativeModule
 {

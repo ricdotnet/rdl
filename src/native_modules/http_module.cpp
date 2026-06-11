@@ -1,22 +1,24 @@
 #include <vector>
 #include "./native_module.hpp"
+#include "../runtime_context.hpp"
 #include "../http/server.hpp"
 
 class HttpModule : NativeModule
 {
 private:
-  Environment *environment;
+  RuntimeContext context;
 
 public:
-  explicit HttpModule(Environment *environment) : NativeModule(), environment(environment) {}
+  explicit HttpModule(const RuntimeContext context) : NativeModule(), context(context) {}
 
   [[nodiscard]] std::string name() const override { return "http"; }
 
   [[nodiscard]] Value init() override
   {
+    auto ctx = this->context;
     const auto functions = std::make_shared<std::unordered_map<std::string, Value> >();
 
-    (*functions)["listen"] = Value::builtin_function_value([this](const Value &, const std::vector<Value> &args) {
+    auto listenFn = [ctx](const Value &, const std::vector<Value> &args) {
       if (args.size() != 1)
       {
         ErrorService::runtime_error("Expected 1 argument for listen method.", "Found " + std::to_string(args.size()));
@@ -44,10 +46,12 @@ public:
       }
 
       HttpServer http_server;
-      http_server.start_server(port, this->environment);
+      http_server.start_server(port, ctx);
 
       return Value::nil_value();
-    });
+    };
+
+    functions->emplace("listen", Value::builtin_function_value(listenFn));
 
     return Value::object_value(functions);
   }

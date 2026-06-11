@@ -14,10 +14,10 @@ public:
   {
     const auto functions = std::make_shared<std::unordered_map<std::string, Value> >();
 
-    (*functions)["now"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
+    (*functions)["now"] = Value::builtin_function_value([](const Value &, std::vector<Value> &args) {
       return now(args);
     });
-    (*functions)["sleep"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
+    (*functions)["sleep"] = Value::builtin_function_value([](const Value &, std::vector<Value> &args) {
       return sleep(args);
     });
 

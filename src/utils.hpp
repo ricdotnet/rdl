@@ -1,3 +1,6 @@
+#pragma once
+
+#include "./interpreter.hpp"
 
 template<typename T>
 std::shared_ptr<T> native(const Value &v)

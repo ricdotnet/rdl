@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include "../interpreter.cpp"
 
-[[noreturn]] void HttpServer::start_server(const int port, Environment *environment)
+[[noreturn]] void HttpServer::start_server(const int port, RuntimeContext context)
 {
   const int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -22,20 +22,20 @@
 
   ::listen(server_fd, 10);
 
-  const auto runtime = environment->get_runtime();
+  const auto runtime = context.runtime;
   *runtime->out << "Server is listening on port " << port << '\n';
 
   while (true)
   {
     const int client = accept(server_fd, nullptr, nullptr);
 
-    handle_client(client, environment);
+    handle_client(client, context);
 
     close(client);
   }
 }
 
-void HttpServer::handle_client(const int client, Environment *environment)
+void HttpServer::handle_client(const int client, RuntimeContext context)
 {
   char buffer[4096];
 
@@ -72,7 +72,7 @@ void HttpServer::handle_client(const int client, Environment *environment)
   auto request_object = Value::object_value(request_props);
   request_object.object.native_object = request_handle;
 
-  const auto route = environment->get_runtime()->find_route(method, path);
+  const auto route = context.runtime->find_route(method, path);
 
   if (!route)
   {
@@ -94,7 +94,7 @@ void HttpServer::handle_client(const int client, Environment *environment)
   register_request_methods(request_props.get());
   register_response_methods(response_props.get());
 
-  Interpreter interpreter(environment);
+  Interpreter interpreter(context);
   interpreter.execute_route(*route, request_object, response_object);
 
   close(client);

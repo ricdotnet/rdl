@@ -26,15 +26,15 @@ void run(std::string source, const bool debug)
   const auto program = parser.parse();
 
   Runtime runtime;
-  Environment env;
+  Environment env(nullptr, &runtime);
 
-  env.set_runtime(runtime);
   runtime.out = &std::cout;
-
   runtime.init_type_methods();
 
+  RuntimeContext context = {&env, &runtime};
+
   ASTPrinter printer;
-  Interpreter interpreter(&env);
+  Interpreter interpreter(context);
 
   for (auto &statement: program)
   {
