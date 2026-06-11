@@ -8,6 +8,7 @@
 #include <string>
 #include "./error_service.hpp"
 #include "./value_type.hpp"
+#include "./libs/httplib.h"
 
 // Forward declarations
 struct Value;
@@ -79,12 +80,12 @@ struct StructInstance
 
 struct RequestHandle : NativeObject
 {
-  int client_fd;
+  httplib::Request *request = nullptr;
 };
 
 struct ResponseHandle : NativeObject
 {
-  int client_fd;
+  httplib::Response *response = nullptr;
 };
 
 struct FileHandler : NativeObject

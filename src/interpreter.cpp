@@ -3,10 +3,10 @@
 #include "./environment_guard.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
-#include "./native_modules/fs_module.cpp"
-#include "./native_modules/http_module.cpp"
-#include "./native_modules/io_module.cpp"
-#include "./native_modules/time_module.cpp"
+#include "./native_modules/fs_module.hpp"
+#include "./native_modules/http_module.hpp"
+#include "./native_modules/io_module.hpp"
+#include "./native_modules/time_module.hpp"
 #include "./utils/string.hpp"
 
 class Interpreter : public ExprVisitor
@@ -47,7 +47,7 @@ public:
     Environment local(context.environment, context.runtime);
     EnvironmentGuard guard(context.environment, &local);
 
-    context.environment->define("request", request);
+    // context.environment->define("request", request);
     context.environment->define("response", response);
 
     for (auto &expr: route.statements)
@@ -648,19 +648,19 @@ public:
 
     if (module_name == "time")
     {
-      module = std::make_shared<TimeModule>().get()->init();
+      module = std::make_shared<TimeModule>()->init();
     }
     if (module_name == "io")
     {
-      module = std::make_shared<IoModule>().get()->init();
+      module = std::make_shared<IoModule>(context)->init();
     }
     if (module_name == "fs")
     {
-      module = std::make_shared<FileSystemModule>().get()->init();
+      module = std::make_shared<FileSystemModule>()->init();
     }
     if (module_name == "http")
     {
-      module = std::make_shared<HttpModule>(context).get()->init();
+      module = std::make_shared<HttpModule>(context)->init();
     }
 
     context.runtime->add_global(module_name, module);

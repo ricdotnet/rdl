@@ -1,8 +1,6 @@
 #include "./runtime.hpp"
-#include <iostream>
 #include "./environment.hpp"
 #include "./error_service.hpp"
-#include "./native_modules/time_module.cpp"
 #include "./utils/string.hpp"
 
 void Runtime::add_global(const std::string &name, const Value &value)
