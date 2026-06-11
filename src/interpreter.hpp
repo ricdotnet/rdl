@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <set>
@@ -76,6 +77,11 @@ struct RequestHandle : NativeObject
 struct ResponseHandle : NativeObject
 {
   int client_fd;
+};
+
+struct FileHandler : NativeObject
+{
+  std::ifstream stream;
 };
 
 struct Value
