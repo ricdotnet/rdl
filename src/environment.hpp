@@ -34,7 +34,7 @@ public:
 
   void assign(const std::string &name, const Value &value);
 
-  void set_runtime(Runtime &runtime);
+  void set_runtime(Runtime &run);
 
   Runtime *get_runtime() const;
 };

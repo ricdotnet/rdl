@@ -2,8 +2,8 @@
 #include <iostream>
 #include "./environment.hpp"
 #include "./error_service.hpp"
-#include "utils.hpp"
 #include "./native_modules/time_module.cpp"
+#include "./utils/string.hpp"
 
 void Runtime::add_global(const std::string &name, const Value &value)
 {
@@ -41,9 +41,8 @@ void Runtime::init_type_methods()
         ErrorService::runtime_error("Expected 0 arguments for string upper method.",
                                     "Found " + std::to_string(args.size()));
       }
-      std::string upper = receiver.string;
-      std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
-      return Value::string_value(upper);
+
+      return Value::string_value(to_upper(receiver.string));
     })
   });
 
@@ -54,9 +53,8 @@ void Runtime::init_type_methods()
         ErrorService::runtime_error("Expected 0 arguments for string lower method.",
                                     "Found " + std::to_string(args.size()));
       }
-      std::string lower = receiver.string;
-      std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-      return Value::string_value(lower);
+
+      return Value::string_value(to_lower(receiver.string));
     })
   });
 
@@ -74,7 +72,7 @@ void Runtime::init_type_methods()
         delimiter = args[0].string;
       }
 
-      const auto split_strings = Utils::split(receiver.string, delimiter);
+      const auto split_strings = split(receiver.string, delimiter);
       return Value::array_value(ValueType::String,
                                 std::make_shared<std::vector<Value> >(split_strings.begin(), split_strings.end()));
     })

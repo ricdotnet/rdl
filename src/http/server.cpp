@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include "../interpreter.cpp"
 
-
 [[noreturn]] void HttpServer::start_server(const int port, Environment *environment)
 {
   const int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -64,39 +63,7 @@ void HttpServer::handle_client(const int client, Environment *environment)
   auto request_headers = std::make_shared<std::unordered_map<std::string, Value> >();
   auto request_props = std::make_shared<std::unordered_map<std::string, Value> >();
 
-  // TODO: refactor info helper
-  std::string line;
-  std::getline(request, line);
-  while (std::getline(request, line))
-  {
-    if (line == "\r" || line.empty())
-    {
-      break;
-    }
-
-    auto pos = line.find(':');
-
-    if (pos == std::string::npos)
-    {
-      continue;
-    }
-
-    auto key = line.substr(0, pos);
-
-    auto value = line.substr(pos + 1);
-
-    if (!value.empty() && value.front() == ' ')
-    {
-      value.erase(0, 1);
-    }
-
-    if (!value.empty() && value.back() == '\r')
-    {
-      value.pop_back();
-    }
-
-    (*request_headers)[key] = Value::string_value(value);
-  }
+  process_headers(request, request_headers.get());
 
   request_props->insert({"headers", Value::object_value(request_headers)});
   request_props->insert({"method", Value::string_value(method)});
@@ -133,6 +100,43 @@ void HttpServer::handle_client(const int client, Environment *environment)
   close(client);
 }
 
+void HttpServer::process_headers(std::istream &request, std::unordered_map<std::string, Value> *headers_map)
+{
+  std::string line;
+  std::getline(request, line);
+
+  while (std::getline(request, line))
+  {
+    if (line == "\r" || line.empty())
+    {
+      break;
+    }
+
+    auto pos = line.find(':');
+
+    if (pos == std::string::npos)
+    {
+      continue;
+    }
+
+    auto key = line.substr(0, pos);
+
+    auto value = line.substr(pos + 1);
+
+    if (!value.empty() && value.front() == ' ')
+    {
+      value.erase(0, 1);
+    }
+
+    if (!value.empty() && value.back() == '\r')
+    {
+      value.pop_back();
+    }
+
+    (*headers_map)[to_lower(key)] = Value::string_value(value);
+  }
+}
+
 void HttpServer::register_request_methods(std::unordered_map<std::string, Value> *properties)
 {
   (*properties)["get_header"] = Value::builtin_function_value(
@@ -151,11 +155,11 @@ void HttpServer::register_request_methods(std::unordered_map<std::string, Value>
 
       const auto header = args[0].string;
       const auto request_props = receiver.object.properties;
-      auto &headers = request_props->at("headers").object;
+      const auto header_props = request_props->at("headers").object.properties;
 
-      if (headers.properties->contains(header))
+      if (const auto lower_header = to_lower(header); header_props->contains(lower_header))
       {
-        return headers.properties->at(header);
+        return header_props->at(lower_header);
       }
 
       return Value::undefined_value();

@@ -1,8 +1,9 @@
-#include  "./utils.hpp"
-#include <sstream>
-#include <vector>
+#pragma once
 
-std::string Utils::normalise_identifier(std::string identifier)
+#include <string>
+#include "../interpreter.hpp"
+
+inline std::string normalise_identifier(std::string identifier)
 {
   if (identifier.front() == '$')
   {
@@ -12,7 +13,7 @@ std::string Utils::normalise_identifier(std::string identifier)
   return identifier;
 }
 
-std::vector<Value> Utils::split(const std::string &string, const std::string &delim)
+inline std::vector<Value> split(const std::string &string, const std::string &delim)
 {
   std::vector<Value> elements;
 
@@ -37,4 +38,18 @@ std::vector<Value> Utils::split(const std::string &string, const std::string &de
   elements.push_back(Value::string_value(string.substr(start)));
 
   return elements;
+}
+
+inline std::string to_upper(const std::string &s)
+{
+  std::string result;
+  std::transform(s.begin(), s.end(), std::back_inserter(result), ::toupper);
+  return result;
+}
+
+inline std::string to_lower(const std::string &s)
+{
+  std::string result;
+  std::transform(s.begin(), s.end(), std::back_inserter(result), ::tolower);
+  return result;
 }

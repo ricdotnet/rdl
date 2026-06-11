@@ -13,6 +13,10 @@ private:
 
   void register_response_methods(std::unordered_map<std::string, Value> *properties);
 
+  static void process_headers(std::istream &request, std::unordered_map<std::string, Value> *headers_map);
+
+  static void process_body(std::istream &request, std::string &body);
+
 public:
   [[noreturn]] void start_server(int port, Environment *environment);
 

@@ -3,7 +3,7 @@
 #include "./environment_guard.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
-#include "./utils.hpp"
+#include "./utils/string.hpp"
 #include "./native_modules/fs_module.cpp"
 #include "./native_modules/http_module.cpp"
 #include "./native_modules/io_module.cpp"
@@ -157,7 +157,7 @@ public:
     }
 
     // we have to normalize a mutable identifier
-    const auto iterator = Utils::normalise_identifier(expr.iterator);
+    const auto iterator = normalise_identifier(expr.iterator);
     const auto body = expr.body.get();
     const auto iterable = evaluate(expr.iterable.get());
 
@@ -195,7 +195,7 @@ public:
           env->assign(iterator, arr->at(i));
           if (expr.index_name.has_value())
           {
-            env->assign(Utils::normalise_identifier(*expr.index_name), Value::number_value(i));
+            env->assign(normalise_identifier(*expr.index_name), Value::number_value(i));
           }
           evaluate(body);
         }

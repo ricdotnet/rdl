@@ -1,5 +1,4 @@
 #include "./environment.hpp"
-#include <iostream>
 #include "./error_service.hpp"
 #include "./interpreter.hpp"
 
@@ -51,10 +50,16 @@ Value Environment::get(const std::string &name)
     return parent->get(name);
   }
 
-  // It should throw before being called
-  if (get_runtime()->globals.contains(name))
+  const auto *run = get_runtime();
+  if (!run)
   {
-    return get_runtime()->globals.at(name);
+    ErrorService::runtime_error("No runtime found", "");
+    return Value::undefined_value();
+  }
+
+  if (run->globals.contains(name))
+  {
+    return run->globals.at(name);
   }
 
   return Value::undefined_value();
@@ -82,9 +87,9 @@ void Environment::assign(const std::string &name, const Value &value)
   ErrorService::runtime_error("Undefined variable", name);
 }
 
-void Environment::set_runtime(Runtime &runtime)
+void Environment::set_runtime(Runtime &run)
 {
-  this->runtime = &runtime;
+  this->runtime = &run;
 }
 
 Runtime *Environment::get_runtime() const
