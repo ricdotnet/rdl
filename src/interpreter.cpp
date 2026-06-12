@@ -42,15 +42,15 @@ public:
     return result;
   }
 
-  void execute_route(const BlockStmt &route, const Value &request, const Value &response)
+  void execute_route(const RegisteredRoute &route, const Value &request, const Value &response)
   {
     Environment local(context.environment, context.runtime);
     EnvironmentGuard guard(context.environment, &local);
 
-    // context.environment->define("request", request);
-    context.environment->define("response", response);
+    context.environment->define(route.req_identifier.has_value() ? route.req_identifier.value() : "request", request);
+    context.environment->define(route.res_identifier.has_value() ? route.res_identifier.value() : "response", response);
 
-    for (auto &expr: route.statements)
+    for (auto &expr: route.body->statements)
     {
       evaluate(expr.get());
     }
@@ -678,7 +678,7 @@ public:
 
   void visit(RouteStmt &stmt) override
   {
-    context.runtime->register_route(stmt.method, stmt.path, stmt.body.get());
+    context.runtime->register_route(stmt.method, stmt.path, stmt.body.get(), stmt.req_identifier, stmt.res_identifier);
 
     result = Value::nil_value();
   }

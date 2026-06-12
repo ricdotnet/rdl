@@ -31,8 +31,6 @@ private:
 
   std::unique_ptr<Expr> struct_definition();
 
-  std::unique_ptr<RouteStmt> route_definition();
-
   std::unique_ptr<BlockStmt> block();
 
   std::unique_ptr<Expr> expression();

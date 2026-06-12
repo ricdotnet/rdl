@@ -106,11 +106,23 @@ std::unique_ptr<Expr> Parser::statement()
     auto method = consume(TokenType::HttpVerb);
     auto path = consume(TokenType::String);
 
+    std::optional<std::string> req_identifier;
+    std::optional<std::string> res_identifier;
+
+    if (check(TokenType::LeftParen))
+    {
+      consume(TokenType::LeftParen);
+      req_identifier = consume(TokenType::Identifier).value;
+      consume(TokenType::Comma);
+      res_identifier = consume(TokenType::Identifier).value;
+      consume(TokenType::RightParen);
+    }
+
     consume(TokenType::LeftBrace);
 
     auto body = block();
 
-    return std::make_unique<RouteStmt>(method.value, path.value, std::move(body));
+    return std::make_unique<RouteStmt>(method.value, path.value, std::move(body), req_identifier, res_identifier);
   }
 
   if (match(TokenType::Group))
@@ -206,18 +218,6 @@ std::unique_ptr<Expr> Parser::struct_definition()
   seen_types.insert(struct_name.value);
 
   return std::make_unique<StructStmt>(struct_name.value, std::move(fields));
-}
-
-std::unique_ptr<RouteStmt> Parser::route_definition()
-{
-  auto method = consume(TokenType::HttpVerb);
-  auto path = consume(TokenType::String);
-
-  consume(TokenType::LeftBrace);
-
-  auto body = block();
-
-  return std::make_unique<RouteStmt>(method.value, path.value, std::move(body));
 }
 
 std::unique_ptr<BlockStmt> Parser::block()

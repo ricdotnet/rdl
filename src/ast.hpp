@@ -347,7 +347,12 @@ public:
 
   std::unique_ptr<BlockStmt> body;
 
-  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<BlockStmt> body);
+  std::optional<std::string> req_identifier;
+
+  std::optional<std::string> res_identifier;
+
+  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<BlockStmt> body,
+                     std::optional<std::string> req_identifier, std::optional<std::string> res_identifier);
 
   void accept(ExprVisitor &visitor) override;
 };

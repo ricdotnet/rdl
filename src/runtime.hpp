@@ -13,6 +13,10 @@ struct RegisteredRoute
   std::string path;
 
   BlockStmt *body;
+
+  std::optional<std::string> req_identifier;
+
+  std::optional<std::string> res_identifier;
 };
 
 class Runtime
@@ -32,7 +36,9 @@ public:
 
   Value resolve(const std::string &name);
 
-  void register_route(const std::string &method, const std::string &path, BlockStmt *body);
+  void register_route(const std::string &method, const std::string &path, BlockStmt *body,
+                      const std::optional<std::string> &req_identifier,
+                      const std::optional<std::string> &res_identifier);
 
-  BlockStmt *find_route(const std::string &method, const std::string &path) const;
+  RegisteredRoute find_route(const std::string &method, const std::string &path) const;
 };

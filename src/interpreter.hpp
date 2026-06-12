@@ -80,7 +80,7 @@ struct StructInstance
 
 struct RequestHandle : NativeObject
 {
-  httplib::Request *request = nullptr;
+  const httplib::Request *request = nullptr;
 };
 
 struct ResponseHandle : NativeObject
