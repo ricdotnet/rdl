@@ -209,7 +209,7 @@ std::unique_ptr<Expr> Parser::struct_definition()
   while (!check(TokenType::RightBrace) && !is_at_end())
   {
     auto field_name = consume(TokenType::Identifier);
-    auto field_type = consume(TokenType::Identifier);
+    const auto field_type = parse_type();
     std::optional<std::string> field_json = std::nullopt;
 
     if (check(TokenType::Backtick))
@@ -219,7 +219,7 @@ std::unique_ptr<Expr> Parser::struct_definition()
       consume(TokenType::Backtick);
     }
 
-    fields.emplace(field_name.value, StructDefinitionField{Value::type_of(field_type.value, &seen_types), field_json});
+    fields.emplace(field_name.value, StructDefinitionField{field_type, field_json});
     try_consume(TokenType::Comma);
   }
 
@@ -613,6 +613,31 @@ std::unique_ptr<Expr> Parser::primary()
 
   ErrorService::syntax_error("Expected expression", tokens[current]);
   return nullptr;
+}
+
+TypeDescriptor Parser::parse_type()
+{
+  if (match(TokenType::LeftBracket))
+  {
+    consume(TokenType::RightBracket);
+    TypeDescriptor element_type = parse_type();
+    return {.type = ValueType::Array, .element_type = std::make_shared<TypeDescriptor>(std::move(element_type))};
+  }
+
+  const auto token = consume(TokenType::Identifier);
+
+  if (token.value == "String") return {.type = ValueType::String};
+
+  if (token.value == "Number") return {.type = ValueType::Number};
+
+  if (token.value == "Boolean") return {.type = ValueType::Boolean};
+
+  if (seen_types.contains(token.value))
+  {
+    return {.type = ValueType::Struct, .name = token.value};
+  }
+
+  return TypeDescriptor{};
 }
 
 bool Parser::match(const TokenType type)

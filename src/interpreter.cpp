@@ -258,11 +258,11 @@ public:
           ErrorService::runtime_error("Undefined field for struct " + definition->name, left->field_name);
         }
 
-        if (definition->fields.at(left->field_name).type != value.type)
+        if (definition->fields.at(left->field_name).type.type != value.type)
         {
           ErrorService::runtime_error(
             "Type mismatch for struct field assignment: expected " +
-            Value::type_name(definition->fields.at(left->field_name).type) + ", got " + Value::type_name(value.type),
+            Value::type_name(definition->fields.at(left->field_name).type.type) + ", got " + Value::type_name(value.type),
             left->field_name);
         }
 
@@ -628,10 +628,10 @@ public:
       const auto &struct_field = struct_fields.at(field_name);
       const auto value = evaluate(field_expr.get());
 
-      if (value.type != struct_field.type)
+      if (value.type != struct_field.type.type)
       {
         ErrorService::runtime_error(
-          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field.type) +
+          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field.type.type) +
           ", got " + Value::type_name(value.type), "");
       }
 

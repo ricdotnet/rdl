@@ -23,14 +23,14 @@ private:
     return request_object;
   }
 
-  static Value response_handle(httplib::Response &res)
+  static Value response_handle(const RuntimeContext context, httplib::Response &res)
   {
     const auto response_handle = std::make_shared<ResponseHandle>();
     response_handle->response = &res;
     const auto response_props = std::make_shared<std::unordered_map<std::string, Value> >();
     auto response_object = Value::object_value(response_props);
     response_object.object.native_object = response_handle;
-    register_response_methods(response_props.get());
+    register_response_methods(context, response_props.get());
 
     return response_object;
   }
@@ -52,7 +52,7 @@ private:
       *context.runtime->out << "[" << req.method << "] " << req.path << std::endl;
 
       Interpreter interpreter(context);
-      interpreter.execute_route(route, request_handle(context, req), response_handle(res));
+      interpreter.execute_route(route, request_handle(context, req), response_handle(context, res));
 
       const auto end = std::chrono::system_clock::now();
       const auto duration_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -80,10 +80,10 @@ public:
     server.listen("0.0.0.0", port);
   }
 
-  static void register_response_methods(std::unordered_map<std::string, Value> *properties)
+  static void register_response_methods(RuntimeContext context, std::unordered_map<std::string, Value> *properties)
   {
     (*properties)["send"] = Value::builtin_function_value(
-      [](const Value &receiver, const std::vector<Value> &args) -> Value {
+      [context](const Value &receiver, const std::vector<Value> &args) -> Value {
         const auto response = std::static_pointer_cast<ResponseHandle>(receiver.object.native_object);
 
         if (response->finished)
@@ -105,25 +105,10 @@ public:
 
         const auto response_body = args[0];
 
-        if (response_body.type == ValueType::Object)
+        if (response_body.type == ValueType::Object || response_body.type == ValueType::Array || response_body.type ==
+            ValueType::Struct)
         {
-          nlohmann::json json;
-          for (auto &[key, value]: *response_body.object.properties)
-          {
-            json[key] = value.string;
-          }
-          response->response->set_content(json.dump(), "application/json");
-        }
-
-        if (response_body.type == ValueType::Struct)
-        {
-          nlohmann::json json;
-          auto definition = response_body.struct_instance.definition;
-          for (auto &[key, value]: *response_body.struct_instance.fields)
-          {
-            json[definition->fields.at(key).json_name.value_or(key)] = value.string;
-          }
-          response->response->set_content(json.dump(), "application/json");
+          response->response->set_content(marshal(response_body, context).dump(), "application/json");
         }
 
         if (response_body.type == ValueType::String)
@@ -200,8 +185,8 @@ public:
 
           const auto value = parsed_body.at(final_field_name);
 
-          // TODO: parse JSON with type checks too
-          (*fields)[field_name] = Value::string_value(value.get<std::string>());
+          const auto type = field->type;
+          (*fields)[field_name] = unmarshal(value, type, context);
         }
 
         auto struct_definition = struct_def.struct_definition;

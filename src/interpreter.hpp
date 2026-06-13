@@ -66,7 +66,7 @@ struct ArrayValue
 
 struct StructDefinitionField
 {
-  ValueType type;
+  TypeDescriptor type;
 
   std::optional<std::string> json_name;
 };

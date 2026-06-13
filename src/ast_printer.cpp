@@ -76,7 +76,7 @@ public:
       print_indent();
 
       std::cout << field_name << ": ";
-      std::cout << Value::type_name(field_def.type) << "\n";
+      std::cout << Value::type_name(field_def.type.type) << "\n";
     }
     indent--;
     print_indent();
