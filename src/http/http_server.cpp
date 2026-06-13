@@ -1,4 +1,5 @@
 #include "./http_server.hpp"
+#include "./utils.hpp"
 #include "../interpreter.cpp"
 #include "../libs/httplib.h"
 #include "../libs/json.hpp"
@@ -34,54 +35,45 @@ private:
     return response_object;
   }
 
+  static httplib::Server::Handler handler_lambda(const RuntimeContext context)
+  {
+    return [context](const httplib::Request &req, httplib::Response &res) {
+      const auto start = std::chrono::system_clock::now();
+
+      const auto route = context.runtime->find_route(req.method, req.path);
+
+      if (!route.body)
+      {
+        *context.runtime->out << "[" << req.method << "] " << req.path << " 404 Not Found" << std::endl;
+        res.status = 404;
+        return;
+      }
+
+      *context.runtime->out << "[" << req.method << "] " << req.path << std::endl;
+
+      Interpreter interpreter(context);
+      interpreter.execute_route(route, request_handle(context, req), response_handle(res));
+
+      const auto end = std::chrono::system_clock::now();
+      const auto duration_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+      *context.runtime->out << "[" << req.method << "] " << req.path << " " << duration_microseconds.count() << "μs" <<
+          "\n";
+    };
+  }
+
 public:
   void listen(const int port, const RuntimeContext context) override
   {
     httplib::Server server;
 
-    server.Get(R"(.*)", [&](const httplib::Request &req, httplib::Response &res) {
-      const auto start = std::chrono::system_clock::now();
+    server.Get(R"(.*)", handler_lambda(context));
+    server.Post(R"(.*)", handler_lambda(context));
+    server.Put(R"(.*)", handler_lambda(context));
+    server.Patch(R"(.*)", handler_lambda(context));
+    server.Delete(R"(.*)", handler_lambda(context));
+    server.Options(R"(.*)", handler_lambda(context));
 
-      const auto route = context.runtime->find_route(req.method, req.path);
-
-      if (!route.body)
-      {
-        res.status = 404;
-        return;
-      }
-
-      *context.runtime->out << "[" << req.method << "] " << req.path << std::endl;
-
-      Interpreter interpreter(context);
-      interpreter.execute_route(route, request_handle(context, req), response_handle(res));
-
-      const auto end = std::chrono::system_clock::now();
-      const auto duration_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-      *context.runtime->out << "[" << req.method << "] " << req.path << " " << duration_microseconds.count() << "μs" <<
-          "\n";
-    });
-
-    server.Post(R"(.*)", [&](const httplib::Request &req, httplib::Response &res) {
-      const auto start = std::chrono::system_clock::now();
-
-      const auto route = context.runtime->find_route(req.method, req.path);
-
-      if (!route.body)
-      {
-        res.status = 404;
-        return;
-      }
-
-      *context.runtime->out << "[" << req.method << "] " << req.path << std::endl;
-
-      Interpreter interpreter(context);
-      interpreter.execute_route(route, request_handle(context, req), response_handle(res));
-
-      const auto end = std::chrono::system_clock::now();
-      const auto duration_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-      *context.runtime->out << "[" << req.method << "] " << req.path << " " << duration_microseconds.count() << "μs" <<
-          "\n";
-    });
+    // TODO: websocket support later
 
     *context.runtime->out << "Server listening on port " << port << std::endl;
 
@@ -94,9 +86,50 @@ public:
       [](const Value &receiver, const std::vector<Value> &args) -> Value {
         const auto response = std::static_pointer_cast<ResponseHandle>(receiver.object.native_object);
 
-        response->response->status = 200;
-        const std::string body = args.empty() ? "" : args[0].to_string();
-        response->response->set_content(body, "text/plain");
+        if (response->finished)
+        {
+          ErrorService::runtime_error("Cannot send a response after the request is finished.", "");
+        }
+
+        response->finished = true;
+
+        if (args.empty())
+        {
+          return Value::nil_value();
+        }
+
+        if (receiver.object.properties->contains("status"))
+        {
+          response->response->status = receiver.object.properties->at("status").number;
+        }
+
+        const auto response_body = args[0];
+
+        if (response_body.type == ValueType::Object)
+        {
+          nlohmann::json json;
+          for (auto &[key, value]: *response_body.object.properties)
+          {
+            json[key] = value.string;
+          }
+          response->response->set_content(json.dump(), "application/json");
+        }
+
+        if (response_body.type == ValueType::Struct)
+        {
+          nlohmann::json json;
+          auto definition = response_body.struct_instance.definition;
+          for (auto &[key, value]: *response_body.struct_instance.fields)
+          {
+            json[definition->fields.at(key).json_name.value_or(key)] = value.string;
+          }
+          response->response->set_content(json.dump(), "application/json");
+        }
+
+        if (response_body.type == ValueType::String)
+        {
+          response->response->set_content(response_body.string, "text/plain");
+        }
 
         return Value::nil_value();
       });
@@ -163,11 +196,7 @@ public:
         for (const auto &[field_name, field_def]: struct_def.struct_definition->fields)
         {
           auto field = &field_def;
-          auto final_field_name = field_name;
-          if (field->json_name.has_value())
-          {
-            final_field_name = field->json_name.value();
-          }
+          auto final_field_name = field->json_name.value_or(field_name);
 
           const auto value = parsed_body.at(final_field_name);
 

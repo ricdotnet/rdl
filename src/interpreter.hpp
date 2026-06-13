@@ -93,6 +93,8 @@ struct RequestHandle : NativeObject
 struct ResponseHandle : NativeObject
 {
   httplib::Response *response = nullptr;
+
+  bool finished = false;
 };
 
 struct FileHandler : NativeObject
@@ -344,7 +346,8 @@ struct Value
     return v;
   }
 
-  static Value struct_value(const std::string &name, const std::unordered_map<std::string, StructDefinitionField> &fields)
+  static Value struct_value(const std::string &name,
+                            const std::unordered_map<std::string, StructDefinitionField> &fields)
   {
     Value v;
 
