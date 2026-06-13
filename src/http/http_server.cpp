@@ -160,9 +160,16 @@ public:
         const auto parsed_body = nlohmann::json::parse(request->request->body);
         const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
 
-        for (const auto &field_name: struct_def.struct_definition->fields | std::views::keys)
+        for (const auto &[field_name, field_def]: struct_def.struct_definition->fields)
         {
-          const auto value = parsed_body.at(field_name);
+          auto field = &field_def;
+          auto final_field_name = field_name;
+          if (field->json_name.has_value())
+          {
+            final_field_name = field->json_name.value();
+          }
+
+          const auto value = parsed_body.at(final_field_name);
 
           // TODO: parse JSON with type checks too
           (*fields)[field_name] = Value::string_value(value.get<std::string>());

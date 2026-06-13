@@ -64,11 +64,18 @@ struct ArrayValue
   std::shared_ptr<std::vector<Value> > elements;
 };
 
+struct StructDefinitionField
+{
+  ValueType type;
+
+  std::optional<std::string> json_name;
+};
+
 struct StructDefinition
 {
   std::string name;
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 };
 
 struct StructInstance
@@ -337,7 +344,7 @@ struct Value
     return v;
   }
 
-  static Value struct_value(const std::string &name, const std::unordered_map<std::string, ValueType> &fields)
+  static Value struct_value(const std::string &name, const std::unordered_map<std::string, StructDefinitionField> &fields)
   {
     Value v;
 

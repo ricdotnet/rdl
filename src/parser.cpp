@@ -204,13 +204,22 @@ std::unique_ptr<Expr> Parser::struct_definition()
   const auto struct_name = consume(TokenType::Identifier);
   consume(TokenType::LeftBrace);
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 
   while (!check(TokenType::RightBrace) && !is_at_end())
   {
     auto field_name = consume(TokenType::Identifier);
     auto field_type = consume(TokenType::Identifier);
-    fields.emplace(field_name.value, Value::type_of(field_type.value, &seen_types));
+    std::optional<std::string> field_json = std::nullopt;
+
+    if (check(TokenType::Backtick))
+    {
+      consume(TokenType::Backtick);
+      field_json = consume(TokenType::Identifier).value;
+      consume(TokenType::Backtick);
+    }
+
+    fields.emplace(field_name.value, StructDefinitionField{Value::type_of(field_type.value, &seen_types), field_json});
     try_consume(TokenType::Comma);
   }
 

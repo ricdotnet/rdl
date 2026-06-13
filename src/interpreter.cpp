@@ -109,7 +109,7 @@ public:
   void visit(StructStmt &stmt) override
   {
     const auto type_name = stmt.name;
-    std::unordered_map<std::string, ValueType> fields;
+    std::unordered_map<std::string, StructDefinitionField> fields;
     for (const auto &[field_name, field_type]: stmt.fields)
     {
       fields[field_name] = field_type;
@@ -258,11 +258,11 @@ public:
           ErrorService::runtime_error("Undefined field for struct " + definition->name, left->field_name);
         }
 
-        if (definition->fields.at(left->field_name) != value.type)
+        if (definition->fields.at(left->field_name).type != value.type)
         {
           ErrorService::runtime_error(
             "Type mismatch for struct field assignment: expected " +
-            Value::type_name(definition->fields.at(left->field_name)) + ", got " + Value::type_name(value.type),
+            Value::type_name(definition->fields.at(left->field_name).type) + ", got " + Value::type_name(value.type),
             left->field_name);
         }
 
@@ -628,11 +628,11 @@ public:
       const auto &struct_field = struct_fields.at(field_name);
       const auto value = evaluate(field_expr.get());
 
-      if (value.type != struct_field)
+      if (value.type != struct_field.type)
       {
         ErrorService::runtime_error(
-          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field) + ", got " +
-          Value::type_name(value.type), "");
+          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field.type) +
+          ", got " + Value::type_name(value.type), "");
       }
 
       fields->insert({field_name, value});

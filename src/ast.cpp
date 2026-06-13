@@ -21,7 +21,7 @@ BlockStmt::BlockStmt(std::vector<std::unique_ptr<Expr> > stmts) : statements(std
 
 void BlockStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
 
-StructStmt::StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields)
+StructStmt::StructStmt(std::string name, std::unordered_map<std::string, StructDefinitionField> fields)
   : name(std::move(name)), fields(std::move(fields)) {}
 
 void StructStmt::accept(ExprVisitor &visitor) { visitor.visit(*this); }
