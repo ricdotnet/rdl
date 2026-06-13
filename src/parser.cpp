@@ -441,8 +441,9 @@ std::unique_ptr<Expr> Parser::postfix()
         {
           do
           {
+            try_consume(TokenType::Comma);
             args.push_back(expression());
-          } while (match(TokenType::Comma));
+          } while (check(TokenType::Comma));
         }
 
         consume(TokenType::RightParen);
@@ -486,7 +487,7 @@ std::unique_ptr<Expr> Parser::primary()
   {
     const auto identifier = previous();
 
-    if (seen_types.contains(identifier.value))
+    if (seen_types.contains(identifier.value) && peek().type == TokenType::LeftBrace)
     {
       const auto type_name = identifier.value;
 

@@ -73,7 +73,7 @@ struct StructDefinition
 
 struct StructInstance
 {
-  std::shared_ptr<StructDefinition> definition;
+  std::shared_ptr<const StructDefinition> definition;
 
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
 };
@@ -113,9 +113,9 @@ struct Value
 
   ArrayValue array{};
 
-  StructDefinition struct_definition{};
-
   StructInstance struct_instance{};
+
+  std::shared_ptr<StructDefinition> struct_definition;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -342,8 +342,7 @@ struct Value
     Value v;
 
     v.type = ValueType::Struct;
-    v.struct_definition.name = name;
-    v.struct_definition.fields = fields;
+    v.struct_definition = std::make_shared<StructDefinition>(name, fields);
 
     return v;
   }

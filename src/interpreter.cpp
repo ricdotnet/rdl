@@ -612,8 +612,8 @@ public:
 
   void visit(StructInitExpr &expr) override
   {
-    auto struct_definition = context.environment->get(expr.type_name).struct_definition;
-    const auto &struct_fields = struct_definition.fields;
+    const auto struct_definition = context.environment->get(expr.type_name).struct_definition;
+    const auto &struct_fields = struct_definition->fields;
 
     const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
     fields->reserve(expr.fields.size());
@@ -638,7 +638,7 @@ public:
       fields->insert({field_name, value});
     }
 
-    result = Value::struct_instance_value(std::make_shared<StructDefinition>(struct_definition), fields);
+    result = Value::struct_instance_value(struct_definition, fields);
   }
 
   void visit(ImportExpr &expr) override
