@@ -6,6 +6,7 @@
 #include "./native_modules/fs_module.hpp"
 #include "./native_modules/http_module.hpp"
 #include "./native_modules/io_module.hpp"
+#include "./native_modules/json_module.hpp"
 #include "./native_modules/time_module.hpp"
 #include "./utils/string.hpp"
 
@@ -261,8 +262,8 @@ public:
         if (definition->fields.at(left->field_name).type.type != value.type)
         {
           ErrorService::runtime_error(
-            "Type mismatch for struct field assignment: expected " +
-            Value::type_name(definition->fields.at(left->field_name).type.type) + ", got " + Value::type_name(value.type),
+            "Type mismatch for struct field assignment: expected " + Value::type_name(
+              definition->fields.at(left->field_name).type.type) + ", got " + Value::type_name(value.type),
             left->field_name);
         }
 
@@ -661,6 +662,10 @@ public:
     if (module_name == "http")
     {
       module = std::make_shared<HttpModule>(context)->init();
+    }
+    if (module_name == "json")
+    {
+      module = std::make_shared<JsonModule>(context)->init();
     }
 
     context.runtime->add_global(module_name, module);
