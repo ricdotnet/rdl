@@ -3,14 +3,16 @@
 #include "./environment_guard.hpp"
 #include "./error_service.hpp"
 #include "./runtime.hpp"
-#include "./utils.hpp"
-#include "./native_modules/fs_module.cpp"
-#include "./native_modules/io_module.cpp"
-#include "./native_modules/time_module.cpp"
+#include "./native_modules/fs_module.hpp"
+#include "./native_modules/http_module.hpp"
+#include "./native_modules/io_module.hpp"
+#include "./native_modules/json_module.hpp"
+#include "./native_modules/time_module.hpp"
+#include "./utils/string.hpp"
 
 class Interpreter : public ExprVisitor
 {
-  Environment *env;
+  RuntimeContext context;
 
   static std::string concat_expr(const std::string &left, const std::string &right)
   {
@@ -33,12 +35,26 @@ class Interpreter : public ExprVisitor
 public:
   Value result;
 
-  explicit Interpreter(Environment *env) : env(env), result() {}
+  explicit Interpreter(const RuntimeContext context) : context(context), result() {}
 
   Value evaluate(Expr *expr)
   {
     expr->accept(*this);
     return result;
+  }
+
+  void execute_route(const RegisteredRoute &route, const Value &request, const Value &response)
+  {
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
+
+    context.environment->define(route.req_identifier.has_value() ? route.req_identifier.value() : "request", request);
+    context.environment->define(route.res_identifier.has_value() ? route.res_identifier.value() : "response", response);
+
+    for (auto &expr: route.body->statements)
+    {
+      evaluate(expr.get());
+    }
   }
 
   void visit(FunctionExpr &expr) override
@@ -47,12 +63,12 @@ public:
 
     if (expr.receiver_type.has_value())
     {
-      const auto &receiver_type = env->get_runtime()->globals.at(expr.receiver_type.value());
+      const auto &receiver_type = context.runtime->globals.at(expr.receiver_type.value());
       receiver_type.object.properties->insert({expr.name, result});
       return;
     }
 
-    env->define(expr.name, result);
+    context.environment->define(expr.name, result);
   }
 
   void visit(ReturnStmt &stmt) override
@@ -94,13 +110,13 @@ public:
   void visit(StructStmt &stmt) override
   {
     const auto type_name = stmt.name;
-    std::unordered_map<std::string, ValueType> fields;
+    std::unordered_map<std::string, StructDefinitionField> fields;
     for (const auto &[field_name, field_type]: stmt.fields)
     {
       fields[field_name] = field_type;
     }
 
-    env->define(type_name, Value::struct_value(type_name, fields));
+    context.environment->define(type_name, Value::struct_value(type_name, fields));
 
     result = Value::nil_value();
   }
@@ -109,8 +125,8 @@ public:
   {
     while (evaluate(expr.condition.get()).is_truthy())
     {
-      Environment local(env);
-      EnvironmentGuard guard(env, &local);
+      Environment local(context.environment, context.runtime);
+      EnvironmentGuard guard(context.environment, &local);
 
       try
       {
@@ -132,17 +148,17 @@ public:
 
   void visit(ForStmt &expr) override
   {
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
 
-    env->define(expr.iterator, Value::nil_value());
+    context.environment->define(expr.iterator, Value::nil_value());
     if (expr.index_name)
     {
-      env->define(*expr.index_name, Value::number_value(0));
+      context.environment->define(*expr.index_name, Value::number_value(0));
     }
 
     // we have to normalize a mutable identifier
-    const auto iterator = Utils::normalise_identifier(expr.iterator);
+    const auto iterator = normalise_identifier(expr.iterator);
     const auto body = expr.body.get();
     const auto iterable = evaluate(expr.iterable.get());
 
@@ -161,7 +177,7 @@ public:
       {
         for (int i = start; i < end_value; i += step)
         {
-          env->assign(iterator, Value::number_value(i));
+          context.environment->assign(iterator, Value::number_value(i));
           evaluate(body);
         }
       } catch (ReturnSignal &)
@@ -177,10 +193,10 @@ public:
       {
         for (int i = 0; i < size; ++i)
         {
-          env->assign(iterator, arr->at(i));
+          context.environment->assign(iterator, arr->at(i));
           if (expr.index_name.has_value())
           {
-            env->assign(Utils::normalise_identifier(*expr.index_name), Value::number_value(i));
+            context.environment->assign(normalise_identifier(*expr.index_name), Value::number_value(i));
           }
           evaluate(body);
         }
@@ -208,7 +224,7 @@ public:
 
   void visit(VariableExpr &expr) override
   {
-    const auto value = env->get(expr.name);
+    const auto value = context.environment->get(expr.name);
 
     if (value.is_undefined)
     {
@@ -224,7 +240,7 @@ public:
 
     if (const auto *left = dynamic_cast<VariableExpr *>(expr.left.get()))
     {
-      env->assign(left->name, value);
+      context.environment->assign(left->name, value);
       result = value;
       return;
     }
@@ -243,11 +259,11 @@ public:
           ErrorService::runtime_error("Undefined field for struct " + definition->name, left->field_name);
         }
 
-        if (definition->fields.at(left->field_name) != value.type)
+        if (definition->fields.at(left->field_name).type.type != value.type)
         {
           ErrorService::runtime_error(
-            "Type mismatch for struct field assignment: expected " +
-            Value::type_name(definition->fields.at(left->field_name)) + ", got " + Value::type_name(value.type),
+            "Type mismatch for struct field assignment: expected " + Value::type_name(
+              definition->fields.at(left->field_name).type.type) + ", got " + Value::type_name(value.type),
             left->field_name);
         }
 
@@ -288,7 +304,7 @@ public:
   {
     const auto value = evaluate(expr.initialiser.get());
 
-    env->define(expr.name, value);
+    context.environment->define(expr.name, value);
 
     result = Value::nil_value();
   }
@@ -431,14 +447,14 @@ public:
       arguments.push_back(evaluate(arg.get()));
     }
 
-    if (callee.function.is_builtin)
+    if (callee.function.kind == FunctionValue::Kind::Builtin)
     {
       result = callee.function.builtin(callee, arguments);
       return;
     }
 
-    Environment local(env);
-    EnvironmentGuard guard(env, &local);
+    Environment local(context.environment, context.runtime);
+    EnvironmentGuard guard(context.environment, &local);
 
     bind_local_params(local, *callee.function.declaration, arguments);
 
@@ -458,7 +474,7 @@ public:
 
     if (receiver.type != ValueType::Object)
     {
-      fields = *env->get_runtime()->globals.at(Value::type_name(receiver.type)).object.properties;
+      fields = *context.runtime->globals.at(Value::type_name(receiver.type)).object.properties;
     } else
     {
       fields = *receiver.object.properties;
@@ -489,15 +505,15 @@ public:
       args.push_back(evaluate(arg.get()));
     }
 
-    if (method.function.is_builtin)
+    if (method.function.kind == FunctionValue::Kind::Builtin)
     {
       result = method.function.builtin(receiver, args);
     } else
     {
-      Environment local(env);
-      EnvironmentGuard guard(env, &local);
+      Environment local(context.environment, context.runtime);
+      EnvironmentGuard guard(context.environment, &local);
 
-      env->define("self", receiver);
+      local.define("self", receiver);
 
       bind_local_params(local, *method.function.declaration, args);
 
@@ -597,8 +613,8 @@ public:
 
   void visit(StructInitExpr &expr) override
   {
-    auto struct_definition = env->get(expr.type_name).struct_definition;
-    const auto &struct_fields = struct_definition.fields;
+    const auto struct_definition = context.environment->get(expr.type_name).struct_definition;
+    const auto &struct_fields = struct_definition->fields;
 
     const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
     fields->reserve(expr.fields.size());
@@ -613,17 +629,17 @@ public:
       const auto &struct_field = struct_fields.at(field_name);
       const auto value = evaluate(field_expr.get());
 
-      if (value.type != struct_field)
+      if (value.type != struct_field.type.type)
       {
         ErrorService::runtime_error(
-          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field) + ", got " +
-          Value::type_name(value.type), "");
+          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field.type.type) +
+          ", got " + Value::type_name(value.type), "");
       }
 
       fields->insert({field_name, value});
     }
 
-    result = Value::struct_instance_value(std::make_shared<StructDefinition>(struct_definition), fields);
+    result = Value::struct_instance_value(struct_definition, fields);
   }
 
   void visit(ImportExpr &expr) override
@@ -633,18 +649,41 @@ public:
 
     if (module_name == "time")
     {
-      module = std::make_shared<TimeModule>().get()->init();
+      module = std::make_shared<TimeModule>()->init();
     }
     if (module_name == "io")
     {
-      module = std::make_shared<IoModule>().get()->init();
+      module = std::make_shared<IoModule>(context)->init();
     }
     if (module_name == "fs")
     {
-      module = std::make_shared<FileSystemModule>().get()->init();
+      module = std::make_shared<FileSystemModule>()->init();
+    }
+    if (module_name == "http")
+    {
+      module = std::make_shared<HttpModule>(context)->init();
+    }
+    if (module_name == "json")
+    {
+      module = std::make_shared<JsonModule>(context)->init();
     }
 
-    env->get_runtime()->add_global(module_name, module);
+    context.runtime->add_global(module_name, module);
+
+    result = Value::nil_value();
+  }
+
+  void visit(GroupStmt &stmt) override
+  {
+    for (const auto &route: stmt.routes)
+    {
+      route->accept(*this);
+    }
+  }
+
+  void visit(RouteStmt &stmt) override
+  {
+    context.runtime->register_route(stmt.method, stmt.path, stmt.body.get(), stmt.req_identifier, stmt.res_identifier);
 
     result = Value::nil_value();
   }

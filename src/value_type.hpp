@@ -13,3 +13,12 @@ enum class ValueType
   Array,
   Struct,
 };
+
+struct TypeDescriptor
+{
+  ValueType type;
+
+  std::string name;
+
+  std::shared_ptr<TypeDescriptor> element_type;
+};

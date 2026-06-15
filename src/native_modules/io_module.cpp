@@ -1,60 +1,18 @@
-#include "./native_module.hpp"
+#include "./io_module.hpp"
+#include "./io_lambdas.hpp"
 
-class IoModule : public NativeModule
+[[nodiscard]] std::string IoModule::name() const
 {
-public:
-  explicit IoModule() : NativeModule() {}
+  return "io";
+}
 
-  ~IoModule() override = default;
+[[nodiscard]] Value IoModule::init()
+{
+  const auto functions = std::make_shared<std::unordered_map<std::string, Value> >();
 
-  [[nodiscard]] std::string name() const override
-  {
-    return "io";
-  }
+  functions->emplace("print", Value::builtin_function_value(print(context)));
+  functions->emplace("println", Value::builtin_function_value(println(context)));
+  functions->emplace("input", Value::builtin_function_value(input()));
 
-  [[nodiscard]] Value init() override
-  {
-    const auto functions = std::make_shared<std::unordered_map<std::string, Value> >();
-
-    (*functions)["print"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
-      return print(args);
-    });
-
-    (*functions)["println"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &args) {
-      return println(args);
-    });
-
-    (*functions)["input"] = Value::builtin_function_value([](const Value &, const std::vector<Value> &) {
-      return input();
-    });
-
-    return Value::object_value(functions);
-  }
-
-private:
-  static Value print(const std::vector<Value> &args)
-  {
-    for (const auto &arg: args)
-    {
-      std::cout << arg.to_string();
-    }
-    return Value::nil_value();
-  }
-
-  static Value println(const std::vector<Value> &args)
-  {
-    for (const auto &arg: args)
-    {
-      std::cout << arg.to_string();
-    }
-    std::cout << std::endl;
-    return Value::nil_value();
-  }
-
-  static Value input()
-  {
-    std::string input;
-    std::getline(std::cin, input);
-    return Value::string_value(input);
-  }
-};
+  return Value::object_value(functions);
+}

@@ -8,6 +8,7 @@
 #include <string>
 #include "./error_service.hpp"
 #include "./value_type.hpp"
+#include "./libs/httplib.h"
 
 // Forward declarations
 struct Value;
@@ -16,6 +17,8 @@ class Environment;
 
 class FunctionExpr;
 
+using NativeFn = std::function<Value(const Value &receiver, std::vector<Value> &args)>;
+
 struct NativeObject
 {
   virtual ~NativeObject() = default;
@@ -23,11 +26,17 @@ struct NativeObject
 
 struct FunctionValue
 {
+  enum class Kind
+  {
+    Builtin,
+    UserDefined,
+  };
+
+  Kind kind;
+
   FunctionExpr *declaration = nullptr;
 
-  std::function<Value(const Value &, std::vector<Value> &)> builtin;
-
-  bool is_builtin = false;
+  NativeFn builtin;
 };
 
 struct RangeValue
@@ -55,18 +64,37 @@ struct ArrayValue
   std::shared_ptr<std::vector<Value> > elements;
 };
 
+struct StructDefinitionField
+{
+  TypeDescriptor type;
+
+  std::optional<std::string> json_name;
+};
+
 struct StructDefinition
 {
   std::string name;
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 };
 
 struct StructInstance
 {
-  std::shared_ptr<StructDefinition> definition;
+  std::shared_ptr<const StructDefinition> definition;
 
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
+};
+
+struct RequestHandle : NativeObject
+{
+  const httplib::Request *request = nullptr;
+};
+
+struct ResponseHandle : NativeObject
+{
+  httplib::Response *response = nullptr;
+
+  bool finished = false;
 };
 
 struct FileHandler : NativeObject
@@ -78,7 +106,7 @@ struct Value
 {
   ValueType type;
 
-  size_t number{};
+  ssize_t number{};
 
   std::string string{};
 
@@ -94,9 +122,9 @@ struct Value
 
   ArrayValue array{};
 
-  StructDefinition struct_definition{};
-
   StructInstance struct_instance{};
+
+  std::shared_ptr<StructDefinition> struct_definition;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -232,7 +260,7 @@ struct Value
     return v;
   }
 
-  static Value number_value(const size_t n)
+  static Value number_value(const ssize_t n)
   {
     Value v;
 
@@ -272,13 +300,13 @@ struct Value
     return v;
   }
 
-  static Value builtin_function_value(const std::function<Value(const Value &receiver, std::vector<Value> &)> &body)
+  static Value builtin_function_value(NativeFn body)
   {
     Value v;
 
     v.type = ValueType::Function;
-    v.function.builtin = body;
-    v.function.is_builtin = true;
+    v.function.builtin = std::move(body);
+    v.function.kind = FunctionValue::Kind::Builtin;
 
     return v;
   }
@@ -289,7 +317,7 @@ struct Value
 
     v.type = ValueType::Function;
     v.function.declaration = declaration;
-    v.function.is_builtin = false;
+    v.function.kind = FunctionValue::Kind::UserDefined;
 
     return v;
   }
@@ -318,13 +346,13 @@ struct Value
     return v;
   }
 
-  static Value struct_value(const std::string &name, const std::unordered_map<std::string, ValueType> &fields)
+  static Value struct_value(const std::string &name,
+                            const std::unordered_map<std::string, StructDefinitionField> &fields)
   {
     Value v;
 
     v.type = ValueType::Struct;
-    v.struct_definition.name = name;
-    v.struct_definition.fields = fields;
+    v.struct_definition = std::make_shared<StructDefinition>(name, fields);
 
     return v;
   }

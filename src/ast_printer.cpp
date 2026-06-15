@@ -28,7 +28,12 @@ public:
   void visit(ReturnStmt &stmt) override
   {
     print_indent();
-    std::cout << "Return(" << stmt.value << ")\n";
+    std::cout << "Return\n";
+    indent++;
+    stmt.value->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 
   void visit(IfStmt &stmt) override
@@ -66,11 +71,12 @@ public:
     print_indent();
     std::cout << "StructStmt(" + expr.name + " \n";
     indent++;
-    for (const auto &[field_name, field_type]: expr.fields)
+    for (const auto &[field_name, field_def]: expr.fields)
     {
       print_indent();
+
       std::cout << field_name << ": ";
-      std::cout << Value::type_name(field_type) << "\n";
+      std::cout << Value::type_name(field_def.type.type) << "\n";
     }
     indent--;
     print_indent();
@@ -296,5 +302,42 @@ public:
   {
     print_indent();
     std::cout << "Import(" << expr.module_name << ")\n";
+  }
+
+  void visit(GroupStmt &expr) override
+  {
+    print_indent();
+    std::cout << "GroupStmt(\n";
+    indent++;
+    print_indent();
+    std::cout << "Prefix(" << expr.path << ")\n";
+    for (const auto &route: expr.routes)
+    {
+      route->accept(*this);
+    }
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+  }
+
+  void visit(RouteStmt &expr) override
+  {
+    print_indent();
+    std::cout << "RouteStmt(\n";
+    indent++;
+    print_indent();
+    std::cout << "Method(" << expr.method << ")\n";
+    print_indent();
+    std::cout << "Path(" << expr.path << ")\n";
+    print_indent();
+    std::cout << "Body(\n";
+    indent++;
+    expr.body->accept(*this);
+    indent--;
+    print_indent();
+    std::cout << ")\n";
+    indent--;
+    print_indent();
+    std::cout << ")\n";
   }
 };

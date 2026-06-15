@@ -14,6 +14,7 @@ enum class TokenType
   String,
   True,
   False,
+  HttpVerb,
 
   // OPERATORS
   And,
@@ -61,6 +62,8 @@ enum class TokenType
   Range,
   While,
   Return,
+  Group,
+  Route,
 };
 
 struct Token

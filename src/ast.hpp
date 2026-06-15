@@ -74,9 +74,9 @@ class StructStmt : public Expr
 public:
   std::string name;
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 
-  explicit StructStmt(std::string name, std::unordered_map<std::string, ValueType> fields);
+  explicit StructStmt(std::string name, std::unordered_map<std::string, StructDefinitionField> fields);
 
   void accept(ExprVisitor &visitor) override;
 };
@@ -322,6 +322,37 @@ public:
   std::string module_name;
 
   explicit ImportExpr(std::string module_name);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class GroupStmt : public Expr
+{
+public:
+  std::string path;
+
+  std::vector<std::unique_ptr<Expr> > routes;
+
+  explicit GroupStmt(std::string path, std::vector<std::unique_ptr<Expr> > routes);
+
+  void accept(ExprVisitor &visitor) override;
+};
+
+class RouteStmt : public Expr
+{
+public:
+  std::string method;
+
+  std::string path;
+
+  std::unique_ptr<BlockStmt> body;
+
+  std::optional<std::string> req_identifier;
+
+  std::optional<std::string> res_identifier;
+
+  explicit RouteStmt(std::string method, std::string path, std::unique_ptr<BlockStmt> body,
+                     std::optional<std::string> req_identifier, std::optional<std::string> res_identifier);
 
   void accept(ExprVisitor &visitor) override;
 };

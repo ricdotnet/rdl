@@ -21,6 +21,8 @@ class Lexer
 
   static Token previous_token(const std::vector<Token> &tokens, size_t index_back);
 
+  static bool is_http_verb(const std::string &verb);
+
 public:
   explicit Lexer(std::string src);
 

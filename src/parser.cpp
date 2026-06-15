@@ -101,6 +101,55 @@ std::unique_ptr<Expr> Parser::statement()
     return struct_definition();
   }
 
+  if (match(TokenType::Route))
+  {
+    auto method = consume(TokenType::HttpVerb);
+    auto path = consume(TokenType::String);
+
+    std::optional<std::string> req_identifier;
+    std::optional<std::string> res_identifier;
+
+    if (check(TokenType::LeftParen))
+    {
+      consume(TokenType::LeftParen);
+      req_identifier = consume(TokenType::Identifier).value;
+      consume(TokenType::Comma);
+      res_identifier = consume(TokenType::Identifier).value;
+      consume(TokenType::RightParen);
+    }
+
+    consume(TokenType::LeftBrace);
+
+    auto body = block();
+
+    return std::make_unique<RouteStmt>(method.value, path.value, std::move(body), req_identifier, res_identifier);
+  }
+
+  if (match(TokenType::Group))
+  {
+    const auto base_path = consume(TokenType::String);
+    consume(TokenType::LeftBrace);
+
+    std::vector<std::unique_ptr<Expr> > statements;
+
+    while (!check(TokenType::RightBrace))
+    {
+      std::unique_ptr<Expr> stmt = declaration();
+
+      if (const auto &route = dynamic_cast<RouteStmt *>(stmt.get()))
+      {
+        route->path = base_path.value + route->path;
+      }
+
+      statements.push_back(std::move(stmt));
+      try_consume(TokenType::Semicolon);
+    }
+
+    consume(TokenType::RightBrace);
+
+    return std::make_unique<GroupStmt>(base_path.value, std::move(statements));
+  }
+
   return expression();
 }
 
@@ -155,13 +204,22 @@ std::unique_ptr<Expr> Parser::struct_definition()
   const auto struct_name = consume(TokenType::Identifier);
   consume(TokenType::LeftBrace);
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 
   while (!check(TokenType::RightBrace) && !is_at_end())
   {
     auto field_name = consume(TokenType::Identifier);
-    auto field_type = consume(TokenType::Identifier);
-    fields.emplace(field_name.value, Value::type_of(field_type.value, &seen_types));
+    const auto field_type = parse_type();
+    std::optional<std::string> field_json = std::nullopt;
+
+    if (check(TokenType::Backtick))
+    {
+      consume(TokenType::Backtick);
+      field_json = consume(TokenType::Identifier).value;
+      consume(TokenType::Backtick);
+    }
+
+    fields.emplace(field_name.value, StructDefinitionField{field_type, field_json});
     try_consume(TokenType::Comma);
   }
 
@@ -177,7 +235,7 @@ std::unique_ptr<BlockStmt> Parser::block()
 
   while (!check(TokenType::RightBrace) && !is_at_end())
   {
-    statements.push_back(statement());
+    statements.push_back(declaration());
 
     try_consume(TokenType::Semicolon);
   }
@@ -392,8 +450,9 @@ std::unique_ptr<Expr> Parser::postfix()
         {
           do
           {
+            try_consume(TokenType::Comma);
             args.push_back(expression());
-          } while (match(TokenType::Comma));
+          } while (check(TokenType::Comma));
         }
 
         consume(TokenType::RightParen);
@@ -437,7 +496,7 @@ std::unique_ptr<Expr> Parser::primary()
   {
     const auto identifier = previous();
 
-    if (seen_types.contains(identifier.value))
+    if (seen_types.contains(identifier.value) && peek().type == TokenType::LeftBrace)
     {
       const auto type_name = identifier.value;
 
@@ -554,6 +613,31 @@ std::unique_ptr<Expr> Parser::primary()
 
   ErrorService::syntax_error("Expected expression", tokens[current]);
   return nullptr;
+}
+
+TypeDescriptor Parser::parse_type()
+{
+  if (match(TokenType::LeftBracket))
+  {
+    consume(TokenType::RightBracket);
+    TypeDescriptor element_type = parse_type();
+    return {.type = ValueType::Array, .element_type = std::make_shared<TypeDescriptor>(std::move(element_type))};
+  }
+
+  const auto token = consume(TokenType::Identifier);
+
+  if (token.value == "String") return {.type = ValueType::String};
+
+  if (token.value == "Number") return {.type = ValueType::Number};
+
+  if (token.value == "Boolean") return {.type = ValueType::Boolean};
+
+  if (seen_types.contains(token.value))
+  {
+    return {.type = ValueType::Struct, .name = token.value};
+  }
+
+  return TypeDescriptor{};
 }
 
 bool Parser::match(const TokenType type)
