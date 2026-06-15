@@ -43,13 +43,13 @@ inline std::vector<Value> split(const std::string &string, const std::string &de
 inline std::string to_upper(const std::string &s)
 {
   std::string result;
-  std::transform(s.begin(), s.end(), std::back_inserter(result), ::toupper);
+  std::ranges::transform(s, std::back_inserter(result), ::toupper);
   return result;
 }
 
 inline std::string to_lower(const std::string &s)
 {
   std::string result;
-  std::transform(s.begin(), s.end(), std::back_inserter(result), ::tolower);
+  std::ranges::transform(s, std::back_inserter(result), ::tolower);
   return result;
 }

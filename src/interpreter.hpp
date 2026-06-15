@@ -64,16 +64,23 @@ struct ArrayValue
   std::shared_ptr<std::vector<Value> > elements;
 };
 
+struct StructDefinitionField
+{
+  TypeDescriptor type;
+
+  std::optional<std::string> json_name;
+};
+
 struct StructDefinition
 {
   std::string name;
 
-  std::unordered_map<std::string, ValueType> fields;
+  std::unordered_map<std::string, StructDefinitionField> fields;
 };
 
 struct StructInstance
 {
-  std::shared_ptr<StructDefinition> definition;
+  std::shared_ptr<const StructDefinition> definition;
 
   std::shared_ptr<std::unordered_map<std::string, Value> > fields;
 };
@@ -86,6 +93,8 @@ struct RequestHandle : NativeObject
 struct ResponseHandle : NativeObject
 {
   httplib::Response *response = nullptr;
+
+  bool finished = false;
 };
 
 struct FileHandler : NativeObject
@@ -113,9 +122,9 @@ struct Value
 
   ArrayValue array{};
 
-  StructDefinition struct_definition{};
-
   StructInstance struct_instance{};
+
+  std::shared_ptr<StructDefinition> struct_definition;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -337,13 +346,13 @@ struct Value
     return v;
   }
 
-  static Value struct_value(const std::string &name, const std::unordered_map<std::string, ValueType> &fields)
+  static Value struct_value(const std::string &name,
+                            const std::unordered_map<std::string, StructDefinitionField> &fields)
   {
     Value v;
 
     v.type = ValueType::Struct;
-    v.struct_definition.name = name;
-    v.struct_definition.fields = fields;
+    v.struct_definition = std::make_shared<StructDefinition>(name, fields);
 
     return v;
   }

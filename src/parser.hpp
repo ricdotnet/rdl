@@ -59,6 +59,8 @@ private:
 
   std::unique_ptr<Expr> primary();
 
+  TypeDescriptor parse_type();
+
   Token peek();
 
   Token peek_next();

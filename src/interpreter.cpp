@@ -6,6 +6,7 @@
 #include "./native_modules/fs_module.hpp"
 #include "./native_modules/http_module.hpp"
 #include "./native_modules/io_module.hpp"
+#include "./native_modules/json_module.hpp"
 #include "./native_modules/time_module.hpp"
 #include "./utils/string.hpp"
 
@@ -109,7 +110,7 @@ public:
   void visit(StructStmt &stmt) override
   {
     const auto type_name = stmt.name;
-    std::unordered_map<std::string, ValueType> fields;
+    std::unordered_map<std::string, StructDefinitionField> fields;
     for (const auto &[field_name, field_type]: stmt.fields)
     {
       fields[field_name] = field_type;
@@ -258,11 +259,11 @@ public:
           ErrorService::runtime_error("Undefined field for struct " + definition->name, left->field_name);
         }
 
-        if (definition->fields.at(left->field_name) != value.type)
+        if (definition->fields.at(left->field_name).type.type != value.type)
         {
           ErrorService::runtime_error(
-            "Type mismatch for struct field assignment: expected " +
-            Value::type_name(definition->fields.at(left->field_name)) + ", got " + Value::type_name(value.type),
+            "Type mismatch for struct field assignment: expected " + Value::type_name(
+              definition->fields.at(left->field_name).type.type) + ", got " + Value::type_name(value.type),
             left->field_name);
         }
 
@@ -612,8 +613,8 @@ public:
 
   void visit(StructInitExpr &expr) override
   {
-    auto struct_definition = context.environment->get(expr.type_name).struct_definition;
-    const auto &struct_fields = struct_definition.fields;
+    const auto struct_definition = context.environment->get(expr.type_name).struct_definition;
+    const auto &struct_fields = struct_definition->fields;
 
     const auto fields = std::make_shared<std::unordered_map<std::string, Value> >();
     fields->reserve(expr.fields.size());
@@ -628,17 +629,17 @@ public:
       const auto &struct_field = struct_fields.at(field_name);
       const auto value = evaluate(field_expr.get());
 
-      if (value.type != struct_field)
+      if (value.type != struct_field.type.type)
       {
         ErrorService::runtime_error(
-          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field) + ", got " +
-          Value::type_name(value.type), "");
+          "Type mismatch in struct field '" + field_name + "': expected " + Value::type_name(struct_field.type.type) +
+          ", got " + Value::type_name(value.type), "");
       }
 
       fields->insert({field_name, value});
     }
 
-    result = Value::struct_instance_value(std::make_shared<StructDefinition>(struct_definition), fields);
+    result = Value::struct_instance_value(struct_definition, fields);
   }
 
   void visit(ImportExpr &expr) override
@@ -661,6 +662,10 @@ public:
     if (module_name == "http")
     {
       module = std::make_shared<HttpModule>(context)->init();
+    }
+    if (module_name == "json")
+    {
+      module = std::make_shared<JsonModule>(context)->init();
     }
 
     context.runtime->add_global(module_name, module);

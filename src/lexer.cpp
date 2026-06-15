@@ -354,6 +354,9 @@ std::vector<Token> Lexer::tokenize()
           break;
         }
         break;
+      case '`':
+        tokens.push_back({TokenType::Backtick, "`", line, column});
+        break;
       default:
         ErrorService::syntax_error("Unexpected character: " + std::string(1, c),
                                    {TokenType::Unknown, std::string(1, c), line, column});

@@ -71,11 +71,12 @@ public:
     print_indent();
     std::cout << "StructStmt(" + expr.name + " \n";
     indent++;
-    for (const auto &[field_name, field_type]: expr.fields)
+    for (const auto &[field_name, field_def]: expr.fields)
     {
       print_indent();
+
       std::cout << field_name << ": ";
-      std::cout << Value::type_name(field_type) << "\n";
+      std::cout << Value::type_name(field_def.type.type) << "\n";
     }
     indent--;
     print_indent();
