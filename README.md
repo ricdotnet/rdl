@@ -32,6 +32,21 @@ func hello() {
 }
 ```
 
+## Modules
+
+You can import modules using the `import` keyword followed by the module name.
+
+```
+import "fs";
+import "io";
+```
+
+Modules can then be used in the same way as any other variable.
+
+```
+io.println("Hello World!");
+```
+
 ## Variables
 
 Variables are declared using the `let` keyword. By default, variables are immutable.<br>
@@ -209,7 +224,7 @@ for $i in arr {
 ```
 
 Iterating over an array with an index is also supported.<br>
-This index can also be added to range for loops but will be ignored and trying to use it will result in a runtime error.
+This index can also be added in range for loops but will be ignored, and trying to use it will result in a runtime error.
 
 ```
 let arr = []String{"Hello", "World"};
@@ -268,16 +283,64 @@ print(-a); // -1
 print(-(-a)) // 1
 ```
 
-## Built-in functions
+## HTTP
 
-1. `print()` or `println()` for printing to the console
-2. `sleep(time in ms)` for pausing the program
-3. `now()` for getting the current time in milliseconds
-4. `input()` for getting user input
-5. `String::length()` for getting the length of a string
-6. `String::upper()` for converting a string to uppercase
-7. `String::lower()` for converting a string to lowercase
-8. `Number::to_string()` for converting a number to a string
-9. `Boolean::to_string()` for converting a boolean to a string
-10. `Array::push()` for adding an element to the end of an array
-11. `Array::pop()` for removing the last element from an array
+The language supports defining HTTP routes and route groups.
+
+### Routes
+
+Routes are defined using the `route` keyword followed by the HTTP method and the path.<br>
+The body of the route is defined using the `{}` format and can contain any code.
+
+```
+route POST "/" {
+  let user = request.body(User);
+  // ...
+  response.send(res);
+}
+```
+
+### Route Groups
+
+Groups are created using the `group` keyword and can be used to organize routes using a common prefix.<br>
+The routes inside the group will be prefixed with the group path.<br>
+Group blocks can also contain any code.
+
+```
+group "/api" {
+  route GET "/users" {
+    // ...
+  }
+}
+```
+
+### Listen
+
+To start the HTTP server, use `http.listen(port)`.
+
+```
+http.listen(8000);
+```
+
+## Available modules
+
+1. `fs` - File system module
+    1. `fs.read_file(path)` - Reads a file and returns its contents as a string
+    2. `fs.write_file(path, content)` - Writes a string to a file
+    3. `fs.open_file(path)` - Opens a file for reading and writing
+        1. `.read_line()` - Reads a line from the file
+        2. `.read_all()` - Reads all lines from the file (similar to `fs.read_file()`)
+        3. `.has_next()` - Checks if there are more lines to read
+        4. `.close()` - Closes the file
+2. `io` - Input/Output module
+    1. `io.print(value)` - Prints a value to the console
+    2. `io.println(value)` - Prints a value to the console with a newline
+    3. `io.input()` - Reads a line from the console
+3. `http` - HTTP module
+    1. `http.listen(port)` - Starts the HTTP server on the specified port
+4. `time` - Time module
+    1. `time.now()` - Returns the current time in milliseconds
+    2. `time.sleep(milliseconds)` - Sleeps for the specified number of milliseconds
+5. `json` - JSON module
+    1. `json.marshal(value)` - Marshals a value to JSON
+    2. `json.unmarshal(value)` - Unmarshals a JSON string to a value
