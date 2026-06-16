@@ -294,9 +294,27 @@ The body of the route is defined using the `{}` format and can contain any code.
 
 ```
 route POST "/" {
+  let User = struct {
+    name String
+    surname String
+  };
+
+  // Parse the request body using a struct
   let user = request.body(User);
+
   // ...
+
   response.send(res);
+}
+```
+
+Routes also inject a `request` and `response` variable into the route body that can be used to access the request and response objects.<br>
+These objects can also be defined by the developer using the syntax shown below - `req` and `res` are just examples and can be anything the developer wants.
+
+```
+route GET "/users" (req, res) {
+  let users = getUsers();
+  res.send(users);
 }
 ```
 
