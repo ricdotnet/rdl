@@ -683,7 +683,7 @@ public:
 
   void visit(RouteStmt &stmt) override
   {
-    context.runtime->register_route(stmt.method, stmt.path, stmt.body.get(), stmt.req_identifier, stmt.res_identifier);
+    context.runtime->router.register_route(stmt.method, stmt.path, stmt.body.get(), stmt.req_identifier, stmt.res_identifier);
 
     result = Value::nil_value();
   }

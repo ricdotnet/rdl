@@ -5,6 +5,7 @@
 #include "./src/lexer.hpp"
 #include "./src/parser.hpp"
 #include "./src/runtime.hpp"
+#include "./src/http/router.hpp"
 
 void run(std::string source, const bool debug)
 {
@@ -28,6 +29,7 @@ void run(std::string source, const bool debug)
   Runtime runtime;
   Environment env(nullptr, &runtime);
 
+  runtime.router = Router();
   runtime.out = &std::cout;
   runtime.init_type_methods();
 

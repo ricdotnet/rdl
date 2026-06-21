@@ -40,7 +40,7 @@ private:
     return [context](const httplib::Request &req, httplib::Response &res) {
       const auto start = std::chrono::system_clock::now();
 
-      const auto route = context.runtime->find_route(req.method, req.path);
+      const auto route = context.runtime->router.find_route(req.method, req.path);
 
       if (!route.body)
       {
